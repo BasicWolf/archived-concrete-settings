@@ -1,3 +1,3 @@
 test:
 	cd src
-	pipenv run pytest
+	pipenv run pytest -s
