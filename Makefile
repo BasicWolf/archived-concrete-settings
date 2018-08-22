@@ -1,3 +1,4 @@
+PIPENV=PYTHONPATH=${PYTHONPATH}:${PWD} pipenv
+
 test:
-	cd src
-	pipenv run pytest -s
+	${PIPENV} run pytest -s

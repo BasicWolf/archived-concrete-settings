@@ -2,12 +2,13 @@
 # * Exceptions with 'hint', 'colour_message', 'message' fields
 #   * common messages about OverrideSettings
 #
-
 import copy
 import re
 import sys
 import types
 from typing import Any, Callable, Sequence, Union
+
+from .utils import guess_type_hint, validate_type
 
 PY_VERSION = (sys.version_info.major, sys.version_info.minor)
 PY_35 = (3, 5)
@@ -15,34 +16,42 @@ PY_35 = (3, 5)
 if PY_VERSION < PY_35:
     raise ImportError('Python < 3.5 is not supported')
 
-ValidatorsOrNone = Union[Callable, Sequence[Callable], None]
-
 
 class Undefined:
     pass
 
 
-class GuessSettingType:
+class _GuessSettingType:
     """A special value for Setting.type_hint, which indicates
        that a Setting type should be derived from the default value."""
     pass
 
 
-def validate_type(setting, val):
-    pass
+class _DefaultValidators:
+    """A special value for Settings.validators, which indicates
+    that validators have not beet explicitly set by a user,
+    and the default validators logic should apply.
+    """
+    VALIDATORS = (validate_type, )
+
+
+
+ValidatorsOrNone = Union[_DefaultValidators, Callable, Sequence[Callable], None]
 
 
 class Setting:
     # TODO: slots
 
-    val: Any
-    _type_hint: Any
+    value: Any
+    type_hint: Any
+    description: str
+    validators: Union[Sequence[Callable], _DefaultValidators]
 
     def __init__(self,
                  default_val: Any = Undefined,
                  description: str = '',
-                 validators: ValidatorsOrNone = (validate_type, ),
-                 type_hint: Any = GuessSettingType):
+                 validators: ValidatorsOrNone = _DefaultValidators,
+                 type_hint: Any = _GuessSettingType):
 
         self.value = default_val
         self.description = description
@@ -64,17 +73,6 @@ class Setting:
     def full_name(self):
         return self.owner_name + '_' + self.name
 
-    @property
-    def type_hint(self):
-        return self._type_hint
-
-    @type_hint.setter
-    def type_hint(self, val):
-        if val == GuessSettingType:
-            self._type_hint = guess_type_hint(self.value)
-        else:
-            self._type_hint = val
-
     def __get__(self, obj, objtype):
         # TODO: VALIDATOR
         if self.value == Undefined:
@@ -88,8 +86,9 @@ class Setting:
         return self.value
 
     def __set__(self, obj, val):
-        for validator in self.validators:
-            validator(self, val)
+        # TODO
+        # for validator in self.validators:
+        #     validator(self, val)
         self.value = val
 
 
@@ -118,6 +117,8 @@ class SettingsMeta(type):
             cls._py35_set_name(cls, new_dict)
 
         new_dict = cls.merge_into_class_dict(new_dict, base_dict)
+        new_dict = cls.setup_defaults(new_dict)
+
         cls = super().__new__(cls, name, bases, new_dict)
         return cls
 
@@ -133,13 +134,20 @@ class SettingsMeta(type):
         new_dict = {}
         annotations = class_dict.get('__annotations__', {})
 
-        for attr, val in class_dict.items():
-            if isinstance(val, Setting):
-                new_dict[attr] = val
-            elif cls.is_setting_name(attr):
-                new_dict[attr] = cls.make_setting_from_attr(attr, val, annotations)
-            else:
-                new_dict[attr] = val
+        for attr, field in class_dict.items():
+            new_field = field
+
+            # Make a Setting out of ALL_UPPERCASE_ATTRIBUTE
+            if not isinstance(field, Setting) and cls.is_setting_name(attr):
+                new_field = cls.make_setting_from_attr(attr, field, annotations)
+
+            # Should we try to guess a type_hint for a Setting?
+            if (isinstance(new_field, Setting)
+                and new_field.type_hint is _GuessSettingType
+                and new_field.value is not Undefined):
+                new_field.type_hint = guess_type_hint(new_field.value)
+
+            new_dict[attr] = new_field
         return new_dict
 
     @staticmethod
@@ -147,7 +155,7 @@ class SettingsMeta(type):
         if callable(val):
             type_hint = val.__annotations__.get('return', Any)
         else:
-            type_hint = annotations.get(attr, GuessSettingType)
+            type_hint = annotations.get(attr, _GuessSettingType)
 
         return Setting(val, type_hint=type_hint)
 
@@ -193,18 +201,18 @@ class SettingsMeta(type):
                 raise AttributeError(
                     f'TODO: History; Setting "{attr}" in class "[TODO]"'
                     ' is sealed and cannot be changed in class "[TODO]".'
-                    ' Define a setting via OverrideSetting() descriptor to override'
+                    ' HINT: Define a setting via OverrideSetting() descriptor to override'
                     ' the sealed setting type and value explicitly.'
                 )
             elif isinstance(base_field, Setting):
-                if field.type_hint == GuessSettingType:
+                if field.type_hint == _GuessSettingType:
                     # TODO: record in history
                     field.type_hint = base_field.type_hint
                 elif field.type_hint != base_field.type_hint:
                     raise AttributeError(
                         f'TODO: History; Setting "{attr}" in class "[TODO]"'
                         ' has a different type hint that definition in class "[TODO]".'
-                        ' Define a setting via OverrideSetting() descriptor to override'
+                        ' HINT: Define a setting via OverrideSetting() descriptor to override'
                         ' the existing setting type explicitly.'
                     )
 
@@ -212,33 +220,42 @@ class SettingsMeta(type):
                     raise AttributeError(
                         f'TODO: History; Setting "{attr}" in class "[TODO]"'
                         ' has a different description than definition in class "[TODO]".'
-                        ' Define a setting via OverrideSetting() descriptor to override'
+                        ' HINT: Define a setting via OverrideSetting() descriptor to override'
                         ' the existing setting description explicitly.'
                     )
                 else:
                     field.description = base_field.description
 
-                field.validators = base_field.validators
-                raise Exception('TODO: WRITE A UNIT TEST')
-
-
+                if field.validators is _DefaultValidators:
+                    # Apply special logic by copying the base field validators
+                    field.validators = base_field.validators
+                elif set(field.validators).issuperset(set(base_field.validators)):
+                    raise AttributeError(
+                        f'TODO: History; Setting "{attr}" in class "[TODO]"'
+                        ' has different validators than definition in class "[TODO]".'
+                        ' HINT: Define a setting via OverrideSetting() descriptor to override'
+                        ' the existing setting validators explicitly.'
+                    )
             else:
                 raise AttributeError(
                     f'TODO: History; Setting in class "[TODO]" overrides an'
                     ' existing attribute "{attr}" defined in class "[TODO]".'
-                    ' Define a setting via OverrideSetting() descriptor to override'
+                    ' HINT: Define a setting via OverrideSetting() descriptor to override'
                     ' the attribute explicitly.'
                 )
         return field #, diff # <- TODO History
 
+    @staticmethod
+    def setup_defaults(class_dict):
+        """Convert Setting fields defaults stubs to values"""
+        for field in class_dict.values():
+            if not isinstance(field, Setting):
+                continue
 
-def guess_type_hint(val):
-    # TODO: unit tests for this function
-    if isinstance(val, int):
-        return int
-    elif isinstance(val, float):
-        return float
+            if field.validators is _DefaultValidators:
+                field.validators = _DefaultValidators.VALIDATORS
 
+        return class_dict
 
 class Settings(metaclass=SettingsMeta):
     pass
