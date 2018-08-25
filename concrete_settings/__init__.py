@@ -8,6 +8,7 @@ import sys
 import types
 from typing import Any, Callable, Sequence, Union
 
+from .import exceptions
 from .utils import guess_type_hint, validate_type
 
 PY_VERSION = (sys.version_info.major, sys.version_info.minor)
@@ -76,7 +77,7 @@ class Setting:
     def __get__(self, obj, objtype):
         # TODO: VALIDATOR
         if self.value == Undefined:
-            raise ValueError(f'Setting {self.full_name} value has not been set')
+            raise exceptions.UndefinedValueError(f'Setting {self.full_name} value has not been set')
 
         if obj:
             # object.field access
@@ -103,20 +104,20 @@ class OverrideSetting(Setting):
 
 class SettingsMeta(type):
     def __new__(cls, name, bases, class_dict):
-        base_dict = {}
+        bases_dict = {}
         for base in bases:
             if not issubclass(base, Settings):
                 raise TypeError('Settings class can inherit from from other Settings classes only')
             # TODO:
             if base is not Settings:
-                base_dict = base.__dict__
+                bases_dict = cls.merge_into_class_dict(base.__dict__, bases_dict)
 
         new_dict = cls.class_dict_to_settings(class_dict)
 
         if PY_VERSION == PY_35:
             cls._py35_set_name(cls, new_dict)
 
-        new_dict = cls.merge_into_class_dict(new_dict, base_dict)
+        new_dict = cls.merge_into_class_dict(new_dict, bases_dict)
         new_dict = cls.setup_defaults(new_dict)
 
         cls = super().__new__(cls, name, bases, new_dict)
@@ -198,51 +199,30 @@ class SettingsMeta(type):
         # class field is defined as Setting, i.e. no override precedence.
         elif isinstance(field, Setting):
             if isinstance(base_field, SealedSetting):
-                raise AttributeError(
-                    f'TODO: History; Setting "{attr}" in class "[TODO]"'
-                    ' is sealed and cannot be changed in class "[TODO]".'
-                    ' HINT: Define a setting via OverrideSetting() descriptor to override'
-                    ' the sealed setting type and value explicitly.'
-                )
+                raise exceptions.SealedSettingError(attr)
+
             elif isinstance(base_field, Setting):
                 if field.type_hint == _GuessSettingType:
                     # TODO: record in history
                     field.type_hint = base_field.type_hint
                 elif field.type_hint != base_field.type_hint:
-                    raise AttributeError(
-                        f'TODO: History; Setting "{attr}" in class "[TODO]"'
-                        ' has a different type hint that definition in class "[TODO]".'
-                        ' HINT: Define a setting via OverrideSetting() descriptor to override'
-                        ' the existing setting type explicitly.'
-                    )
+                    raise exceptions.TypeHintDiffersError(attr)
 
-                if field.description and field.description != base_field.description:
-                    raise AttributeError(
-                        f'TODO: History; Setting "{attr}" in class "[TODO]"'
-                        ' has a different description than definition in class "[TODO]".'
-                        ' HINT: Define a setting via OverrideSetting() descriptor to override'
-                        ' the existing setting description explicitly.'
-                    )
+                if (field.description
+                    and base_field.description
+                    and field.description != base_field.description):
+                    raise exceptions.DescriptionDiffersError(attr)
                 else:
                     field.description = base_field.description
 
                 if field.validators is _DefaultValidators:
                     # Apply special logic by copying the base field validators
                     field.validators = base_field.validators
-                elif set(field.validators).issuperset(set(base_field.validators)):
-                    raise AttributeError(
-                        f'TODO: History; Setting "{attr}" in class "[TODO]"'
-                        ' has different validators than definition in class "[TODO]".'
-                        ' HINT: Define a setting via OverrideSetting() descriptor to override'
-                        ' the existing setting validators explicitly.'
-                    )
+                elif not set(field.validators).issuperset(set(base_field.validators)):
+                    raise exceptions.ValidatorsDiffersError(attr)
             else:
-                raise AttributeError(
-                    f'TODO: History; Setting in class "[TODO]" overrides an'
-                    ' existing attribute "{attr}" defined in class "[TODO]".'
-                    ' HINT: Define a setting via OverrideSetting() descriptor to override'
-                    ' the attribute explicitly.'
-                )
+                # base_field is NOT a setting, i.e. trying to override a normal class field
+                raise exceptions.AttributeShadowError(attr)
         return field #, diff # <- TODO History
 
     @staticmethod

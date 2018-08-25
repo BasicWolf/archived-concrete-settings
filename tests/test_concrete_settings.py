@@ -5,7 +5,8 @@ import factory
 import pytest
 from factory.fuzzy import FuzzyInteger, FuzzyFloat, FuzzyText
 
-from concrete_settings import Settings, Setting, SealedSetting, OverrideSetting
+from concrete_settings import (Settings, Setting, SealedSetting, OverrideSetting,
+                               exceptions)
 
 seed = random.randint(1, 1e9)
 print(f'Running tests with seed: {seed:0>10}')
@@ -18,6 +19,23 @@ STR_VAL: str = FuzzyText(length=FuzzyInteger(1, 255).fuzz()).fuzz()
 
 STR_CONST: str = 'HELLO DESCRIPTION'
 
+
+
+
+
+# ======================= Fixtures ================================= #
+# ================================================================== #
+
+
+@pytest.fixture
+def make_dummy_validator():
+    def _make_dummy_validator():
+        return lambda settings, val: None
+    return _make_dummy_validator
+
+
+# ========================== Tests ================================= #
+# ================================================================== #
 
 def test_value_attribute_converted_to_setting():
     class S0(Settings):
@@ -74,9 +92,8 @@ def test_value_change_in_derived_settings():
     assert S1().DEMO == INT_VAL
 
 
-def test_setting_attributes_copied_in_derived_settings():
-    def dummy_validator(setting, val):
-        pass
+def test_setting_attributes_copied_in_derived_settings(make_dummy_validator):
+    dummy_validator = make_dummy_validator()
 
     class S0(Settings):
         DEMO: int = Setting(INT_VAL, STR_CONST, dummy_validator)
@@ -95,7 +112,7 @@ def test_description_change_in_derived_settings_error():
     class S0(Settings):
         DEMO: int = Setting(INT_VAL, STR_CONST)
 
-    with pytest.raises(AttributeError) as e:
+    with pytest.raises(exceptions.DescriptionDiffersError) as e:
         class S1(S0):
             DEMO: int = Setting(INT_VAL, STR_CONST + 'a')
     e.match('has a different description')
@@ -105,7 +122,7 @@ def test_sealed_setting_change_error():
     class S0(Settings):
         DEMO: int = SealedSetting(INT_VAL)
 
-    with pytest.raises(AttributeError) as e:
+    with pytest.raises(exceptions.SealedSettingError) as e:
         class S1(S0):
             DEMO = INT_VAL + 1
     e.match('is sealed and cannot be changed')
@@ -115,7 +132,7 @@ def test_setting_change_type_in_derived_settings_error():
     class S0(Settings):
         DEMO: int = INT_VAL
 
-    with pytest.raises(AttributeError) as e:
+    with pytest.raises(exceptions.TypeHintDiffersError) as e:
         class S1(S0):
             DEMO = Setting(FLOAT_VAL)
     e.match('has a different type hint')
@@ -125,10 +142,28 @@ def test_attribute_change_in_derived_settings_error():
     class S0(Settings):
         demo: int = INT_VAL
 
-    with pytest.raises(AttributeError) as e:
+    with pytest.raises(exceptions.AttributeShadowError) as e:
         class S1(S0):
             demo = Setting(INT_VAL)
     e.match('overrides an existing attribute')
+
+
+def test_validators_excluded_in_derived_settings_error(make_dummy_validator):
+    dv_1 = make_dummy_validator()
+    dv_2 = make_dummy_validator()
+    dv_3 = make_dummy_validator()
+
+    class S0(Settings):
+        DEMO: int = Setting(INT_VAL, validators=(dv_1, dv_2))
+
+    # this should run fine
+    class S1(Settings):
+        DEMO: int = Setting(INT_VAL, validators=(dv_1, dv_2, dv_3))
+
+    with pytest.raises(exceptions.ValidatorsDiffersError) as e:
+        class S2(S0):
+            DEMO = Setting(INT_VAL, validators=(dv_1, dv_3))
+    e.match('has different validators')
 
 
 def test_non_settings_base_classes_not_allowed():
@@ -140,16 +175,56 @@ def test_non_settings_base_classes_not_allowed():
             DEMO: int = INT_VAL
     assert e.match('inherit')
 
-# def test_empty_setting(c_empty):
-#     with pytest.raises(ValueError) as e:
-#         c_empty.demo
-#     assert e.match('C_demo')
+
+def test_undefined_get_not_allowed():
+    class S0(Settings):
+        DEMO: int = Setting()
+
+    with pytest.raises(exceptions.UndefinedValueError) as e:
+         S0().DEMO
+    assert(e.match('value has not been set'))
 
 
-# def test_sealed(c_sealed):
-#     with pytest.raises(AttributeError) as e:
-#         c_sealed.demo = 30
-#     assert e.match('sealed')
+def test_multi_inheritance_non_basic():
+    class SA(Settings):
+        AQUA: float = FLOAT_VAL
+
+    class SB(Settings):
+        VITA: int = INT_VAL
+
+    class SAB(SB, SA):
+        pass
+
+    sab = SAB()
+    assert sab.AQUA == FLOAT_VAL
+    assert sab.VITA == INT_VAL
+
+
+def test_multi_inheritance_override_error():
+    class SA(Settings):
+        DEMO: int = INT_VAL
+
+    class SB(Settings):
+        DEMO: str = STR_VAL
+
+    with pytest.raises(exceptions.TypeHintDiffersError):
+        class SAB(SB, SA):
+            pass
+
+def test_multi_inheritance_order():
+    class SA(Settings):
+        DEMO: int = INT_VAL
+
+    class SB(Settings):
+        DEMO: str = OverrideSetting(STR_VAL)
+
+    class SAB(SB, SA):
+        pass
+
+    sab = SAB()
+    assert sab.DEMO == STR_VAL
+
+
 
 
 # def test_mixin_override(c_int_cls):
