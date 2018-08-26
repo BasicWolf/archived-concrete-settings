@@ -167,8 +167,7 @@ def test_validators_excluded_in_derived_settings_error(make_dummy_validator):
 
 
 def test_non_settings_base_classes_not_allowed():
-    class NS0:
-        pass
+    class NS0: pass
 
     with pytest.raises(TypeError) as e:
         class S1(NS0, Settings):
@@ -192,8 +191,7 @@ def test_multi_inheritance_non_basic():
     class SB(Settings):
         VITA: int = INT_VAL
 
-    class SAB(SB, SA):
-        pass
+    class SAB(SB, SA): pass
 
     sab = SAB()
     assert sab.AQUA == FLOAT_VAL
@@ -208,46 +206,28 @@ def test_multi_inheritance_override_error():
         DEMO: str = STR_VAL
 
     with pytest.raises(exceptions.TypeHintDiffersError):
-        class SAB(SB, SA):
-            pass
+        class SAB(SB, SA): pass
 
-def test_multi_inheritance_order():
+
+def test_multi_inheritance_resolution_order():
     class SA(Settings):
         DEMO: int = INT_VAL
 
     class SB(Settings):
         DEMO: str = OverrideSetting(STR_VAL)
 
-    class SAB(SB, SA):
-        pass
+    class SAB(SB, SA): pass
 
     sab = SAB()
     assert sab.DEMO == STR_VAL
 
 
+def test_invalid_multi_inheritance_order_fails():
+    class A(Settings): pass
+    class B(Settings): pass
+    class C(A,B) : pass
+    class D(B,A): pass
 
-
-# def test_mixin_override(c_int_cls):
-#     pass
-#     class Mixin:
-#         demo: float = Setting(FLOAT_VAL)
-
-#     with pytest.raises(AttributeError) as e:
-#         class X(Mixin, c_int_cls):
-#             demo_str = Setting(STR_VAL)
-#     assert e.match('Use OverrideSetting')
-
-
-# def test_deep_mixin_override(c_int_cls):
-#     class MixinMiddle:
-#         demo = 30
-
-#     class MixinTop:
-#         demo: int = Setting(INT_VAL)
-
-#     with pytest.raises(AttributeError) as e:
-#         class X(MixinTop, MixinMiddle, c_int_cls):
-#             pass
-
-# def test_get_value(c_int):
-#     assert c_int.demo == INT_VAL
+    with pytest.raises(TypeError) as e:
+        class E(C,D): pass
+    e.match('Cannot create a consistent method resolution')

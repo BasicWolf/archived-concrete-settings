@@ -41,7 +41,8 @@ ValidatorsOrNone = Union[_DefaultValidators, Callable, Sequence[Callable], None]
 
 
 class Setting:
-    # TODO: slots
+    __slots__ = ('value', 'type_hint', 'description', 'validators',
+                 'name', 'owner_name')
 
     value: Any
     type_hint: Any
@@ -64,6 +65,7 @@ class Setting:
             self.validators = validators or ()
 
         self.name = ''
+        # TODO: do we actually need this?
         self.owner_name = ''
 
     def __set_name__(self, owner, name):
@@ -93,11 +95,11 @@ class Setting:
         self.value = val
 
 
-class SealedSetting(Setting):
+class OverrideSetting(Setting):
     pass
 
 
-class OverrideSetting(Setting):
+class SealedSetting(OverrideSetting):
     pass
 
 
@@ -105,19 +107,21 @@ class OverrideSetting(Setting):
 class SettingsMeta(type):
     def __new__(cls, name, bases, class_dict):
         bases_dict = {}
-        for base in bases:
+
+        # Iterating through bases in reverse to detect the changes in fields
+        for base in reversed(bases):
             if not issubclass(base, Settings):
                 raise TypeError('Settings class can inherit from from other Settings classes only')
-            # TODO:
+
             if base is not Settings:
-                bases_dict = cls.merge_into_class_dict(base.__dict__, bases_dict)
+                bases_dict = cls.merge_settings_class_dicts(base.__dict__, bases_dict)
 
         new_dict = cls.class_dict_to_settings(class_dict)
 
         if PY_VERSION == PY_35:
             cls._py35_set_name(cls, new_dict)
 
-        new_dict = cls.merge_into_class_dict(new_dict, bases_dict)
+        new_dict = cls.merge_settings_class_dicts(new_dict, bases_dict)
         new_dict = cls.setup_defaults(new_dict)
 
         cls = super().__new__(cls, name, bases, new_dict)
@@ -166,7 +170,7 @@ class SettingsMeta(type):
         return name.upper() == name
 
     @classmethod
-    def merge_into_class_dict(cls, class_dict, bases_dict):
+    def merge_settings_class_dicts(cls, class_dict, bases_dict):
         new_dict = {}
 
         for attr, field in class_dict.items():
@@ -237,5 +241,10 @@ class SettingsMeta(type):
 
         return class_dict
 
+
 class Settings(metaclass=SettingsMeta):
+    pass
+
+
+class History:
     pass
