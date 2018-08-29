@@ -5,8 +5,10 @@ import factory
 import pytest
 from factory.fuzzy import FuzzyInteger, FuzzyFloat, FuzzyText
 
-from concrete_settings import (Settings, Setting, SealedSetting, OverrideSetting,
-                               exceptions)
+from concrete_settings import (
+    Settings, Setting, SealedSetting, OverrideSetting, RequiredSetting,
+    exceptions, SettingsHistory
+)
 
 seed = random.randint(1, 1e9)
 print(f'Running tests with seed: {seed:0>10}')
@@ -36,6 +38,20 @@ def make_dummy_validator():
 
 # ========================== Tests ================================= #
 # ================================================================== #
+
+def test_value_stored_per_object():
+    class S0(Settings):
+        DEMO: int = INT_VAL
+
+    s1 = S0()
+    s2 = S0()
+
+    s1.DEMO = INT_VAL + 1
+    s2.DEMO = INT_VAL + 2
+
+    assert S0.DEMO != s1.DEMO
+    assert S0.DEMO != s2.DEMO
+
 
 def test_value_attribute_converted_to_setting():
     class S0(Settings):
@@ -175,12 +191,12 @@ def test_non_settings_base_classes_not_allowed():
     assert e.match('inherit')
 
 
-def test_undefined_get_not_allowed():
+def test_required_setting():
     class S0(Settings):
-        DEMO: int = Setting()
+        DEMO: int = RequiredSetting()
 
     with pytest.raises(exceptions.UndefinedValueError) as e:
-         S0().DEMO
+         S0()
     assert(e.match('value has not been set'))
 
 
@@ -222,7 +238,7 @@ def test_multi_inheritance_resolution_order():
     assert sab.DEMO == STR_VAL
 
 
-def test_invalid_multi_inheritance_order_fails():
+def test_invalid_multi_inheritance_order_error():
     class A(Settings): pass
     class B(Settings): pass
     class C(A,B) : pass
@@ -231,3 +247,17 @@ def test_invalid_multi_inheritance_order_fails():
     with pytest.raises(TypeError) as e:
         class E(C,D): pass
     e.match('Cannot create a consistent method resolution')
+
+
+def test_history_attribute_defined_explicitly_error():
+    with pytest.raises(AttributeError) as e:
+        class S0(Settings):
+            __settings_history__ = SettingsHistory()
+    e.match('should not be defined explicitly')
+
+
+def test_settings_storage_attribute_defined_explicitly_error():
+    with pytest.raises(AttributeError) as e:
+        class S0(Settings):
+            __settings_storage__ = {}
+    e.match('should not be defined explicitly')

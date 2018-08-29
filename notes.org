@@ -1,0 +1,3 @@
+* IDEAS
+** Exceptions with 'hint', 'colour_message', 'message' fields
+** "Required" setting - throws error on __get__ with Undefined value

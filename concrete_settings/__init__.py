@@ -1,7 +1,3 @@
-# IDEAS:
-# * Exceptions with 'hint', 'colour_message', 'message' fields
-#   * common messages about OverrideSettings
-#
 import copy
 import re
 import sys
@@ -16,6 +12,9 @@ PY_35 = (3, 5)
 
 if PY_VERSION < PY_35:
     raise ImportError('Python < 3.5 is not supported')
+
+HISTORY_ATTR = '__settings_history__'
+SETTINGS_STORAGE_ATTR = '__settings_storage__'
 
 
 class Undefined:
@@ -77,22 +76,47 @@ class Setting:
         return self.owner_name + '_' + self.name
 
     def __get__(self, obj, objtype):
-        # TODO: VALIDATOR
-        if self.value == Undefined:
-            raise exceptions.UndefinedValueError(f'Setting {self.full_name} value has not been set')
+        # == class-level access ==
+        if not obj:
+            return self.value
 
-        if obj:
-            # object.field access
-            if callable(self.value):
-                return self.value(obj)
+        # == object-level access ==
+        if callable(self.value) and self.value is not Undefined:
+            return self.value(obj)
+        else:
+            return self.get_setting_of_object(obj)
 
-        return self.value
+    def get_setting_of_object(self, obj):
+        storage = getattr(obj, SETTINGS_STORAGE_ATTR, {})
+        try:
+            val = storage[self.name]
+        except KeyError:
+            val = self.value
+        # TODO:RequiredSetting
+        return val
 
     def __set__(self, obj, val):
         # TODO
         # for validator in self.validators:
         #     validator(self, val)
-        self.value = val
+
+        if not obj:
+            # == class-level access ==
+            self.value = val
+        else:
+            # == object-level access ==
+            storage = self.get_objects_settings_storage(obj)
+            storage[self.name] = val
+
+    def get_objects_settings_storage(self, obj):
+        # get or initialize object settings storage
+        try:
+            storage = getattr(obj, SETTINGS_STORAGE_ATTR)
+        except AttributeError:
+            storage = {}
+            setattr(obj, SETTINGS_STORAGE_ATTR, storage)
+        return storage
+
 
 
 class OverrideSetting(Setting):
@@ -103,10 +127,20 @@ class SealedSetting(OverrideSetting):
     pass
 
 
+class RequiredSetting(OverrideSetting):
+    pass
+
 
 class SettingsMeta(type):
     def __new__(cls, name, bases, class_dict):
+        if HISTORY_ATTR in class_dict:
+            raise AttributeError('{name}.{HISTORY_ATTR} should not be defined explicitly.' )
+
+        if SETTINGS_STORAGE_ATTR in class_dict:
+            raise AttributeError('{name}.{SETTINGS_STORAGE_ATTR} should not be defined explicitly.' )
+
         bases_dict = {}
+        history = SettingsHistory()
 
         # Iterating through bases in reverse to detect the changes in fields
         for base in reversed(bases):
@@ -114,14 +148,14 @@ class SettingsMeta(type):
                 raise TypeError('Settings class can inherit from from other Settings classes only')
 
             if base is not Settings:
-                bases_dict = cls.merge_settings_class_dicts(base.__dict__, bases_dict)
+                bases_dict, history = cls.merge_settings_class_dicts(base.__dict__, bases_dict, history)
 
         new_dict = cls.class_dict_to_settings(class_dict)
 
         if PY_VERSION == PY_35:
             cls._py35_set_name(cls, new_dict)
 
-        new_dict = cls.merge_settings_class_dicts(new_dict, bases_dict)
+        new_dict, history = cls.merge_settings_class_dicts(new_dict, bases_dict, history)
         new_dict = cls.setup_defaults(new_dict)
 
         cls = super().__new__(cls, name, bases, new_dict)
@@ -170,7 +204,7 @@ class SettingsMeta(type):
         return name.upper() == name
 
     @classmethod
-    def merge_settings_class_dicts(cls, class_dict, bases_dict):
+    def merge_settings_class_dicts(cls, class_dict, bases_dict, history):
         new_dict = {}
 
         for attr, field in class_dict.items():
@@ -187,7 +221,7 @@ class SettingsMeta(type):
 
             new_dict[attr] = cls._merge_fields(attr, field, base_field)
 
-        return new_dict
+        return new_dict, history
 
     @staticmethod
     def _merge_fields(attr, field, base_field):
@@ -242,9 +276,13 @@ class SettingsMeta(type):
         return class_dict
 
 
-class Settings(metaclass=SettingsMeta):
+    def __call__(self, *args, **kwargs):
+        return super().__call__(*args, **kwargs)
+
+
+class SettingsHistory:
     pass
 
 
-class History:
+class Settings(metaclass=SettingsMeta):
     pass
