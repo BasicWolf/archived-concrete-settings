@@ -1,9 +1,16 @@
+import typing
+
 def validate_type(setting, val):
     pass
 
 def guess_type_hint(val):
-    # TODO: unit tests for this function
-    if isinstance(val, int):
-        return int
-    elif isinstance(val, float):
-        return float
+    known_types = [
+        bool, # bool MUST come before int, as e.g. isinstance(True, int) == True
+        int,
+        float,
+    ]
+
+    for t in known_types:
+        if isinstance(val, t):
+            return t
+    return typing.Any

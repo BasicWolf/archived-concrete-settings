@@ -2,6 +2,7 @@ import copy
 import re
 import sys
 import types
+from collections import defaultdict, namedtuple
 from typing import Any, Callable, Sequence, Union
 
 from .import exceptions
@@ -13,8 +14,7 @@ PY_35 = (3, 5)
 if PY_VERSION < PY_35:
     raise ImportError('Python < 3.5 is not supported')
 
-HISTORY_ATTR = '__settings_history__'
-SETTINGS_STORAGE_ATTR = '__settings_storage__'
+VALUES_ATTR = '__settings_values__'
 
 
 class Undefined:
@@ -41,7 +41,7 @@ ValidatorsOrNone = Union[_DefaultValidators, Callable, Sequence[Callable], None]
 
 class Setting:
     __slots__ = ('value', 'type_hint', 'description', 'validators',
-                 'name', 'owner_name')
+                 'name', 'history')
 
     value: Any
     type_hint: Any
@@ -64,16 +64,9 @@ class Setting:
             self.validators = validators or ()
 
         self.name = ''
-        # TODO: do we actually need this?
-        self.owner_name = ''
 
-    def __set_name__(self, owner, name):
-        self.owner_name = owner.__name__
+    def __set_name__(self, _, name):
         self.name = name
-
-    @property
-    def full_name(self):
-        return self.owner_name + '_' + self.name
 
     def __get__(self, obj, objtype):
         # == class-level access ==
@@ -87,12 +80,11 @@ class Setting:
             return self.get_setting_of_object(obj)
 
     def get_setting_of_object(self, obj):
-        storage = getattr(obj, SETTINGS_STORAGE_ATTR, {})
+        storage = getattr(obj, VALUES_ATTR, {})
         try:
             val = storage[self.name]
         except KeyError:
             val = self.value
-        # TODO:RequiredSetting
         return val
 
     def __set__(self, obj, val):
@@ -105,18 +97,17 @@ class Setting:
             self.value = val
         else:
             # == object-level access ==
-            storage = self.get_objects_settings_storage(obj)
+            storage = self.get_objects_values(obj)
             storage[self.name] = val
 
-    def get_objects_settings_storage(self, obj):
+    def get_objects_values(self, obj):
         # get or initialize object settings storage
         try:
-            storage = getattr(obj, SETTINGS_STORAGE_ATTR)
+            storage = getattr(obj, VALUES_ATTR)
         except AttributeError:
             storage = {}
-            setattr(obj, SETTINGS_STORAGE_ATTR, storage)
+            setattr(obj, VALUES_ATTR, storage)
         return storage
-
 
 
 class OverrideSetting(Setting):
@@ -131,16 +122,13 @@ class RequiredSetting(OverrideSetting):
     pass
 
 
+
 class SettingsMeta(type):
     def __new__(cls, name, bases, class_dict):
-        if HISTORY_ATTR in class_dict:
-            raise AttributeError('{name}.{HISTORY_ATTR} should not be defined explicitly.' )
-
-        if SETTINGS_STORAGE_ATTR in class_dict:
-            raise AttributeError('{name}.{SETTINGS_STORAGE_ATTR} should not be defined explicitly.' )
+        if VALUES_ATTR in class_dict:
+            raise AttributeError('{name}.{VALUES_ATTR} should not be defined explicitly.' )
 
         bases_dict = {}
-        history = SettingsHistory()
 
         # Iterating through bases in reverse to detect the changes in fields
         for base in reversed(bases):
@@ -148,14 +136,14 @@ class SettingsMeta(type):
                 raise TypeError('Settings class can inherit from from other Settings classes only')
 
             if base is not Settings:
-                bases_dict, history = cls.merge_settings_class_dicts(base.__dict__, bases_dict, history)
+                bases_dict = cls.merge_settings_class_dicts(base.__name__, base.__dict__, bases_dict)
 
         new_dict = cls.class_dict_to_settings(class_dict)
 
         if PY_VERSION == PY_35:
             cls._py35_set_name(cls, new_dict)
 
-        new_dict, history = cls.merge_settings_class_dicts(new_dict, bases_dict, history)
+        new_dict = cls.merge_settings_class_dicts(name, new_dict, bases_dict)
         new_dict = cls.setup_defaults(new_dict)
 
         cls = super().__new__(cls, name, bases, new_dict)
@@ -204,7 +192,7 @@ class SettingsMeta(type):
         return name.upper() == name
 
     @classmethod
-    def merge_settings_class_dicts(cls, class_dict, bases_dict, history):
+    def merge_settings_class_dicts(cls, class_name, class_dict, bases_dict):
         new_dict = {}
 
         for attr, field in class_dict.items():
@@ -221,14 +209,13 @@ class SettingsMeta(type):
 
             new_dict[attr] = cls._merge_fields(attr, field, base_field)
 
-        return new_dict, history
+        return new_dict
 
     @staticmethod
     def _merge_fields(attr, field, base_field):
         # class field is defined as OverrideSetting
         if isinstance(field, OverrideSetting):
             if isinstance(base_field, Setting):
-                # TODO: record in history
                 pass
             else:
                 # TODO: WARNING record in history
@@ -275,14 +262,45 @@ class SettingsMeta(type):
 
         return class_dict
 
+    def __call__(cls, *args, **kwargs):
+        for attr, field in cls.__dict__.items():
+            if isinstance(field, RequiredSetting):
+                raise exceptions.RequiredSettingIsUndefined(f'{cls.__name__}.{attr}')
 
-    def __call__(self, *args, **kwargs):
+        # invoke __init__() of the object
         return super().__call__(*args, **kwargs)
-
-
-class SettingsHistory:
-    pass
 
 
 class Settings(metaclass=SettingsMeta):
     pass
+
+
+SettingsClassOrObj = Union[SettingsMeta, Settings]
+
+
+class SettingsHistory:
+    history: dict
+
+    def __init__(self, settings: SettingsClassOrObj):
+        self.history = {}
+        self.history.setdefault(list)
+
+        settings_cls = settings.__class__ if isinstance(settings, Settings) else settings
+        for attr, field in settings_cls.__dict__.items():
+            if isinstance(field, Setting):
+                self.history[attr] = self.calculate_history(settings_cls.__mro__, attr)
+
+    def __getattr__(self, name):
+        return self.history[name]
+
+    def __getitem__(self, name):
+        return self.__getattr__(name)
+
+    def calculate_history(self, settings_cls_mro, attr):
+        # iterate over all settings class base classes;
+        # skip Object and Settings, which are the last in MRO
+        return [
+            cls
+            for cls in reversed(settings_cls_mro[:-2])
+            if attr in cls.__dict__
+        ]

@@ -1,28 +1,13 @@
-import random
 import types
-
-import factory
 import pytest
-from factory.fuzzy import FuzzyInteger, FuzzyFloat, FuzzyText
 
 from concrete_settings import (
     Settings, Setting, SealedSetting, OverrideSetting, RequiredSetting,
     exceptions, SettingsHistory
 )
 
-seed = random.randint(1, 1e9)
-print(f'Running tests with seed: {seed:0>10}')
-factory.fuzzy.reseed_random(seed)
 
-
-INT_VAL: int = FuzzyInteger(-10e10, 10e10).fuzz()
-FLOAT_VAL: float = FuzzyFloat(-10e10, 10e10).fuzz()
-STR_VAL: str = FuzzyText(length=FuzzyInteger(1, 255).fuzz()).fuzz()
-
-STR_CONST: str = 'HELLO DESCRIPTION'
-
-
-
+from .common import INT_VAL, FLOAT_VAL, STR_VAL, STR_CONST
 
 
 # ======================= Fixtures ================================= #
@@ -38,6 +23,16 @@ def make_dummy_validator():
 
 # ========================== Tests ================================= #
 # ================================================================== #
+
+def test_setting_stored_per_class():
+    class S0(Settings):
+        DEMO: int = INT_VAL
+
+    class S1(Settings):
+        DEMO = INT_VAL + 1
+
+    assert S0.DEMO != S1.DEMO
+
 
 def test_value_stored_per_object():
     class S0(Settings):
@@ -195,9 +190,9 @@ def test_required_setting():
     class S0(Settings):
         DEMO: int = RequiredSetting()
 
-    with pytest.raises(exceptions.UndefinedValueError) as e:
+    with pytest.raises(exceptions.RequiredSettingIsUndefined) as e:
          S0()
-    assert(e.match('value has not been set'))
+    assert(e.match('required to have a value'))
 
 
 def test_multi_inheritance_non_basic():
@@ -249,15 +244,38 @@ def test_invalid_multi_inheritance_order_error():
     e.match('Cannot create a consistent method resolution')
 
 
-def test_history_attribute_defined_explicitly_error():
-    with pytest.raises(AttributeError) as e:
-        class S0(Settings):
-            __settings_history__ = SettingsHistory()
-    e.match('should not be defined explicitly')
-
-
 def test_settings_storage_attribute_defined_explicitly_error():
     with pytest.raises(AttributeError) as e:
         class S0(Settings):
-            __settings_storage__ = {}
+            __settings_values__ = {}
     e.match('should not be defined explicitly')
+
+
+def test_guess_type():
+    class S0(Settings):
+        # Numeric types
+        S_BOOLEAN = True
+        S_INT = 10
+        S_FLOAT = 10.0
+        S_COMPLEX = 10 + 10j
+
+        # Sequences
+        S_LIST = list()
+        S_TUPLE = tuple()
+        S_RANGE = range(3)
+
+        # Text, Binary
+        S_STR = 'str'
+        S_BYTES = b'abc'
+
+        # set, frozenset, dict
+        S_SET = set()
+        S_FROZENSET = frozenset()
+        S_DICT = dict()
+
+    d = S0.__dict__
+    assert d['S_BOOLEAN'].type_hint == bool
+    assert d['S_INT'].type_hint == int
+    assert d['S_FLOAT'].type_hint == float
+    assert d['S_COMPLEX'].type_hint == complex
+

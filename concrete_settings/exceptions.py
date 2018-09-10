@@ -52,6 +52,6 @@ class AttributeShadowError(SettingsError):
         )
 
 
-class UndefinedValueError(SettingsError):
+class RequiredSettingIsUndefined(SettingsError):
     def __init__(self, setting_name):
-        super().__init__(f'Setting {setting_name} value has not been set')
+        super().__init__(f'Setting {setting_name} is required to have a value.')
