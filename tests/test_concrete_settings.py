@@ -1,9 +1,11 @@
+import sys
 import types
+
 import pytest
 
 from concrete_settings import (
     Settings, Setting, SealedSetting, OverrideSetting, RequiredSetting,
-    exceptions, SettingsHistory
+    exceptions, SettingsHistory, settings_from_module
 )
 
 
@@ -20,6 +22,16 @@ def make_dummy_validator():
         return lambda settings, val: None
     return _make_dummy_validator
 
+@pytest.fixture
+def settings_module():
+    name = 'my_settings'
+    mod = types.ModuleType(name, 'my settings docstring')
+    mod.__file__ =  name + '.py'
+    sys.modules[name] = mod
+
+    mod.DEMO = INT_VAL
+    mod.STR_DEMO = STR_VAL
+    return mod
 
 # ========================== Tests ================================= #
 # ================================================================== #
@@ -251,6 +263,21 @@ def test_settings_storage_attribute_defined_explicitly_error():
     e.match('should not be defined explicitly')
 
 
+def test_settings_from_module(settings_module):
+    S0 = settings_from_module(settings_module)
+    assert issubclass(S0, Settings)
+    assert S0.DEMO == INT_VAL
+    assert S0.STR_DEMO == STR_VAL
+    assert S0.__dict__['DEMO'].type_hint is int
+    assert S0.__dict__['STR_DEMO'].type_hint is Ste
+
+
+def test_settings_from_module_filter(settings_module):
+    S0 = settings_from_module(settings_module, lambda s: s == 'DEMO')
+    assert 'DEMO' in S0.__dict__
+    assert 'STR_DEMO' not in S0.__dict__
+
+
 def test_guess_type():
     class S0(Settings):
         # Numeric types
@@ -274,8 +301,15 @@ def test_guess_type():
         S_DICT = dict()
 
     d = S0.__dict__
-    assert d['S_BOOLEAN'].type_hint == bool
-    assert d['S_INT'].type_hint == int
-    assert d['S_FLOAT'].type_hint == float
-    assert d['S_COMPLEX'].type_hint == complex
-
+    assert d['S_BOOLEAN'].type_hint is bool
+    assert d['S_INT'].type_hint is int
+    assert d['S_FLOAT'].type_hint is float
+    assert d['S_COMPLEX'].type_hint is complex
+    assert d['S_LIST'].type_hint is list
+    assert d['S_TUPLE'].type_hint is tuple
+    assert d['S_RANGE'].type_hint is range
+    assert d['S_STR'].type_hint is str
+    assert d['S_BYTES'].type_hint is bytes
+    assert d['S_SET'].type_hint is set
+    assert d['S_FROZENSET'].type_hint is frozenset
+    assert d['S_DICT'].type_hint is dict

@@ -275,6 +275,19 @@ class Settings(metaclass=SettingsMeta):
     pass
 
 
+def settings_from_module(mod: types.ModuleType,
+                         name_filter: Callable[[str], bool] = SettingsMeta.is_setting_name):
+    mod_fields = {
+        attr: value for attr, value in vars(mod).items()
+        if name_filter(attr)
+    }
+    name = 'Module_' + mod.__name__
+    bases =  (Settings, )
+
+    settings_cls = SettingsMeta.__new__(SettingsMeta, name, bases, mod_fields)
+    return settings_cls
+
+
 SettingsClassOrObj = Union[SettingsMeta, Settings]
 
 
