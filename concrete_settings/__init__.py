@@ -35,13 +35,20 @@ class _DefaultValidators:
     VALIDATORS = (validate_type, )
 
 
+class _CallableSettingWrapper:
+    """A special wrapper for method-settings, i.e.
+    the methods decorated with @setting and  which
+    are processed as setting values producers."""
+    def __init__(self, f):
+        self.f = f
+
 
 ValidatorsOrNone = Union[_DefaultValidators, Callable, Sequence[Callable], None]
 
 
 class Setting:
     __slots__ = ('value', 'type_hint', 'description', 'validators',
-                 'name', 'history')
+                 'name', 'history', '__doc__')
 
     value: Any
     type_hint: Any
@@ -57,6 +64,7 @@ class Setting:
         self.value = default_val
         self.description = description
         self.type_hint = type_hint
+        self.__doc__ = self.description
 
         if isinstance(validators, types.FunctionType):
             self.validators = (validators, )
@@ -74,8 +82,8 @@ class Setting:
             return self.value
 
         # == object-level access ==
-        if callable(self.value) and self.value is not Undefined:
-            return self.value(obj)
+        if isinstance(self.value, _CallableSettingWrapper):
+            return self.value.f(obj)
         else:
             return self.get_setting_of_object(obj)
 
@@ -122,7 +130,6 @@ class RequiredSetting(OverrideSetting):
     pass
 
 
-
 class SettingsMeta(type):
     def __new__(cls, name, bases, class_dict):
         if VALUES_ATTR in class_dict:
@@ -165,7 +172,9 @@ class SettingsMeta(type):
             new_field = field
 
             # Make a Setting out of ALL_UPPERCASE_ATTRIBUTE
-            if not isinstance(field, Setting) and cls.is_setting_name(attr):
+            if (not isinstance(field, Setting)
+                and cls.is_setting_name(attr)
+                and cls.is_safe_setting_type(field)):
                 new_field = cls.make_setting_from_attr(attr, field, annotations)
 
             # Should we try to guess a type_hint for a Setting?
@@ -179,17 +188,33 @@ class SettingsMeta(type):
 
     @staticmethod
     def make_setting_from_attr(attr, val, annotations):
-        if callable(val):
-            type_hint = val.__annotations__.get('return', Any)
+        if isinstance(val, _CallableSettingWrapper):
+            type_hint = val.f.__annotations__.get('return', Any)
+            doc = val.f.__doc__
         else:
             type_hint = annotations.get(attr, _GuessSettingType)
+            doc = ''
 
-        return Setting(val, type_hint=type_hint)
+        return Setting(val, doc, type_hint=type_hint)
 
     @staticmethod
     def is_setting_name(name: str) -> bool:
         '''Return true if name is written in upper case'''
-        return name.upper() == name
+        return all((
+            name.upper() == name,
+            not name.startswith('_'),
+        ))
+
+    @staticmethod
+    def is_safe_setting_type(field: Any) -> bool:
+        '''Return false if field should not be converted to setting automatically'''
+        ignored_types = (
+            property,
+            types.FunctionType,
+            classmethod,
+            staticmethod
+        )
+        return not isinstance(field, ignored_types)
 
     @classmethod
     def merge_settings_class_dicts(cls, class_name, class_dict, bases_dict):
@@ -263,6 +288,7 @@ class SettingsMeta(type):
         return class_dict
 
     def __call__(cls, *args, **kwargs):
+        """__init__() of the Settings object"""
         for attr, field in cls.__dict__.items():
             if isinstance(field, RequiredSetting):
                 raise exceptions.RequiredSettingIsUndefined(f'{cls.__name__}.{attr}')
@@ -275,16 +301,23 @@ class Settings(metaclass=SettingsMeta):
     pass
 
 
+def setting(f):
+    return Settings.make_setting_from_attr(f.__name__, _CallableSettingWrapper(f), {})
+
+
 def settings_from_module(mod: types.ModuleType,
-                         name_filter: Callable[[str], bool] = SettingsMeta.is_setting_name):
+                         *,
+                         name_filter: Callable[[str], bool] = SettingsMeta.is_setting_name,
+                         class_name: str = None):
+    class_name = class_name or 'Module_' + mod.__name__
+
     mod_fields = {
         attr: value for attr, value in vars(mod).items()
         if name_filter(attr)
     }
-    name = 'Module_' + mod.__name__
     bases =  (Settings, )
 
-    settings_cls = SettingsMeta.__new__(SettingsMeta, name, bases, mod_fields)
+    settings_cls = SettingsMeta.__new__(SettingsMeta, class_name, bases, mod_fields)
     return settings_cls
 
 

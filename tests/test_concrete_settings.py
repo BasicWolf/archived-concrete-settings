@@ -5,7 +5,7 @@ import pytest
 
 from concrete_settings import (
     Settings, Setting, SealedSetting, OverrideSetting, RequiredSetting,
-    exceptions, SettingsHistory, settings_from_module
+    exceptions, SettingsHistory, settings_from_module, setting
 )
 
 
@@ -83,6 +83,7 @@ def test_method_converted_to_setting():
     class S0(Settings):
         x = INT_VAL
 
+        @setting
         def DEMO(self) -> int:
             return self.x
 
@@ -269,11 +270,11 @@ def test_settings_from_module(settings_module):
     assert S0.DEMO == INT_VAL
     assert S0.STR_DEMO == STR_VAL
     assert S0.__dict__['DEMO'].type_hint is int
-    assert S0.__dict__['STR_DEMO'].type_hint is Ste
+    assert S0.__dict__['STR_DEMO'].type_hint is str
 
 
 def test_settings_from_module_filter(settings_module):
-    S0 = settings_from_module(settings_module, lambda s: s == 'DEMO')
+    S0 = settings_from_module(settings_module, name_filter=lambda s: s == 'DEMO')
     assert 'DEMO' in S0.__dict__
     assert 'STR_DEMO' not in S0.__dict__
 
@@ -313,3 +314,36 @@ def test_guess_type():
     assert d['S_SET'].type_hint is set
     assert d['S_FROZENSET'].type_hint is frozenset
     assert d['S_DICT'].type_hint is dict
+
+
+def test_invalid_types_are_not_settings():
+    class S0(Settings):
+        S_INT = INT_VAL
+
+        @property
+        def PROP_BOOLEAN(self):
+            return False
+
+        def FUNC(self):
+            return STR_VAL
+
+        @classmethod
+        def CLASS_METH(cls):
+            return cls
+
+        @staticmethod
+        def STATIC_METH():
+            return STR_VAL
+
+    assert S0.S_INT == INT_VAL
+    assert isinstance(S0.PROP_BOOLEAN, property)
+    assert isinstance(S0.FUNC, types.FunctionType)
+    assert isinstance(S0.CLASS_METH, types.MethodType)
+    assert isinstance(S0.STATIC_METH, types.FunctionType)
+
+    s0 = S0()
+    assert s0.PROP_BOOLEAN == False
+    assert s0.FUNC() == STR_VAL
+    assert s0.CLASS_METH() == S0
+    assert s0.STATIC_METH() == STR_VAL
+
