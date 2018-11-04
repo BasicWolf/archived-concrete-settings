@@ -1,3 +1,4 @@
+import os
 import sys
 import types
 
@@ -85,23 +86,15 @@ def test_method_converted_to_setting():
 
         @setting
         def DEMO(self) -> int:
+            """This is demo doc"""
             return self.x
 
     DEMO = S0.__dict__['DEMO']
     assert isinstance(DEMO, Setting)
     assert DEMO.type_hint is int
+    assert S0.DEMO.__annotations__['return'] == int
+    assert S0.DEMO.__doc__ == 'This is demo doc'
     assert S0().DEMO == INT_VAL
-
-
-def test_method_not_converted_to_setting():
-    class S0(Settings):
-        x = INT_VAL
-
-        def demo(self) -> int:
-            return self.x
-
-    assert isinstance(S0.demo, types.FunctionType)
-    assert S0().demo() == INT_VAL
 
 
 def test_value_change_in_derived_settings():
@@ -126,20 +119,20 @@ def test_setting_attributes_copied_in_derived_settings(make_dummy_validator):
         DEMO = INT_VAL + 1
 
     DEMO = S1.__dict__['DEMO']
-    assert DEMO.description == STR_CONST
+    assert DEMO.__doc__ == STR_CONST
     assert DEMO.validators == (dummy_validator, )
     assert DEMO.type_hint is int
     assert S1().DEMO == INT_VAL + 1
 
 
-def test_description_change_in_derived_settings_error():
+def test_doc_change_in_derived_settings_error():
     class S0(Settings):
         DEMO: int = Setting(INT_VAL, STR_CONST)
 
-    with pytest.raises(exceptions.DescriptionDiffersError) as e:
+    with pytest.raises(exceptions.DocDiffersError) as e:
         class S1(S0):
             DEMO: int = Setting(INT_VAL, STR_CONST + 'a')
-    e.match('has a different description')
+    e.match('has a different docstring')
 
 
 def test_sealed_setting_change_error():
@@ -316,7 +309,18 @@ def test_guess_type():
     assert d['S_DICT'].type_hint is dict
 
 
-def test_invalid_types_are_not_settings():
+def test_method_not_converted_to_setting():
+    class S0(Settings):
+        x = INT_VAL
+
+        def demo(self) -> int:
+            return self.x
+
+    assert isinstance(S0.demo, types.FunctionType)
+    assert S0().demo() == INT_VAL
+
+
+def test_callable_types_are_not_settings():
     class S0(Settings):
         S_INT = INT_VAL
 
@@ -347,3 +351,13 @@ def test_invalid_types_are_not_settings():
     assert s0.CLASS_METH() == S0
     assert s0.STATIC_METH() == STR_VAL
 
+
+def test_settings_from_env_variables(monkeypatch):
+    with monkeypatch.context() as m:
+        m.setitem(os.environ, 'S_STR', STR_VAL)
+
+        class S0(Settings):
+            S_STR = Setting(env='S_STR')
+            S_STR2 = Setting(env=True)
+
+        assert S0.S_INT == INT_VAL

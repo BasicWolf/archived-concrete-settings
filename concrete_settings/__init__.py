@@ -1,4 +1,6 @@
 import copy
+import functools
+import os
 import re
 import sys
 import types
@@ -35,36 +37,65 @@ class _DefaultValidators:
     VALIDATORS = (validate_type, )
 
 
-class _CallableSettingWrapper:
+class _CallableSettingValue:
     """A special wrapper for method-settings, i.e.
     the methods decorated with @setting and  which
     are processed as setting values producers."""
     def __init__(self, f):
         self.f = f
 
+    def __call__(self, env=None):
+        return self.f(env)
 
-ValidatorsOrNone = Union[_DefaultValidators, Callable, Sequence[Callable], None]
+
+
+ValidatorsTypes = Union[_DefaultValidators, Callable, Sequence[Callable], None]
+EnvTypes = Union[str, bool, EnvValueReader, None]
+
+
+class EnvValueReader:
+    __slots__ = ('key', 'default_val')
+
+    def __init__(self, key: str, default_val):
+        self.key = key
+        self.default_val = default_val
+
+    def read(self):
+        try:
+            return self._cached_val
+        except AttributeError:
+            self._cached_val = os.environ.get(self.key, self.default_val)
+            return self._cached_val
+
+    @staticmethod
+    def from_env(env: EnvTypes, default_val):
+        if isinstance(env, EnvValueReader):
+            return env
+        elif isinstance(env, str):
+            return EnvValueReader(env, default_val)
+        elif env == True:
+            return EnvValueReader(env, default_val)
+        return None
 
 
 class Setting:
-    __slots__ = ('value', 'type_hint', 'description', 'validators',
+    __slots__ = ('value', 'type_hint', 'validators',
                  'name', 'history', '__doc__')
 
     value: Any
     type_hint: Any
-    description: str
     validators: Union[Sequence[Callable], _DefaultValidators]
 
     def __init__(self,
                  default_val: Any = Undefined,
-                 description: str = '',
-                 validators: ValidatorsOrNone = _DefaultValidators,
-                 type_hint: Any = _GuessSettingType):
+                 doc: str = '',
+                 validators: ValidatorsTypes = _DefaultValidators,
+                 type_hint: Any = _GuessSettingType,
+                 env: EnvTypes = None):
 
-        self.value = default_val
-        self.description = description
+        self.value = self._get_init_value(env, default_val)
         self.type_hint = type_hint
-        self.__doc__ = self.description
+        self.__doc__ = doc
 
         if isinstance(validators, types.FunctionType):
             self.validators = (validators, )
@@ -73,8 +104,17 @@ class Setting:
 
         self.name = ''
 
+    def _get_init_value(self, env, default_val):
+        env_reader = EnvValueReader.from_env(env, default_val)
+        return default_val if env_reader is None else env_reader
+
     def __set_name__(self, _, name):
         self.name = name
+
+        # set environmental variable reader key (name),
+        # so that a value with setting's name can be fetched from the environment
+        if isinstance(self.value, EnvValueReader) and self.value.key == True:
+            self.value.key = name
 
     def __get__(self, obj, objtype):
         # == class-level access ==
@@ -82,8 +122,8 @@ class Setting:
             return self.value
 
         # == object-level access ==
-        if isinstance(self.value, _CallableSettingWrapper):
-            return self.value.f(obj)
+        if isinstance(self.value, _CallableSettingValue):
+            return self.value(obj)
         else:
             return self.get_setting_of_object(obj)
 
@@ -187,15 +227,15 @@ class SettingsMeta(type):
         return new_dict
 
     @staticmethod
-    def make_setting_from_attr(attr, val, annotations):
-        if isinstance(val, _CallableSettingWrapper):
-            type_hint = val.f.__annotations__.get('return', Any)
-            doc = val.f.__doc__
+    def make_setting_from_attr(attr, val, annotations, env=None):
+        if isinstance(val, _CallableSettingValue):
+            type_hint = val.__annotations__.get('return', Any)
+            doc = val.__doc__
         else:
             type_hint = annotations.get(attr, _GuessSettingType)
             doc = ''
 
-        return Setting(val, doc, type_hint=type_hint)
+        return Setting(val, doc, type_hint=type_hint, env=env)
 
     @staticmethod
     def is_setting_name(name: str) -> bool:
@@ -208,13 +248,13 @@ class SettingsMeta(type):
     @staticmethod
     def is_safe_setting_type(field: Any) -> bool:
         '''Return false if field should not be converted to setting automatically'''
-        ignored_types = (
+        callable_types = (
             property,
             types.FunctionType,
             classmethod,
             staticmethod
         )
-        return not isinstance(field, ignored_types)
+        return not isinstance(field, callable_types)
 
     @classmethod
     def merge_settings_class_dicts(cls, class_name, class_dict, bases_dict):
@@ -258,12 +298,12 @@ class SettingsMeta(type):
                 elif field.type_hint != base_field.type_hint:
                     raise exceptions.TypeHintDiffersError(attr)
 
-                if (field.description
-                    and base_field.description
-                    and field.description != base_field.description):
-                    raise exceptions.DescriptionDiffersError(attr)
+                if (field.__doc__
+                    and base_field.__doc__
+                    and field.__doc__ != base_field.__doc__):
+                    raise exceptions.DocDiffersError(attr)
                 else:
-                    field.description = base_field.description
+                    field.__doc__ = base_field.__doc__
 
                 if field.validators is _DefaultValidators:
                     # Apply special logic by copying the base field validators
@@ -301,8 +341,9 @@ class Settings(metaclass=SettingsMeta):
     pass
 
 
-def setting(f):
-    return Settings.make_setting_from_attr(f.__name__, _CallableSettingWrapper(f), {})
+def setting(f, env=None):
+    val = functools.wraps(f)(_CallableSettingValue(f))
+    return Settings.make_setting_from_attr(f.__name__, val, {}, env)
 
 
 def settings_from_module(mod: types.ModuleType,

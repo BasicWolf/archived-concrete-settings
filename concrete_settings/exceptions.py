@@ -21,13 +21,13 @@ class TypeHintDiffersError(SettingsError):
         )
 
 
-class DescriptionDiffersError(SettingsError):
+class DocDiffersError(SettingsError):
     def __init__(self, attr):
         super().__init__(
             f'TODO: History; Setting "{attr}" in class "[TODO]"'
-            ' has a different description than definition in class "[TODO]".'
+            ' has a different docstring than definition in class "[TODO]".'
             ' HINT: Define a setting via OverrideSetting() descriptor to override'
-            ' the existing setting description explicitly.'
+            ' the existing setting doc explicitly.'
         )
 
 
