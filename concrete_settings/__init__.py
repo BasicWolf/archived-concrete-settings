@@ -50,7 +50,7 @@ class _CallableSettingValue:
 
 
 ValidatorsTypes = Union[_DefaultValidators, Callable, Sequence[Callable], None]
-EnvTypes = Union[str, bool, EnvValueReader, None]
+EnvTypes = Union[str, bool, None]
 
 
 class EnvValueReader:
@@ -78,6 +78,34 @@ class EnvValueReader:
         return None
 
 
+class env:
+    __slots__=('_name', '_default', '_ignore_missing')
+
+    def __init__(self,
+                 name: str = None,
+                 default: Any = Undefined,
+                 ignore_missing=False):
+
+        self._name = name
+        self._default = default
+        self._ignore_missing = ignore_missing
+
+    def get(self, name=None):
+        if not name and not self._name:
+            return self
+        elif not name:
+            name = self._name
+
+        try:
+            return os.environ[name]
+        except KeyError:
+            if self._ignore_missing:
+                return self._default
+            else:
+                raise
+
+
+
 class Setting:
     __slots__ = ('value', 'type_hint', 'validators',
                  'name', 'history', '__doc__')
@@ -87,13 +115,14 @@ class Setting:
     validators: Union[Sequence[Callable], _DefaultValidators]
 
     def __init__(self,
-                 default_val: Any = Undefined,
+                 default: Any = Undefined,
                  doc: str = '',
                  validators: ValidatorsTypes = _DefaultValidators,
                  type_hint: Any = _GuessSettingType,
                  env: EnvTypes = None):
 
-        self.value = self._get_init_value(env, default_val)
+        self.value = self._get_default_or_env(default)
+
         self.type_hint = type_hint
         self.__doc__ = doc
 
@@ -104,17 +133,19 @@ class Setting:
 
         self.name = ''
 
-    def _get_init_value(self, env, default_val):
-        env_reader = EnvValueReader.from_env(env, default_val)
-        return default_val if env_reader is None else env_reader
+    def _get_default_or_env(self, default):
+        if isinstance(default, env):
+            return default.get()
+        else:
+            return default
 
     def __set_name__(self, _, name):
         self.name = name
 
-        # set environmental variable reader key (name),
-        # so that a value with setting's name can be fetched from the environment
-        if isinstance(self.value, EnvValueReader) and self.value.key == True:
-            self.value.key = name
+        # if self.value has not been yet fetched from environment
+        # perhaps the name was not set? --> try fetching here.
+        if isinstance(self.value, env):
+            self.value = self.value.get(name)
 
     def __get__(self, obj, objtype):
         # == class-level access ==

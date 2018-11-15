@@ -6,7 +6,7 @@ import pytest
 
 from concrete_settings import (
     Settings, Setting, SealedSetting, OverrideSetting, RequiredSetting,
-    exceptions, SettingsHistory, settings_from_module, setting
+    exceptions, SettingsHistory, settings_from_module, setting, env
 )
 
 
@@ -357,7 +357,17 @@ def test_settings_from_env_variables(monkeypatch):
         m.setitem(os.environ, 'S_STR', STR_VAL)
 
         class S0(Settings):
-            S_STR = Setting(env='S_STR')
-            S_STR2 = Setting(env=True)
+            S_STR = Setting(env())
+            S_STR2 = Setting(env('S_STR'))
+            S_STR_DEF = Setting(env('S_ABC', 'hello', ignore_missing=True))
 
-        assert S0.S_INT == INT_VAL
+
+        assert S0.S_STR == STR_VAL
+        assert S0.S_STR2 == STR_VAL
+        assert S0.S_STR_DEF == 'hello'
+
+        with pytest.raises(RuntimeError) as e:
+            class S0(Settings):
+                S_STR_MISSING = Setting(env())
+
+            # assert S0.S_STR_MISSING == ''
