@@ -6,7 +6,7 @@ import pytest
 
 from concrete_settings import (
     Settings, Setting, SealedSetting, OverrideSetting, RequiredSetting,
-    exceptions, SettingsHistory, settings_from_module, setting, env
+    exceptions, SettingsHistory, settings_from_module,
 )
 
 
@@ -80,23 +80,6 @@ def test_value_attribute_not_converted_to_setting():
     assert S0().demo == INT_VAL
 
 
-def test_method_converted_to_setting():
-    class S0(Settings):
-        x = INT_VAL
-
-        @setting
-        def DEMO(self) -> int:
-            """This is demo doc"""
-            return self.x
-
-    DEMO = S0.__dict__['DEMO']
-    assert isinstance(DEMO, Setting)
-    assert DEMO.type_hint is int
-    assert S0.DEMO.__annotations__['return'] == int
-    assert S0.DEMO.__doc__ == 'This is demo doc'
-    assert S0().DEMO == INT_VAL
-
-
 def test_value_change_in_derived_settings():
     class S0(Settings):
         DEMO: int = INT_VAL + 1
@@ -133,6 +116,18 @@ def test_doc_change_in_derived_settings_error():
         class S1(S0):
             DEMO: int = Setting(INT_VAL, STR_CONST + 'a')
     e.match('has a different docstring')
+
+
+        # @setting
+        # def demo_meth(self) -> str:
+        #     return STR_VAL
+
+
+
+    # with pytest.raises(exceptions.AttributeShadowError) as e:
+    #     class S1(S0):
+    #         demo_meth = Setting(INT_VAL)
+    # e.match('overrides an existing attribute')
 
 
 def test_sealed_setting_change_error():
@@ -350,24 +345,3 @@ def test_callable_types_are_not_settings():
     assert s0.FUNC() == STR_VAL
     assert s0.CLASS_METH() == S0
     assert s0.STATIC_METH() == STR_VAL
-
-
-def test_settings_from_env_variables(monkeypatch):
-    with monkeypatch.context() as m:
-        m.setitem(os.environ, 'S_STR', STR_VAL)
-
-        class S0(Settings):
-            S_STR = Setting(env())
-            S_STR2 = Setting(env('S_STR'))
-            S_STR_DEF = Setting(env('S_ABC', 'hello', ignore_missing=True))
-
-
-        assert S0.S_STR == STR_VAL
-        assert S0.S_STR2 == STR_VAL
-        assert S0.S_STR_DEF == 'hello'
-
-        with pytest.raises(RuntimeError) as e:
-            class S0(Settings):
-                S_STR_MISSING = Setting(env())
-
-            # assert S0.S_STR_MISSING == ''

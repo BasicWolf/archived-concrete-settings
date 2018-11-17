@@ -32,77 +32,13 @@ class _GuessSettingType:
 class _DefaultValidators:
     """A special value for Settings.validators, which indicates
     that validators have not beet explicitly set by a user,
-    and the default validators logic should apply.
+    and the Meta.default_validators logic should apply.
     """
-    VALIDATORS = (validate_type, )
-
-
-class _CallableSettingValue:
-    """A special wrapper for method-settings, i.e.
-    the methods decorated with @setting and  which
-    are processed as setting values producers."""
-    def __init__(self, f):
-        self.f = f
-
-    def __call__(self, env=None):
-        return self.f(env)
+    DEFAULT_VALIDATORS = (validate_type, )
 
 
 
-ValidatorsTypes = Union[_DefaultValidators, Callable, Sequence[Callable], None]
-EnvTypes = Union[str, bool, None]
-
-
-class EnvValueReader:
-    __slots__ = ('key', 'default_val')
-
-    def __init__(self, key: str, default_val):
-        self.key = key
-        self.default_val = default_val
-
-    def read(self):
-        try:
-            return self._cached_val
-        except AttributeError:
-            self._cached_val = os.environ.get(self.key, self.default_val)
-            return self._cached_val
-
-    @staticmethod
-    def from_env(env: EnvTypes, default_val):
-        if isinstance(env, EnvValueReader):
-            return env
-        elif isinstance(env, str):
-            return EnvValueReader(env, default_val)
-        elif env == True:
-            return EnvValueReader(env, default_val)
-        return None
-
-
-class env:
-    __slots__=('_name', '_default', '_ignore_missing')
-
-    def __init__(self,
-                 name: str = None,
-                 default: Any = Undefined,
-                 ignore_missing=False):
-
-        self._name = name
-        self._default = default
-        self._ignore_missing = ignore_missing
-
-    def get(self, name=None):
-        if not name and not self._name:
-            return self
-        elif not name:
-            name = self._name
-
-        try:
-            return os.environ[name]
-        except KeyError:
-            if self._ignore_missing:
-                return self._default
-            else:
-                raise
+ValidatorsTypes = Union[_DefaultValidators, Sequence[Callable], None]
 
 
 
@@ -118,10 +54,9 @@ class Setting:
                  default: Any = Undefined,
                  doc: str = '',
                  validators: ValidatorsTypes = _DefaultValidators,
-                 type_hint: Any = _GuessSettingType,
-                 env: EnvTypes = None):
+                 type_hint: Any = _GuessSettingType):
 
-        self.value = self._get_default_or_env(default)
+        self.value = default
 
         self.type_hint = type_hint
         self.__doc__ = doc
@@ -133,19 +68,8 @@ class Setting:
 
         self.name = ''
 
-    def _get_default_or_env(self, default):
-        if isinstance(default, env):
-            return default.get()
-        else:
-            return default
-
     def __set_name__(self, _, name):
         self.name = name
-
-        # if self.value has not been yet fetched from environment
-        # perhaps the name was not set? --> try fetching here.
-        if isinstance(self.value, env):
-            self.value = self.value.get(name)
 
     def __get__(self, obj, objtype):
         # == class-level access ==
@@ -153,10 +77,7 @@ class Setting:
             return self.value
 
         # == object-level access ==
-        if isinstance(self.value, _CallableSettingValue):
-            return self.value(obj)
-        else:
-            return self.get_setting_of_object(obj)
+        return self.get_setting_of_object(obj)
 
     def get_setting_of_object(self, obj):
         storage = getattr(obj, VALUES_ATTR, {})
@@ -207,14 +128,14 @@ class SettingsMeta(type):
             raise AttributeError('{name}.{VALUES_ATTR} should not be defined explicitly.' )
 
         bases_dict = {}
-
+        base_meta = None
         # Iterating through bases in reverse to detect the changes in fields
         for base in reversed(bases):
             if not issubclass(base, Settings):
                 raise TypeError('Settings class can inherit from from other Settings classes only')
 
-            if base is not Settings:
-                bases_dict = cls.merge_settings_class_dicts(base.__name__, base.__dict__, bases_dict)
+            bases_dict = cls.merge_settings_class_dicts(base.__name__, base.__dict__, bases_dict)
+            base_meta = getattr(base, 'Meta', base_meta)
 
         new_dict = cls.class_dict_to_settings(class_dict)
 
@@ -222,7 +143,6 @@ class SettingsMeta(type):
             cls._py35_set_name(cls, new_dict)
 
         new_dict = cls.merge_settings_class_dicts(name, new_dict, bases_dict)
-        new_dict = cls.setup_defaults(new_dict)
 
         cls = super().__new__(cls, name, bases, new_dict)
         return cls
@@ -258,15 +178,10 @@ class SettingsMeta(type):
         return new_dict
 
     @staticmethod
-    def make_setting_from_attr(attr, val, annotations, env=None):
-        if isinstance(val, _CallableSettingValue):
-            type_hint = val.__annotations__.get('return', Any)
-            doc = val.__doc__
-        else:
-            type_hint = annotations.get(attr, _GuessSettingType)
-            doc = ''
-
-        return Setting(val, doc, type_hint=type_hint, env=env)
+    def make_setting_from_attr(attr, val, annotations):
+        type_hint = annotations.get(attr, _GuessSettingType)
+        doc = ''
+        return Setting(val, doc, type_hint=type_hint)
 
     @staticmethod
     def is_setting_name(name: str) -> bool:
@@ -347,14 +262,14 @@ class SettingsMeta(type):
         return field #, diff # <- TODO History
 
     @staticmethod
-    def setup_defaults(class_dict):
-        """Convert Setting fields defaults stubs to values"""
+    def setup_meta(class_dict, cls_meta):
+        """Setup current class Settings according to Settings.Meta"""
         for field in class_dict.values():
             if not isinstance(field, Setting):
                 continue
 
             if field.validators is _DefaultValidators:
-                field.validators = _DefaultValidators.VALIDATORS
+                field.validators = cls_meta.default_validators
 
         return class_dict
 
@@ -370,11 +285,6 @@ class SettingsMeta(type):
 
 class Settings(metaclass=SettingsMeta):
     pass
-
-
-def setting(f, env=None):
-    val = functools.wraps(f)(_CallableSettingValue(f))
-    return Settings.make_setting_from_attr(f.__name__, val, {}, env)
 
 
 def settings_from_module(mod: types.ModuleType,
