@@ -9,7 +9,6 @@ from concrete_settings import (
     exceptions, SettingsHistory, settings_from_module,
 )
 
-
 from .common import INT_VAL, FLOAT_VAL, STR_VAL, STR_CONST
 
 
@@ -195,6 +194,10 @@ def test_required_setting():
          S0()
     assert(e.match('required to have a value'))
 
+    class S1(S0):
+        pass
+    with pytest.raises(exceptions.RequiredSettingIsUndefined) as e:
+         S1()
 
 def test_multi_inheritance_non_basic():
     class SA(Settings):

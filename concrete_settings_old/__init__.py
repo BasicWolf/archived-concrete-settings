@@ -1,5 +1,6 @@
 import copy
 import functools
+import itertools
 import os
 import re
 import sys
@@ -29,7 +30,7 @@ class _GuessSettingType:
     pass
 
 
-class _DefaultValidators:
+class _UndefinedValidators:
     """A special value for Settings.validators, which indicates
     that validators have not beet explicitly set by a user,
     and the Meta.default_validators logic should apply.
@@ -38,7 +39,7 @@ class _DefaultValidators:
 
 
 
-ValidatorsTypes = Union[_DefaultValidators, Sequence[Callable], None]
+ValidatorsTypes = Union[_UndefinedValidators, Sequence[Callable], None]
 
 
 
@@ -48,12 +49,12 @@ class Setting:
 
     value: Any
     type_hint: Any
-    validators: Union[Sequence[Callable], _DefaultValidators]
+    validators: Union[Sequence[Callable], _UndefinedValidators]
 
     def __init__(self,
                  default: Any = Undefined,
                  doc: str = '',
-                 validators: ValidatorsTypes = _DefaultValidators,
+                 validators: ValidatorsTypes = _UndefinedValidators,
                  type_hint: Any = _GuessSettingType):
 
         self.value = default
@@ -119,7 +120,22 @@ class SealedSetting(OverrideSetting):
 
 
 class RequiredSetting(OverrideSetting):
-    pass
+    def __init__(self,
+                 default: Any = Undefined,
+                 doc: str = '',
+                 validators: ValidatorsTypes = _UndefinedValidators,
+                 type_hint: Any = _GuessSettingType):
+        super().__init__(default, doc, validators, type_hint)
+
+
+    # def __call__(cls, *args, **kwargs):
+    #     """__init__() of the Settings object"""
+    #     for attr, field in cls.__dict__.items():
+    #         if isinstance(field, RequiredSetting):
+    #             raise exceptions.RequiredSettingIsUndefined(f'{cls.__name__}.{attr}')
+
+    #     # invoke __init__() of the object
+    #     return super().__call__(*args, **kwargs)
 
 
 class SettingsMeta(type):
@@ -251,7 +267,7 @@ class SettingsMeta(type):
                 else:
                     field.__doc__ = base_field.__doc__
 
-                if field.validators is _DefaultValidators:
+                if field.validators is _UndefinedValidators:
                     # Apply special logic by copying the base field validators
                     field.validators = base_field.validators
                 elif not set(field.validators).issuperset(set(base_field.validators)):
@@ -268,19 +284,10 @@ class SettingsMeta(type):
             if not isinstance(field, Setting):
                 continue
 
-            if field.validators is _DefaultValidators:
+            if field.validators is _UndefinedValidators:
                 field.validators = cls_meta.default_validators
 
         return class_dict
-
-    def __call__(cls, *args, **kwargs):
-        """__init__() of the Settings object"""
-        for attr, field in cls.__dict__.items():
-            if isinstance(field, RequiredSetting):
-                raise exceptions.RequiredSettingIsUndefined(f'{cls.__name__}.{attr}')
-
-        # invoke __init__() of the object
-        return super().__call__(*args, **kwargs)
 
 
 class Settings(metaclass=SettingsMeta):

@@ -10,7 +10,7 @@ def test_settings_history_smoke():
         DEMO: int = INT_VAL
 
     sh = SettingsHistory(S0)
-    assert 1 == len(sh.DEMO)
+    assert len(sh.DEMO) == 1
 
     assert S0 is sh.DEMO[0]
 
@@ -26,4 +26,4 @@ def test_settings_multiple():
         DEMO = S1.DEMO + 1
 
     sh = SettingsHistory(S2)
-    assert 2 == len(sh.DEMO)
+    assert len(sh.DEMO) == 2
