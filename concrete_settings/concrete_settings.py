@@ -1,46 +1,48 @@
+import sys
+import types
 from typing import Any, Callable, Sequence, Union
 
 from .utils import guess_type_hint, validate_type
 
-# remember __mro__
+
+PY_VERSION = (sys.version_info.major, sys.version_info.minor)
+PY_36 = (3, 6)
+
+if PY_VERSION < PY_36:
+    raise ImportError("Python 3.6 or higher is required by concrete_settings")
 
 
 class Undefined:
+    """A special value for which indicates
+    that something has not been explicitly set by a user.
+    """
+
     pass
 
 
-class _GuessSettingType:
+class GuessSettingType:
     """A special value for Setting.type_hint, which indicates
        that a Setting type should be derived from the default value."""
 
     pass
 
 
-class _UndefinedValidators:
-    """A special value for Settings.validators, which indicates
-    that validators have not beet explicitly set by a user,
-    and the Meta.default_validators logic should apply.
-    """
-
-    DEFAULT_VALIDATORS = (validate_type,)
-
-
-ValidatorsTypes = Union[_UndefinedValidators, Sequence[Callable], None]
+DEFAULT_VALIDATORS = (validate_type,)
 
 
 class Setting:
-    __slots__ = ('value', 'type_hint', 'validators', 'name', '__doc__')
+    __slots__ = ("value", "type_hint", "validators", "name", "__doc__")
 
     value: Any
     type_hint: Any
-    validators: Union[Sequence[Callable], _UndefinedValidators]
+    validators: Union[Sequence[Callable], Undefined]
 
     def __init__(
         self,
         default: Any = Undefined,
-        doc: str = "",
-        validators: ValidatorsTypes = _UndefinedValidators,
-        type_hint: Any = _GuessSettingType,
+        doc: Union[str, Undefined] = Undefined,
+        validators: Union[Sequence[Callable], Undefined] = Undefined,
+        type_hint: Any = GuessSettingType,
     ):
 
         self.value = default
@@ -53,7 +55,7 @@ class Setting:
         else:
             self.validators = validators or ()
 
-        self.name = ''
+        self.name = ""
 
     def __set_name__(self, _, name):
         self.name = name
@@ -61,40 +63,25 @@ class Setting:
     def __get__(self, obj, objtype):
         # == class-level access ==
         if not obj:
-            return self.value
+            return self
 
         # == object-level access ==
-        return getattr(obj, f'__setting_{self.name}_value', self.value)
+        return getattr(obj, f"__setting_{self.name}_value", self.value)
 
     def __set__(self, obj, val):
-        if not obj:
-            # == class-level access ==
-            self.value = val
-        else:
-            # == object-level access ==
-            setattr(obj, f'__setting_{self.name}_value', val)
+        assert obj is not None, "obj should not be None!"
+        setattr(obj, f"__setting_{self.name}_value", val)
 
 
 class ConcreteSettingsMeta(type):
     def __new__(cls, name, bases, class_dict):
         new_class_dict = cls.class_dict_to_settings(class_dict)
-
-        if PY_VERSION == PY_35:
-            cls._py35_set_name(cls, new_class_dict)
-
         return super().__new__(cls, name, bases, new_class_dict)
-
-    @classmethod
-    def _py35_set_name(self, cls, class_dict):
-        '''__set_name__() implementation for Python 3.5'''
-        for name, field in class_dict.items():
-            if isinstance(field, Setting):
-                field.__set_name__(cls, name)
 
     @classmethod
     def class_dict_to_settings(cls, class_dict):
         new_dict = {}
-        annotations = class_dict.get('__annotations__', {})
+        annotations = class_dict.get("__annotations__", {})
 
         for attr, field in class_dict.items():
             new_field = field
@@ -110,7 +97,7 @@ class ConcreteSettingsMeta(type):
             # Should we try to guess a type_hint for a Setting?
             if (
                 isinstance(new_field, Setting)
-                and new_field.type_hint is _GuessSettingType
+                and new_field.type_hint is GuessSettingType
                 and new_field.value is not Undefined
             ):
                 new_field.type_hint = guess_type_hint(new_field.value)
@@ -120,7 +107,7 @@ class ConcreteSettingsMeta(type):
 
     @staticmethod
     def make_setting_from_attr(attr, val, annotations):
-        type_hint = annotations.get(attr, _GuessSettingType)
+        type_hint = annotations.get(attr, GuessSettingType)
         doc = "No documentation provided"
         return Setting(val, doc, type_hint=type_hint)
 
@@ -137,4 +124,7 @@ class ConcreteSettingsMeta(type):
 
 
 class ConcreteSettings(metaclass=ConcreteSettingsMeta):
-    pass
+    def validate(self, raise_error=True):
+        found_settings = {}
+
+        pass

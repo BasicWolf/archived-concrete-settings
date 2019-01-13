@@ -9,24 +9,24 @@ import importlib.util
 import typing
 from pathlib import Path
 
-from concrete_settings import(
-    settings_from_module, Setting, SettingsMeta
-)
+from concrete_settings import settings_from_module, Setting, SettingsMeta
 
 # ~/.virtualenvs/django1.11/lib/python3.6/site-packages/django/conf/global_settings.py
 
+
 def setup_and_parse_args():
-    parser = argparse.ArgumentParser(description='Convert a module to ConcreteSettings class')
-    parser.add_argument('path_or_module',
-                        help='a file or Python module to convert')
+    parser = argparse.ArgumentParser(
+        description="Convert a module to ConcreteSettings class"
+    )
+    parser.add_argument("path_or_module", help="a file or Python module to convert")
     return parser.parse_args()
 
 
 def main():
     args = setup_and_parse_args()
 
-    class_name: str = 'SettingsClassNameFromModuleOrFile'
-    outfile: 'FileDescriptor' = None
+    class_name: str = "SettingsClassNameFromModuleOrFile"
+    outfile: "FileDescriptor" = None
 
     path = Path(args.path_or_module)
     if path.exists() and path.is_file():
@@ -42,14 +42,14 @@ def main():
 
 def render_settings_cls(cls):
     res = []
-    res.append(f'class {cls.__name__}:')
+    res.append(f"class {cls.__name__}:")
 
     for attr, field in cls.__dict__.items():
         if not SettingsMeta.is_setting_name(attr):
             continue
         s = render_setting(attr, field)
-        res.append(f'    {s}')
-    return '\n'.join(res)
+        res.append(f"    {s}")
+    return "\n".join(res)
 
 
 def render_setting(attr, field):
@@ -60,10 +60,10 @@ def render_setting(attr, field):
         type_hint_obj = field.type_hint.__qualname__
 
     if isinstance(default_val, str):
-        default_val = f"\'{default_val}\'"
+        default_val = f"'{default_val}'"
 
-    return f'{attr}: {type_hint_obj} = Setting({default_val})'
+    return f"{attr}: {type_hint_obj} = Setting({default_val})"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
