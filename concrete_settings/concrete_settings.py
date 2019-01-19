@@ -1,7 +1,9 @@
 import sys
 import types
-from typing import Any, Callable, Sequence, Union
+from collections import defaultdict
+from typing import Any, Callable, Sequence, Union, Dict
 
+from . import exceptions
 from .utils import guess_type_hint, validate_type
 
 
@@ -29,6 +31,9 @@ class GuessSettingType:
 
 DEFAULT_VALIDATORS = (validate_type,)
 
+
+# ==== Settings classes ==== #
+# ========================== #
 
 class Setting:
     __slots__ = ("value", "type_hint", "validators", "name", "__doc__")
@@ -66,12 +71,26 @@ class Setting:
             return self
 
         # == object-level access ==
+        if not getattr(obj, 'validated', False):
+            raise exceptions.SettingsNotValidatedError(obj.__class__.__name__, self.name)
+
         return getattr(obj, f"__setting_{self.name}_value", self.value)
 
     def __set__(self, obj, val):
         assert obj is not None, "obj should not be None!"
         setattr(obj, f"__setting_{self.name}_value", val)
 
+
+class OverrideSetting(Setting):
+    pass
+
+
+class SealedSetting(OverrideSetting):
+    pass
+
+
+# ==== ConcreteSettings classes ==== #
+# ================================== #
 
 class ConcreteSettingsMeta(type):
     def __new__(cls, name, bases, class_dict):
@@ -124,7 +143,45 @@ class ConcreteSettingsMeta(type):
 
 
 class ConcreteSettings(metaclass=ConcreteSettingsMeta):
-    def validate(self, raise_error=True):
-        found_settings = {}
+    def __init__(self, validate=True):
+        super().__init__()
+        if validate:
+            self.validate()
 
-        pass
+    def validate(self, raise_exception=True):
+        # 1. Iterate through __mro__ classes in reverse order - so that
+        #    iteration happens from the most-base class to the current one.
+        # 2. Store found settigns as {name: [cls, ...]} to settings_classes
+        # 3. Validate settings_classes
+        settings_classes = defaultdict(list)
+        # __mro__[:-2] - skip ConcreteSettings and object bases
+        for cls in reversed(self.__class__.__mro__[:-2]):
+            import pudb; pu.db
+            for attr, val in cls.__dict__.items():
+                if isinstance(val, Setting):
+                    settings_classes[attr].append(cls)
+
+        errors = {}
+
+        # first, validate each setting individually
+        for name, classes in settings_classes.items():
+            for cls in classes:
+                self.__validate_setting(name, cls)
+
+        for name, classes in settings_classes.items():
+            # start with setting object of the first classes
+            prev_setting = classes[0].__dict__[name]
+
+            for cls in classes[1:]:
+                cls_setting = cls.__dict__[name]
+                diff = self.__settings_diff(prev_setting, cls_setting)
+                if diff:
+                    pass
+
+    def __settings_diff(self, s1, s2) -> Union[None, Dict]:
+        # No checks are performed if setting is overriden
+        if isinstance(s2, OverrideSetting):
+            return None
+
+        if isinstance(s1, SealedSetting) and s1.value != s2.value:
+            pass

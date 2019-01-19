@@ -1,5 +1,10 @@
 import types
-from concrete_settings import ConcreteSettings, Setting
+from concrete_settings import (
+    ConcreteSettings,
+    Setting,
+    OverrideSetting,
+    SealedSetting,
+)
 
 
 def test_smoke():
@@ -114,4 +119,13 @@ def test_validate_smoke():
         pass
 
     s = S()
-    s.validate()
+
+
+def test_validate_override_smoke(rint, rstr):
+    class S(ConcreteSettings):
+        T: int = rint
+
+    class S1(S):
+        T: str = OverrideSetting(rstr)
+
+    assert S1().T == rstr
