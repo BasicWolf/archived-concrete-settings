@@ -35,6 +35,7 @@ DEFAULT_VALIDATORS = (validate_type,)
 # ==== Settings classes ==== #
 # ========================== #
 
+
 class Setting:
     __slots__ = ("value", "type_hint", "validators", "name", "__doc__")
 
@@ -72,7 +73,9 @@ class Setting:
 
         # == object-level access ==
         if not getattr(obj, 'validated', False):
-            raise exceptions.SettingsNotValidatedError(obj.__class__.__name__, self.name)
+            raise exceptions.SettingsNotValidatedError(
+                obj.__class__.__name__, self.name
+            )
 
         return getattr(obj, f"__setting_{self.name}_value", self.value)
 
@@ -91,6 +94,7 @@ class SealedSetting(OverrideSetting):
 
 # ==== ConcreteSettings classes ==== #
 # ================================== #
+
 
 class ConcreteSettingsMeta(type):
     def __new__(cls, name, bases, class_dict):
@@ -143,45 +147,74 @@ class ConcreteSettingsMeta(type):
 
 
 class ConcreteSettings(metaclass=ConcreteSettingsMeta):
-    def __init__(self, validate=True):
-        super().__init__()
-        if validate:
-            self.validate()
+    _is_valid = False
+    _validated = False
 
-    def validate(self, raise_exception=True):
+    def __init__(self):
+        super().__init__()
+
+    def validate(self, raise_exception=False):
         # 1. Iterate through __mro__ classes in reverse order - so that
         #    iteration happens from the most-base class to the current one.
         # 2. Store found settigns as {name: [cls, ...]} to settings_classes
         # 3. Validate settings_classes
         settings_classes = defaultdict(list)
+
+        assert self.__class__.__mro__[-2] is ConcreteSettings
+
         # __mro__[:-2] - skip ConcreteSettings and object bases
         for cls in reversed(self.__class__.__mro__[:-2]):
-            import pudb; pu.db
             for attr, val in cls.__dict__.items():
                 if isinstance(val, Setting):
                     settings_classes[attr].append(cls)
 
-        errors = {}
+        errors = defaultdict(list)
 
         # first, validate each setting individually
+        # the goal here is to find out, whether a setting
+        # has a valid value on each level of inheritance
         for name, classes in settings_classes.items():
             for cls in classes:
                 self.__validate_setting(name, cls)
 
+        # validate whether the setting on Nth level of the class hierarchy
+        # corresponds to the setting on N-1th level of the class hierarchy.
         for name, classes in settings_classes.items():
-            # start with setting object of the first classes
-            prev_setting = classes[0].__dict__[name]
-
-            for cls in classes[1:]:
-                cls_setting = cls.__dict__[name]
-                diff = self.__settings_diff(prev_setting, cls_setting)
+            for c0, c1 in zip(classes, classes[1:]):
+                # start with setting object of the first classes
+                s0 = c0.__dict__[name]
+                s1 = c1.__dict__[name]
+                diff = self.__settings_diff(s0, s1)
                 if diff:
-                    pass
+                    err = exceptions.SettingDiffersError(name, c0, c1, diff)
+                    if raise_exception:
+                        raise err
+                    else:
+                        errors[name].append(str(err))
 
-    def __settings_diff(self, s1, s2) -> Union[None, Dict]:
+        self._validated = True
+        self._is_valid = errors == {}
+
+    @property
+    def is_valid(self):
+        return self._is_valid
+
+    @property
+    def validated(self):
+        return self._validated
+
+    def __validate_setting(self, name: str, cls: 'ConcreteSettings'):
+        pass
+
+    def __settings_diff(self, s0, s1) -> Union[None, Dict]:
         # No checks are performed if setting is overriden
-        if isinstance(s2, OverrideSetting):
+        if isinstance(s1, OverrideSetting):
             return None
 
-        if isinstance(s1, SealedSetting) and s1.value != s2.value:
+        if isinstance(s0, SealedSetting) and s0.value != s1.value:
             pass
+
+        if s0.type_hint != s1.type_hint:
+            return 'types differ'
+
+        return None

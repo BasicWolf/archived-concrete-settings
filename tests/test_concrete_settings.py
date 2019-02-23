@@ -1,10 +1,10 @@
 import types
-from concrete_settings import (
-    ConcreteSettings,
-    Setting,
-    OverrideSetting,
-    SealedSetting,
-)
+
+import pytest
+
+from concrete_settings import ConcreteSettings, Setting, OverrideSetting, SealedSetting
+
+from concrete_settings import exceptions
 
 
 def test_smoke():
@@ -129,3 +129,14 @@ def test_validate_override_smoke(rint, rstr):
         T: str = OverrideSetting(rstr)
 
     assert S1().T == rstr
+
+
+def test_fail_validate_type_without_override(rint, rstr):
+    class S(ConcreteSettings):
+        T: int = rint
+
+    class S1(S):
+        T: str = rstr
+
+    with pytest.raises(exceptions.SettingDiffersError) as e:
+        S1().validate(raise_exception=True)
