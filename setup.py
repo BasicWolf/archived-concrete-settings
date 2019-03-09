@@ -14,6 +14,7 @@ setuptools.setup(
     long_description_content_type="text/x-rst",
     url="https://github.com/basicwolf/concrete-settings",
     packages=setuptools.find_packages(),
+    install_requires=['sphinx>=1.8.4'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

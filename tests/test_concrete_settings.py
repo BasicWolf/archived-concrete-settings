@@ -138,5 +138,10 @@ def test_fail_validate_type_without_override(rint, rstr):
     class S1(S):
         T: str = rstr
 
-    with pytest.raises(exceptions.SettingDiffersError) as e:
-        S1().validate(raise_exception=True)
+    s = S1()
+    with pytest.raises(exceptions.SettingsValidationError) as e:
+        s.is_valid(raise_exception=True)
+
+        e.match('types differ')
+
+    assert 'T' in s.errors

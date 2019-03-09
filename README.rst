@@ -25,7 +25,7 @@ Overriding settings
     class S(ConcreteSettings):
         T: int = 10
 
-    
+
     class S2(S):
         T: str = OverrideSetting('hello')
 

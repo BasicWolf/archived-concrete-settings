@@ -72,7 +72,7 @@ class Setting:
             return self
 
         # == object-level access ==
-        if not getattr(obj, 'validated', False):
+        if not obj.is_valid:
             raise exceptions.SettingsNotValidatedError(
                 obj.__class__.__name__, self.name
             )
@@ -147,13 +147,19 @@ class ConcreteSettingsMeta(type):
 
 
 class ConcreteSettings(metaclass=ConcreteSettingsMeta):
-    _is_valid = False
-    _validated = False
-
     def __init__(self):
+        self._validated = False
+
         super().__init__()
 
-    def validate(self, raise_exception=False):
+    def is_valid(self, raise_exception=False) -> bool:
+        """Validate settings and return a boolean indicate whether settings are valid"""
+        if not self._validated:
+            self._validate(raise_exception)
+        return self.errors == {}
+
+
+    def _validate(self, raise_exception=False):
         # 1. Iterate through __mro__ classes in reverse order - so that
         #    iteration happens from the most-base class to the current one.
         # 2. Store found settigns as {name: [cls, ...]} to settings_classes
@@ -186,22 +192,15 @@ class ConcreteSettings(metaclass=ConcreteSettingsMeta):
                 s1 = c1.__dict__[name]
                 diff = self.__settings_diff(s0, s1)
                 if diff:
-                    err = exceptions.SettingDiffersError(name, c0, c1, diff)
-                    if raise_exception:
-                        raise err
-                    else:
-                        errors[name].append(str(err))
+                    err = (f'in classes {c0} and {c1} setting has'
+                           f' the following difference(s): {diff}')
+                    errors[name].append(str(err))
 
+        self.errors = errors
         self._validated = True
-        self._is_valid = errors == {}
 
-    @property
-    def is_valid(self):
-        return self._is_valid
-
-    @property
-    def validated(self):
-        return self._validated
+        if raise_exception:
+            raise exceptions.SettingsValidationError(errors)
 
     def __validate_setting(self, name: str, cls: 'ConcreteSettings'):
         pass
@@ -211,10 +210,10 @@ class ConcreteSettings(metaclass=ConcreteSettingsMeta):
         if isinstance(s1, OverrideSetting):
             return None
 
-        if isinstance(s0, SealedSetting) and s0.value != s1.value:
-            pass
+        # if isinstance(s0, SealedSetting) and s0.value != s1.value:
+        #     pass
 
         if s0.type_hint != s1.type_hint:
-            return 'types differ'
+            return f'types differ: {s0.type_hint} != {s1.type_hint}'
 
         return None
