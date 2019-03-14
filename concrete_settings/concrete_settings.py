@@ -1,7 +1,10 @@
+import os
 import sys
 import types
 from collections import defaultdict
 from typing import Any, Callable, Sequence, Union, Dict
+
+from sphinx.pycode.parser import Parser
 
 from . import exceptions
 from .utils import guess_type_hint, validate_type
@@ -98,11 +101,12 @@ class SealedSetting(OverrideSetting):
 
 class ConcreteSettingsMeta(type):
     def __new__(cls, name, bases, class_dict):
-        new_class_dict = cls.class_dict_to_settings(class_dict)
-        return super().__new__(cls, name, bases, new_class_dict)
+        new_dict = cls.class_dict_to_settings(class_dict)
+        cls.add_settings_help(name, new_dict)
+        return super().__new__(cls, name, bases, new_dict)
 
     @classmethod
-    def class_dict_to_settings(cls, class_dict):
+    def class_dict_to_settings(cls: type, class_dict: dict):
         new_dict = {}
         annotations = class_dict.get("__annotations__", {})
 
@@ -131,7 +135,7 @@ class ConcreteSettingsMeta(type):
     @staticmethod
     def make_setting_from_attr(attr, val, annotations):
         type_hint = annotations.get(attr, GuessSettingType)
-        doc = "No documentation provided"
+        doc = ""
         return Setting(val, doc, type_hint=type_hint)
 
     @staticmethod
@@ -145,19 +149,68 @@ class ConcreteSettingsMeta(type):
         callable_types = (property, types.FunctionType, classmethod, staticmethod)
         return not isinstance(field, callable_types)
 
+    @staticmethod
+    def add_settings_help(cls_name: str, class_dict: dict):
+        if not '__module__' in class_dict:
+            # class is not coming from a module
+            return
+
+        settings = {
+            attr: field
+            for attr, field in class_dict.items()
+            if isinstance(field, Setting)
+        }
+        if not settings:
+            # class seems to contain to settings
+            return
+
+        if all(setting.__doc__ for setting in settings.values()):
+            # All settings of the class have been explicitly documented.
+            # Since explicit documentation overrides comment-docs,
+            # there is no need to proceed further
+            return
+
+        # read the contents of the module which contains the settings
+        # and parse it via Sphinx parser
+        cls_module_name = class_dict['__module__']
+        module_path = getattr(sys.modules[cls_module_name], '__file__', None)
+        if not module_path or not os.path.exists(module_path):
+            return
+
+        with open(module_path, 'r') as f:
+            module_code = f.read()
+        parser = Parser(module_code)
+        parser.parse()
+
+        settings_comments = {}
+        for name, setting in settings.items():
+            if setting.__doc__:
+                # do not modify an explicitly-made setting documentation
+                continue
+
+            comment_key = (cls_name, name)
+            try:
+                setting.__doc__ = parser.comments[comment_key]
+            except KeyError:
+                # no comment-style documentation exists
+                pass
+
 
 class ConcreteSettings(metaclass=ConcreteSettingsMeta):
     def __init__(self):
+        breakpoint()
         self._validated = False
-
         super().__init__()
+
+    @classmethod
+    def from_module(cls, module):
+        pass
 
     def is_valid(self, raise_exception=False) -> bool:
         """Validate settings and return a boolean indicate whether settings are valid"""
         if not self._validated:
             self._validate(raise_exception)
         return self.errors == {}
-
 
     def _validate(self, raise_exception=False):
         # 1. Iterate through __mro__ classes in reverse order - so that
@@ -192,8 +245,10 @@ class ConcreteSettings(metaclass=ConcreteSettingsMeta):
                 s1 = c1.__dict__[name]
                 diff = self.__settings_diff(s0, s1)
                 if diff:
-                    err = (f'in classes {c0} and {c1} setting has'
-                           f' the following difference(s): {diff}')
+                    err = (
+                        f'in classes {c0} and {c1} setting has'
+                        f' the following difference(s): {diff}'
+                    )
                     errors[name].append(str(err))
 
         self.errors = errors
