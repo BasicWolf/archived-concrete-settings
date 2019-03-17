@@ -19,9 +19,17 @@ class SettingsValidationError(ConcreteSettingsError):
         # so the errors should always be coerced to a list if not already.
         if not isinstance(errors, dict) and not isinstance(errors, list):
             errors = [errors]
+        self.errors = errors
 
     def __str__(self):
-        return str(self.errors)
+        breakpoint()
+        if isinstance(self.errors, dict):
+            return '\n'.join(
+                f"{setting}: {'; '.join(errors)}"
+                for setting, errors in self.errors.items()
+            )
+        else:
+            return '; '.join(self.errors)
 
 
 class SettingsNotValidatedError(ConcreteSettingsError):

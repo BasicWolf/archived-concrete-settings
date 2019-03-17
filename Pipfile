@@ -4,17 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+concrete-settings = {path = "."}
 
 [dev-packages]
 # debug
 pudb = '*'
-
 # unit testing
 factory_boy = '*'
 pytest = "*"
+pytest-mock = '*'
 pytest-pudb = '*'
 tox = '*'
-
 # linters / formatters
 black = "==18.9b0"
 flake8 = '*'

@@ -14,7 +14,7 @@ It is built on the following concepts:
 .. code-block:: python
 
    class CommonSettings(Settings):
-       # This is the documentation of MAX_SPEED setting
+       #: This is the documentation of MAX_SPEED setting
        MAX_SPEED: int = 100
 
 Overriding settings
@@ -23,10 +23,22 @@ Overriding settings
 .. code-block:: python
 
     class S(ConcreteSettings):
-        T: int = 10
+        SPEED: int = 10
 
+    # Protect from accidental type changes
+    class S1(S):
+        SPEED: str = 'hello'
 
+    >>> S2(); S2.is_valid(raise_exception=True)
+    SettingsValidationError:
+        SPEED:
+            in classes <class 'S'> and <class 'S1'> setting has the following difference(s):
+            types differ: <class 'int'> != <class 'str'>
+
+    # Override is required
     class S2(S):
-        T: str = OverrideSetting('hello')
+        SPEED: str = OverrideSetting('hello')
 
-    >>> S1().T == 'hello'
+    >>> S2();
+    >>> S2.is_valid()
+        True

@@ -6,9 +6,8 @@ from typing import Any, Callable, Sequence, Union, Dict
 
 from sphinx.pycode.parser import Parser
 
-from . import exceptions
+from . import exceptions, docreader
 from .utils import guess_type_hint, validate_type
-
 
 PY_VERSION = (sys.version_info.major, sys.version_info.minor)
 PY_36 = (3, 6)
@@ -173,16 +172,11 @@ class ConcreteSettingsMeta(type):
         # read the contents of the module which contains the settings
         # and parse it via Sphinx parser
         cls_module_name = class_dict['__module__']
-        module_path = getattr(sys.modules[cls_module_name], '__file__', None)
-        if not module_path or not os.path.exists(module_path):
-            return
 
-        with open(module_path, 'r') as f:
-            module_code = f.read()
-        parser = Parser(module_code)
-        parser.parse()
+        comments = docreader.extract_doc_comments_from_class_or_module(
+            cls_module_name, cls_name
+        )
 
-        settings_comments = {}
         for name, setting in settings.items():
             if setting.__doc__:
                 # do not modify an explicitly-made setting documentation
@@ -190,7 +184,7 @@ class ConcreteSettingsMeta(type):
 
             comment_key = (cls_name, name)
             try:
-                setting.__doc__ = parser.comments[comment_key]
+                setting.__doc__ = comments[comment_key]
             except KeyError:
                 # no comment-style documentation exists
                 pass
@@ -198,7 +192,6 @@ class ConcreteSettingsMeta(type):
 
 class ConcreteSettings(metaclass=ConcreteSettingsMeta):
     def __init__(self):
-        breakpoint()
         self._validated = False
         super().__init__()
 
