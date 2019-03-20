@@ -90,8 +90,18 @@ class OverrideSetting(Setting):
     pass
 
 
-class SealedSetting(OverrideSetting):
-    pass
+class DeprecatedSetting(Setting):
+    __slots__ = Setting.__slots__ + ('deprecation_msg',)
+
+    def __init__(
+        self,
+        default: Any = Undefined,
+        doc: Union[str, Undefined] = Undefined,
+        validators: Union[Sequence[Callable], Undefined] = Undefined,
+        type_hint: Any = GuessSettingType,
+        deprecation_msg: str = 'Setting is deprecated and will be removed in future',
+    ):
+        pass
 
 
 # ==== ConcreteSettings classes ==== #
@@ -257,9 +267,6 @@ class ConcreteSettings(metaclass=ConcreteSettingsMeta):
         # No checks are performed if setting is overriden
         if isinstance(s1, OverrideSetting):
             return None
-
-        # if isinstance(s0, SealedSetting) and s0.value != s1.value:
-        #     pass
 
         if s0.type_hint != s1.type_hint:
             return f'types differ: {s0.type_hint} != {s1.type_hint}'

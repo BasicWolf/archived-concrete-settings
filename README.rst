@@ -20,7 +20,7 @@ It is built on the following concepts:
 Overriding settings
 -------------------
 
-.. code-block:: python
+.. code-block:: pycon
 
     class S(ConcreteSettings):
         SPEED: int = 10
@@ -42,3 +42,16 @@ Overriding settings
     >>> S2();
     >>> S2.is_valid()
         True
+
+
+Deprecated settings
+-------------------
+
+.. code-block:: pycon
+
+  class S0(Settings):
+      SPEED: int = DeprecatedSetting(10)
+
+
+  >>> S0()
+  DepracationWarning: SPEED in class 'S0': Setting is deprecated and will be removed in future
