@@ -20,7 +20,7 @@ It is built on the following concepts:
 Overriding settings
 -------------------
 
-.. code-block:: pycon
+.. code-block:: python
 
     class S(ConcreteSettings):
         SPEED: int = 10
@@ -29,15 +29,21 @@ Overriding settings
     class S1(S):
         SPEED: str = 'hello'
 
+.. code-block:: pycon
+
     >>> S2(); S2.is_valid(raise_exception=True)
     SettingsValidationError:
         SPEED:
             in classes <class 'S'> and <class 'S1'> setting has the following difference(s):
             types differ: <class 'int'> != <class 'str'>
 
+.. code-block:: python
+
     # Override is required
     class S2(S):
         SPEED: str = OverrideSetting('hello')
+
+.. code-block:: pycon
 
     >>> S2();
     >>> S2.is_valid()
@@ -47,7 +53,7 @@ Overriding settings
 Deprecated settings
 -------------------
 
-.. code-block:: pycon
+.. code-block:: python
 
   class S0(Settings):
       SPEED: int = DeprecatedSetting(10)
