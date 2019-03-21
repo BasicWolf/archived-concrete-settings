@@ -22,32 +22,31 @@ Overriding settings
 
 .. code-block:: python
 
-    class S(ConcreteSettings):
-        SPEED: int = 10
+   class S(ConcreteSettings):
+       SPEED: int = 10
 
-    # Protect from accidental type changes
-    class S1(S):
-        SPEED: str = 'hello'
-
+   # Protect from accidental type changes
+   class S1(S):
+       SPEED: str = 'hello'
 .. code-block:: pycon
 
-    >>> S2(); S2.is_valid(raise_exception=True)
-    SettingsValidationError:
-        SPEED:
-            in classes <class 'S'> and <class 'S1'> setting has the following difference(s):
-            types differ: <class 'int'> != <class 'str'>
+   >>> S2(); S2.is_valid(raise_exception=True)
+   SettingsValidationError:
+      SPEED:
+          in classes <class 'S'> and <class 'S1'> setting has the following difference(s):
+          types differ: <class 'int'> != <class 'str'>
 
 .. code-block:: python
 
-    # Override is required
-    class S2(S):
-        SPEED: str = OverrideSetting('hello')
+   # Override is required
+   class S2(S):
+       SPEED: str = OverrideSetting('hello')
 
 .. code-block:: pycon
 
     >>> S2();
     >>> S2.is_valid()
-        True
+    True
 
 
 Deprecated settings
@@ -55,9 +54,9 @@ Deprecated settings
 
 .. code-block:: python
 
-  class S0(Settings):
-      SPEED: int = DeprecatedSetting(10)
+   class S0(Settings):
+       SPEED: int = DeprecatedSetting(10)
 
 
-  >>> S0()
-  DepracationWarning: SPEED in class 'S0': Setting is deprecated and will be removed in future
+   >>> S0()
+   DepracationWarning: SPEED in class 'S0': Setting is deprecated and will be removed in future
