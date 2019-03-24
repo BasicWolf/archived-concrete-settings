@@ -2,7 +2,7 @@ import types
 
 import pytest
 
-from concrete_settings import ConcreteSettings, Setting, OverrideSetting, SealedSetting
+from concrete_settings import Settings, Setting, OverrideSetting, DeprecatedSetting
 
 from concrete_settings import exceptions
 
@@ -12,7 +12,7 @@ def test_smoke():
 
 
 def test_cls_init_empty_settings():
-    ConcreteSettings()
+    Settings()
 
 
 def test_setting_ctor(rint):
@@ -26,7 +26,7 @@ def test_setting_ctor(rint):
 
 
 def test_settings_converted_from_attributes(rint):
-    class S0(ConcreteSettings):
+    class S0(Settings):
         DEMO: int = rint
         demo: str = rint
 
@@ -36,17 +36,17 @@ def test_settings_converted_from_attributes(rint):
 
 
 def test_setting_set(rint):
-    class S0(ConcreteSettings):
+    class S0(Settings):
         DEMO: int = rint
 
-    class S1(ConcreteSettings):
+    class S1(Settings):
         DEMO = rint + 1
 
     assert S0().DEMO != S1().DEMO
 
 
 def test_guess_type():
-    class S(ConcreteSettings):
+    class S(Settings):
         # Numeric types
         BOOLEAN = True
         INT = 10
@@ -83,7 +83,7 @@ def test_guess_type():
 
 
 def test_callable_types_are_not_settings(rint, rstr):
-    class S(ConcreteSettings):
+    class S(Settings):
         INT = rint
 
         @property
@@ -115,14 +115,14 @@ def test_callable_types_are_not_settings(rint, rstr):
 
 
 def test_validate_smoke():
-    class S(ConcreteSettings):
+    class S(Settings):
         pass
 
     s = S()
 
 
 def test_validate_override_smoke(rint, rstr):
-    class S(ConcreteSettings):
+    class S(Settings):
         T: int = rint
 
     class S1(S):
@@ -132,7 +132,7 @@ def test_validate_override_smoke(rint, rstr):
 
 
 def test_fail_validate_type_without_override(rint, rstr):
-    class S(ConcreteSettings):
+    class S(Settings):
         T: int = rint
 
     class S1(S):
@@ -145,3 +145,12 @@ def test_fail_validate_type_without_override(rint, rstr):
         e.match('types differ')
 
     assert 'T' in s.errors
+
+
+def test_deprecated_setting_raises_warning():
+    with pytest.warns(DeprecationWarning, match=r"Setting `D` is deprecated.") as w:
+
+        class S(Settings):
+            D = DeprecatedSetting(100)
+
+        S().is_valid()

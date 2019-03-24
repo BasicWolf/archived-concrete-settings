@@ -1,8 +1,10 @@
 import os
 import sys
 import types
+import warnings
 from collections import defaultdict
-from typing import Any, Callable, Sequence, Union, Dict
+from typing import Any, Callable, Sequence, Union, Dict, List
+
 
 from sphinx.pycode.parser import Parser
 
@@ -43,13 +45,13 @@ class Setting:
 
     value: Any
     type_hint: Any
-    validators: Union[Sequence[Callable], Undefined]
+    validators: List[Callable]
 
     def __init__(
         self,
         default: Any = Undefined,
         doc: Union[str, Undefined] = Undefined,
-        validators: Union[Sequence[Callable], Undefined] = Undefined,
+        validators: Union[Callable, Sequence[Callable], Undefined] = Undefined,
         type_hint: Any = GuessSettingType,
     ):
 
@@ -58,7 +60,9 @@ class Setting:
         self.type_hint = type_hint
         self.__doc__ = doc
 
-        if isinstance(validators, types.FunctionType):
+        if validators is Undefined:
+            self.validators = DEFAULT_VALIDATORS
+        elif isinstance(validators, types.FunctionType):
             self.validators = (validators,)
         else:
             self.validators = validators or ()
@@ -91,7 +95,7 @@ class OverrideSetting(Setting):
 
 
 class DeprecatedSetting(Setting):
-    __slots__ = Setting.__slots__ + ('deprecation_msg',)
+    __slots__ = Setting.__slots__ + ('deprecation_message', 'verify_as_error')
 
     def __init__(
         self,
@@ -99,9 +103,29 @@ class DeprecatedSetting(Setting):
         doc: Union[str, Undefined] = Undefined,
         validators: Union[Sequence[Callable], Undefined] = Undefined,
         type_hint: Any = GuessSettingType,
-        deprecation_msg: str = 'Setting is deprecated and will be removed in future',
+        deprecation_message: str = 'Setting `{name}` is deprecated.',
+        verify_as_error=False,
     ):
-        pass
+        """
+        :param deprecation_message: The deprecation warning message. Formatting arguments:
+                                    * name - setting name.
+        :param verify_as_error: Fail validation with deprecation message as error.
+        """
+        super().__init__(default, doc, validators, type_hint)
+
+        self.validators = (self.validate_deprecated,) + self.validators
+
+        self.deprecation_message = deprecation_message
+        self.verify_as_error = verify_as_error
+
+    @staticmethod
+    def validate_deprecated(setting: 'Setting', val: Any) -> Union[str, None]:
+        msg = setting.deprecation_message.format(name=name)
+        warnings.warn(msg, DeprecationWarning)
+
+        if setting_obj.verify_as_error:
+            return msg
+        return None
 
 
 # ==== ConcreteSettings classes ==== #
@@ -200,7 +224,7 @@ class ConcreteSettingsMeta(type):
                 pass
 
 
-class ConcreteSettings(metaclass=ConcreteSettingsMeta):
+class Settings(metaclass=ConcreteSettingsMeta):
     def __init__(self):
         self._validated = False
         super().__init__()
@@ -222,7 +246,7 @@ class ConcreteSettings(metaclass=ConcreteSettingsMeta):
         # 3. Validate settings_classes
         settings_classes = defaultdict(list)
 
-        assert self.__class__.__mro__[-2] is ConcreteSettings
+        assert self.__class__.__mro__[-2] is Settings
 
         # __mro__[:-2] - skip ConcreteSettings and object bases
         for cls in reversed(self.__class__.__mro__[:-2]):
@@ -233,11 +257,9 @@ class ConcreteSettings(metaclass=ConcreteSettingsMeta):
         errors = defaultdict(list)
 
         # first, validate each setting individually
-        # the goal here is to find out, whether a setting
-        # has a valid value on each level of inheritance
-        for name, classes in settings_classes.items():
-            for cls in classes:
-                self.__validate_setting(name, cls)
+        for name in settings_classes:
+            st_errors = self.__validate_setting(name)
+            errors[name] += st_errors
 
         # validate whether the setting on Nth level of the class hierarchy
         # corresponds to the setting on N-1th level of the class hierarchy.
@@ -257,11 +279,19 @@ class ConcreteSettings(metaclass=ConcreteSettingsMeta):
         self.errors = errors
         self._validated = True
 
-        if raise_exception:
+        if errors and raise_exception:
             raise exceptions.SettingsValidationError(errors)
 
-    def __validate_setting(self, name: str, cls: 'ConcreteSettings'):
-        pass
+    def __validate_setting(self, name: str) -> Sequence[str]:
+        setting_obj = getattr(self.__class__, name)
+        value = getattr(self, name)
+
+        errors = []
+        for validator in setting_obj.validators:
+            error = validator(setting_obj, value)
+            if error:
+                errors.append(error)
+        return errors
 
     def __settings_diff(self, s0, s1) -> Union[None, Dict]:
         # No checks are performed if setting is overriden
