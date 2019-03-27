@@ -1,7 +1,7 @@
 import typing
 
 
-def validate_type(settings, setting, val):
+def validate_type(val):
     pass
 
 

@@ -22,13 +22,12 @@ Overriding settings
 
 .. code-block:: python
 
-   class S(ConcreteSettings):
+   class S(Settings):
        SPEED: int = 10
 
    # Protect from accidental type changes
    class S1(S):
        SPEED: str = 'hello'
-.. code-block:: pycon
 
    >>> S2(); S2.is_valid(raise_exception=True)
    SettingsValidationError:
@@ -41,8 +40,6 @@ Overriding settings
    # Override is required
    class S2(S):
        SPEED: str = OverrideSetting('hello')
-
-.. code-block:: pycon
 
     >>> S2();
     >>> S2.is_valid()

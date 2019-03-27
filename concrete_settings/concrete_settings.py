@@ -1,3 +1,4 @@
+import copy
 import os
 import sys
 import types
@@ -36,12 +37,20 @@ class GuessSettingType:
 DEFAULT_VALIDATORS = (validate_type,)
 
 
+class Validator:
+    def __call__(self, value):
+        return None
+
+    def set_context(self, settings, setting, name):
+        pass
+
+
 # ==== Settings classes ==== #
 # ========================== #
 
 
 class Setting:
-    __slots__ = ("value", "type_hint", "validators", "name", "__doc__")
+    __slots__ = ('default', 'value', 'type_hint', 'validators', 'name', '__doc__')
 
     value: Any
     type_hint: Any
@@ -55,6 +64,7 @@ class Setting:
         type_hint: Any = GuessSettingType,
     ):
 
+        self.default = default
         self.value = default
 
         self.type_hint = type_hint
@@ -83,7 +93,7 @@ class Setting:
                 obj.__class__.__name__, self.name
             )
 
-        return getattr(obj, f"__setting_{self.name}_value", self.value)
+        return getattr(obj, f"__setting_{self.name}_value", self.default)
 
     def __set__(self, obj, val):
         assert obj is not None, "obj should not be None!"
@@ -92,6 +102,21 @@ class Setting:
 
 class OverrideSetting(Setting):
     pass
+
+
+class DeprecatedValidator(Validator):
+    __slots__ = ('msg', 'verify_as_error')
+
+    def __call__(self, _):
+        warnings.warn(self.msg, DeprecationWarning)
+
+        if self.verify_as_error:
+            return self.msg
+        return None
+
+    def set_context(self, settings, setting, name):
+        self.msg = setting.deprecation_message.format(cls=settings.__class__, name=name)
+        self.verify_as_error = setting.verify_as_error
 
 
 class DeprecatedSetting(Setting):
@@ -103,29 +128,21 @@ class DeprecatedSetting(Setting):
         doc: Union[str, Undefined] = Undefined,
         validators: Union[Sequence[Callable], Undefined] = Undefined,
         type_hint: Any = GuessSettingType,
-        deprecation_message: str = 'Setting `{name}` is deprecated.',
+        deprecation_message: str = 'Setting `{name}` in class `{cls}` is deprecated.',
         verify_as_error=False,
     ):
         """
         :param deprecation_message: The deprecation warning message. Formatting arguments:
                                     * name - setting name.
+                                    * cls - settings class.
         :param verify_as_error: Fail validation with deprecation message as error.
         """
         super().__init__(default, doc, validators, type_hint)
 
-        self.validators = (self.validate_deprecated,) + self.validators
+        self.validators = (DeprecatedValidator(),) + self.validators
 
         self.deprecation_message = deprecation_message
         self.verify_as_error = verify_as_error
-
-    @staticmethod
-    def validate_deprecated(setting: 'Setting', val: Any) -> Union[str, None]:
-        msg = setting.deprecation_message.format(name=name)
-        warnings.warn(msg, DeprecationWarning)
-
-        if setting_obj.verify_as_error:
-            return msg
-        return None
 
 
 # ==== ConcreteSettings classes ==== #
@@ -163,6 +180,7 @@ class ConcreteSettingsMeta(type):
                 new_field.type_hint = guess_type_hint(new_field.value)
 
             new_dict[attr] = new_field
+
         return new_dict
 
     @staticmethod
@@ -283,12 +301,14 @@ class Settings(metaclass=ConcreteSettingsMeta):
             raise exceptions.SettingsValidationError(errors)
 
     def __validate_setting(self, name: str) -> Sequence[str]:
-        setting_obj = getattr(self.__class__, name)
+        setting = getattr(self.__class__, name)
         value = getattr(self, name)
 
         errors = []
-        for validator in setting_obj.validators:
-            error = validator(setting_obj, value)
+        for validator in setting.validators:
+            if isinstance(validator, Validator):
+                validator.set_context(self, setting, name)
+            error = validator(value)
             if error:
                 errors.append(error)
         return errors

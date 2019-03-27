@@ -1,8 +1,3 @@
-from .concrete_settings import (
-    ConcreteSettings,
-    Setting,
-    OverrideSetting,
-    SealedSetting
-)
+from .concrete_settings import Settings, Setting, OverrideSetting, DeprecatedSetting
 
 name = "concrete_settings"
