@@ -50,7 +50,7 @@ class Validator:
 
 
 class Setting:
-    __slots__ = ('default', 'value', 'type_hint', 'validators', 'name', '__doc__')
+    __slots__ = ('value', 'type_hint', 'validators', 'name', '__doc__')
 
     value: Any
     type_hint: Any
@@ -58,14 +58,13 @@ class Setting:
 
     def __init__(
         self,
-        default: Any = Undefined,
+        value: Any = Undefined,
         doc: Union[str, Undefined] = Undefined,
         validators: Union[Callable, Sequence[Callable], Undefined] = Undefined,
         type_hint: Any = GuessSettingType,
     ):
 
-        self.default = default
-        self.value = default
+        self.value = value
 
         self.type_hint = type_hint
         self.__doc__ = doc
@@ -82,22 +81,19 @@ class Setting:
     def __set_name__(self, _, name):
         self.name = name
 
-    def __get__(self, obj, objtype):
+    def __get__(self, settings: 'Settings', settings_type):
         # == class-level access ==
-        if not obj:
+        if not settings:
             return self
 
         # == object-level access ==
-        if not obj.is_valid:
-            raise exceptions.SettingsNotValidatedError(
-                obj.__class__.__name__, self.name
-            )
+        return getattr(settings, f"__setting_{self.name}_value", self.value)
 
-        return getattr(obj, f"__setting_{self.name}_value", self.default)
-
-    def __set__(self, obj, val):
-        assert obj is not None, "obj should not be None!"
-        setattr(obj, f"__setting_{self.name}_value", val)
+    def __set__(self, settings: 'Settings', val):
+        assert isinstance(
+            settings, Settings
+        ), "settings should be an instance of Settings"
+        setattr(settings, f"__setting_{self.name}_value", val)
 
 
 class OverrideSetting(Setting):
@@ -124,7 +120,7 @@ class DeprecatedSetting(Setting):
 
     def __init__(
         self,
-        default: Any = Undefined,
+        value: Any = Undefined,
         doc: Union[str, Undefined] = Undefined,
         validators: Union[Sequence[Callable], Undefined] = Undefined,
         type_hint: Any = GuessSettingType,
@@ -137,12 +133,24 @@ class DeprecatedSetting(Setting):
                                     * cls - settings class.
         :param verify_as_error: Fail validation with deprecation message as error.
         """
-        super().__init__(default, doc, validators, type_hint)
+        super().__init__(value, doc, validators, type_hint)
 
         self.validators = (DeprecatedValidator(),) + self.validators
 
         self.deprecation_message = deprecation_message
         self.verify_as_error = verify_as_error
+
+    def __get__(self, settings, settings_type):
+        if settings and not settings.validating:
+            msg = self.deprecation_message.format(cls=settings_type, name=self.name)
+            warnings.warn(msg, DeprecationWarning)
+        return super().__get__(settings, settings_type)
+
+    def __set__(self, settings, val):
+        if not settings.validating:
+            msg = self.deprecation_message.format(cls=type(obj), name=self.name)
+            warnings.warn(msg, DeprecationWarning)
+        return super().__set__(settings, val)
 
 
 # ==== ConcreteSettings classes ==== #
@@ -244,7 +252,9 @@ class ConcreteSettingsMeta(type):
 
 class Settings(metaclass=ConcreteSettingsMeta):
     def __init__(self):
+        self.validating = False
         self._validated = False
+
         super().__init__()
 
     @classmethod
@@ -258,6 +268,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
         return self.errors == {}
 
     def _validate(self, raise_exception=False):
+        self.validating = True
         # 1. Iterate through __mro__ classes in reverse order - so that
         #    iteration happens from the most-base class to the current one.
         # 2. Store found settigns as {name: [cls, ...]} to settings_classes
@@ -295,6 +306,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
                     errors[name].append(str(err))
 
         self.errors = errors
+        self.validating = False
         self._validated = True
 
         if errors and raise_exception:

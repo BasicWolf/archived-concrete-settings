@@ -147,13 +147,27 @@ def test_fail_validate_type_without_override(rint, rstr):
     assert 'T' in s.errors
 
 
-def test_deprecated_setting_raises_warning():
+def test_deprecated_setting_raises_warning_when_validated():
     with pytest.warns(
         DeprecationWarning,
-        match=r"Setting `D` in class `<class 'test_concrete_settings.test_deprecated_setting_raises_warning.<locals>.S'>` is deprecated",
-    ) as w:
+        match=r"Setting `D` in class `<class 'test_concrete_settings.test_deprecated_setting_raises_warning_when_validated.<locals>.S'>` is deprecated.",
+    ):
 
         class S(Settings):
             D = DeprecatedSetting(100)
 
         S().is_valid()
+
+
+def test_deprecated_setting_raises_warning_when_accessed():
+    class S(Settings):
+        D = DeprecatedSetting(100)
+
+    with pytest.warns(DeprecationWarning):
+        S().is_valid()
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Setting `D` in class `<class 'test_concrete_settings.test_deprecated_setting_raises_warning_when_accessed.<locals>.S'>` is deprecated",
+    ):
+        x = S().D
