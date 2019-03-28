@@ -119,6 +119,7 @@ def test_validate_smoke():
         pass
 
     s = S()
+    s.is_valid()
 
 
 def test_validate_override_smoke(rint, rstr):
@@ -128,7 +129,9 @@ def test_validate_override_smoke(rint, rstr):
     class S1(S):
         T: str = OverrideSetting(rstr)
 
-    assert S1().T == rstr
+    s1 = S1()
+    s1.is_valid()
+    assert s1.T == rstr
 
 
 def test_fail_validate_type_without_override(rint, rstr):
@@ -151,12 +154,13 @@ def test_deprecated_setting_raises_warning_when_validated():
     with pytest.warns(
         DeprecationWarning,
         match=r"Setting `D` in class `<class 'test_concrete_settings.test_deprecated_setting_raises_warning_when_validated.<locals>.S'>` is deprecated.",
-    ):
+    ) as w:
 
         class S(Settings):
             D = DeprecatedSetting(100)
 
         S().is_valid()
+        assert len(w) == 1
 
 
 def test_deprecated_setting_raises_warning_when_accessed():
@@ -169,5 +173,6 @@ def test_deprecated_setting_raises_warning_when_accessed():
     with pytest.warns(
         DeprecationWarning,
         match=r"Setting `D` in class `<class 'test_concrete_settings.test_deprecated_setting_raises_warning_when_accessed.<locals>.S'>` is deprecated",
-    ):
+    ) as w:
         x = S().D
+        assert len(w) == 1

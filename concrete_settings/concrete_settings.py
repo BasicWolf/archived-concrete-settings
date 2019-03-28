@@ -1,22 +1,10 @@
-import copy
-import os
-import sys
 import types
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, Sequence, Union, Dict, List
+from typing import Any, Callable, Sequence, Union, Dict, List, DefaultDict
 
-
-from sphinx.pycode.parser import Parser
-
-from . import exceptions, docreader
-from .utils import guess_type_hint, validate_type
-
-PY_VERSION = (sys.version_info.major, sys.version_info.minor)
-PY_36 = (3, 6)
-
-if PY_VERSION < PY_36:
-    raise ImportError("Python 3.6 or higher is required by concrete_settings")
+from . import docreader, exceptions, validators
+from .utils import guess_type_hint
 
 
 class Undefined:
@@ -29,20 +17,12 @@ class Undefined:
 
 class GuessSettingType:
     """A special value for Setting.type_hint, which indicates
-       that a Setting type should be derived from the default value."""
+       that a Setting type should be guessed from the default value."""
 
     pass
 
 
-DEFAULT_VALIDATORS = (validate_type,)
-
-
-class Validator:
-    def __call__(self, value):
-        return None
-
-    def set_context(self, settings, setting, name):
-        pass
+DEFAULT_VALIDATORS = (validators.ValidateType,)
 
 
 # ==== Settings classes ==== #
@@ -100,23 +80,8 @@ class OverrideSetting(Setting):
     pass
 
 
-class DeprecatedValidator(Validator):
-    __slots__ = ('msg', 'verify_as_error')
-
-    def __call__(self, _):
-        warnings.warn(self.msg, DeprecationWarning)
-
-        if self.verify_as_error:
-            return self.msg
-        return None
-
-    def set_context(self, settings, setting, name):
-        self.msg = setting.deprecation_message.format(cls=settings.__class__, name=name)
-        self.verify_as_error = setting.verify_as_error
-
-
 class DeprecatedSetting(Setting):
-    __slots__ = Setting.__slots__ + ('deprecation_message', 'verify_as_error')
+    __slots__ = Setting.__slots__ + ('deprecation_message',)
 
     def __init__(
         self,
@@ -125,20 +90,22 @@ class DeprecatedSetting(Setting):
         validators: Union[Sequence[Callable], Undefined] = Undefined,
         type_hint: Any = GuessSettingType,
         deprecation_message: str = 'Setting `{name}` in class `{cls}` is deprecated.',
-        verify_as_error=False,
+        validate_as_error=False,
     ):
         """
-        :param deprecation_message: The deprecation warning message. Formatting arguments:
+        :param deprecation_message: The deprecation warning message template.
+                                    Formatting arguments:
                                     * name - setting name.
                                     * cls - settings class.
-        :param verify_as_error: Fail validation with deprecation message as error.
+        :param validate_as_error: Fail validation with deprecation message as error.
         """
         super().__init__(value, doc, validators, type_hint)
 
-        self.validators = (DeprecatedValidator(),) + self.validators
+        self.validators = (
+            validators.DeprecatedValidator(deprecation_message, validate_as_error),
+        ) + self.validators
 
         self.deprecation_message = deprecation_message
-        self.verify_as_error = verify_as_error
 
     def __get__(self, settings, settings_type):
         if settings and not settings.validating:
@@ -148,7 +115,7 @@ class DeprecatedSetting(Setting):
 
     def __set__(self, settings, val):
         if not settings.validating:
-            msg = self.deprecation_message.format(cls=type(obj), name=self.name)
+            msg = self.deprecation_message.format(cls=type(settings), name=self.name)
             warnings.warn(msg, DeprecationWarning)
         return super().__set__(settings, val)
 
@@ -251,28 +218,26 @@ class ConcreteSettingsMeta(type):
 
 
 class Settings(metaclass=ConcreteSettingsMeta):
+    validating: bool
+    _validated: bool
+    _settings_classes: DefaultDict[str, List]
+
     def __init__(self):
         self.validating = False
         self._validated = False
-
+        self._build_internal_helpers()
         super().__init__()
 
     @classmethod
     def from_module(cls, module):
         pass
 
-    def is_valid(self, raise_exception=False) -> bool:
-        """Validate settings and return a boolean indicate whether settings are valid"""
-        if not self._validated:
-            self._validate(raise_exception)
-        return self.errors == {}
-
-    def _validate(self, raise_exception=False):
-        self.validating = True
+    def _build_internal_helpers(self):
+        # self._settings_classes is helper list used in
+        # settings reading and validation routines.
         # 1. Iterate through __mro__ classes in reverse order - so that
         #    iteration happens from the most-base class to the current one.
         # 2. Store found settigns as {name: [cls, ...]} to settings_classes
-        # 3. Validate settings_classes
         settings_classes = defaultdict(list)
 
         assert self.__class__.__mro__[-2] is Settings
@@ -282,22 +247,31 @@ class Settings(metaclass=ConcreteSettingsMeta):
             for attr, val in cls.__dict__.items():
                 if isinstance(val, Setting):
                     settings_classes[attr].append(cls)
+        self._settings_classes = settings_classes
 
+    def is_valid(self, raise_exception=False) -> bool:
+        """Validate settings and return a boolean indicate whether settings are valid"""
+        if not self._validated:
+            self._validate(raise_exception)
+        return self.errors == {}
+
+    def _validate(self, raise_exception=False):
+        self.validating = True
         errors = defaultdict(list)
 
         # first, validate each setting individually
-        for name in settings_classes:
-            st_errors = self.__validate_setting(name)
+        for name in self._settings_classes:
+            st_errors = self._validate_setting(name)
             errors[name] += st_errors
 
         # validate whether the setting on Nth level of the class hierarchy
         # corresponds to the setting on N-1th level of the class hierarchy.
-        for name, classes in settings_classes.items():
+        for name, classes in self._settings_classes.items():
             for c0, c1 in zip(classes, classes[1:]):
                 # start with setting object of the first classes
                 s0 = c0.__dict__[name]
                 s1 = c1.__dict__[name]
-                diff = self.__settings_diff(s0, s1)
+                diff = self._settings_diff(s0, s1)
                 if diff:
                     err = (
                         f'in classes {c0} and {c1} setting has'
@@ -312,7 +286,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
         if errors and raise_exception:
             raise exceptions.SettingsValidationError(errors)
 
-    def __validate_setting(self, name: str) -> Sequence[str]:
+    def _validate_setting(self, name: str) -> Sequence[str]:
         setting = getattr(self.__class__, name)
         value = getattr(self, name)
 
@@ -325,7 +299,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
                 errors.append(error)
         return errors
 
-    def __settings_diff(self, s0, s1) -> Union[None, Dict]:
+    def _settings_diff(self, s0, s1) -> Union[None, Dict]:
         # No checks are performed if setting is overriden
         if isinstance(s1, OverrideSetting):
             return None
