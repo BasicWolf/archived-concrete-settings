@@ -134,20 +134,19 @@ def test_validate_override_smoke(rint, rstr):
     assert s1.T == rstr
 
 
-def test_fail_validate_type_without_override(rint, rstr):
+def test_structure_error_without_override(rint, rstr):
     class S(Settings):
         T: int = rint
 
     class S1(S):
         T: str = rstr
 
-    s = S1()
-    with pytest.raises(exceptions.SettingsValidationError) as e:
-        s.is_valid(raise_exception=True)
+    with pytest.raises(exceptions.SettingsStructureError) as e:
+        S1()
+    e.match('types differ')
 
-        e.match('types differ')
 
-    assert 'T' in s.errors
+# == DeprecatedSetting == #
 
 
 def test_deprecated_setting_raises_warning_when_validated():
@@ -176,3 +175,13 @@ def test_deprecated_setting_raises_warning_when_accessed():
     ) as w:
         x = S().D
         assert len(w) == 1
+
+
+# == ValueTypeValidator == #
+def test_value_type_validator():
+    class S(Settings):
+        T: str = 10
+
+    with pytest.raises(exceptions.SettingsValidationError) as e:
+        S().is_valid(raise_exception=True)
+    e.match("Expected value of type `<class 'str'>` got value of type `<class 'int'>`")

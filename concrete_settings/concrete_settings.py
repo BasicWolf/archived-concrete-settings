@@ -3,7 +3,8 @@ import warnings
 from collections import defaultdict
 from typing import Any, Callable, Sequence, Union, Dict, List, DefaultDict
 
-from . import docreader, exceptions, validators
+from . import docreader, exceptions
+from .validators import DeprecatedValidator, ValueTypeValidator, Validator
 from .utils import guess_type_hint
 
 
@@ -22,9 +23,6 @@ class GuessSettingType:
     pass
 
 
-DEFAULT_VALIDATORS = (validators.ValidateType,)
-
-
 # ==== Settings classes ==== #
 # ========================== #
 
@@ -40,21 +38,14 @@ class Setting:
         self,
         value: Any = Undefined,
         doc: Union[str, Undefined] = Undefined,
-        validators: Union[Callable, Sequence[Callable], Undefined] = Undefined,
+        validators: Union[Sequence[Callable]] = (),
         type_hint: Any = GuessSettingType,
     ):
-
         self.value = value
-
         self.type_hint = type_hint
-        self.__doc__ = doc
+        self.validators = tuple(validators)
 
-        if validators is Undefined:
-            self.validators = DEFAULT_VALIDATORS
-        elif isinstance(validators, types.FunctionType):
-            self.validators = (validators,)
-        else:
-            self.validators = validators or ()
+        self.__doc__ = doc
 
         self.name = ""
 
@@ -85,12 +76,10 @@ class DeprecatedSetting(Setting):
 
     def __init__(
         self,
-        value: Any = Undefined,
-        doc: Union[str, Undefined] = Undefined,
-        validators: Union[Sequence[Callable], Undefined] = Undefined,
-        type_hint: Any = GuessSettingType,
+        *args,
         deprecation_message: str = 'Setting `{name}` in class `{cls}` is deprecated.',
         validate_as_error=False,
+        **kwargs,
     ):
         """
         :param deprecation_message: The deprecation warning message template.
@@ -99,10 +88,10 @@ class DeprecatedSetting(Setting):
                                     * cls - settings class.
         :param validate_as_error: Fail validation with deprecation message as error.
         """
-        super().__init__(value, doc, validators, type_hint)
+        super().__init__(*args, **kwargs)
 
         self.validators = (
-            validators.DeprecatedValidator(deprecation_message, validate_as_error),
+            DeprecatedValidator(deprecation_message, validate_as_error),
         ) + self.validators
 
         self.deprecation_message = deprecation_message
@@ -177,7 +166,7 @@ class ConcreteSettingsMeta(type):
 
     @staticmethod
     def add_settings_help(cls_name: str, class_dict: dict):
-        if not '__module__' in class_dict:
+        if '__module__' not in class_dict:
             # class is not coming from a module
             return
 
@@ -218,6 +207,8 @@ class ConcreteSettingsMeta(type):
 
 
 class Settings(metaclass=ConcreteSettingsMeta):
+    default_validators: tuple = (ValueTypeValidator(),)
+
     validating: bool
     _validated: bool
     _settings_classes: DefaultDict[str, List]
@@ -226,11 +217,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
         self.validating = False
         self._validated = False
         self._build_internal_helpers()
-        super().__init__()
-
-    @classmethod
-    def from_module(cls, module):
-        pass
+        self._check_structure()
 
     def _build_internal_helpers(self):
         # self._settings_classes is helper list used in
@@ -249,6 +236,32 @@ class Settings(metaclass=ConcreteSettingsMeta):
                     settings_classes[attr].append(cls)
         self._settings_classes = settings_classes
 
+    def _check_structure(self):
+        # validate whether the setting on Nth level of the inheritance hierarchy
+        # corresponds to the setting on N-1th level of the hierarchy.
+        for name, classes in self._settings_classes.items():
+            for c0, c1 in zip(classes, classes[1:]):
+                # start with setting object of the first classes
+                s0 = c0.__dict__[name]
+                s1 = c1.__dict__[name]
+                diff = self._settings_diff(s0, s1)
+                if diff:
+                    raise exceptions.SettingsStructureError(
+                        f'in classes {c0} and {c1} setting {name} has'
+                        f' the following difference(s): {diff}'
+                    )
+
+
+    def _settings_diff(self, s0, s1) -> Union[None, Dict]:
+        # No checks are performed if setting is overriden
+        if isinstance(s1, OverrideSetting):
+            return None
+
+        if s0.type_hint != s1.type_hint:
+            return f'types differ: {s0.type_hint} != {s1.type_hint}'
+
+        return None
+
     def is_valid(self, raise_exception=False) -> bool:
         """Validate settings and return a boolean indicate whether settings are valid"""
         if not self._validated:
@@ -259,25 +272,10 @@ class Settings(metaclass=ConcreteSettingsMeta):
         self.validating = True
         errors = defaultdict(list)
 
-        # first, validate each setting individually
+        # validate each setting individually
         for name in self._settings_classes:
             st_errors = self._validate_setting(name)
             errors[name] += st_errors
-
-        # validate whether the setting on Nth level of the class hierarchy
-        # corresponds to the setting on N-1th level of the class hierarchy.
-        for name, classes in self._settings_classes.items():
-            for c0, c1 in zip(classes, classes[1:]):
-                # start with setting object of the first classes
-                s0 = c0.__dict__[name]
-                s1 = c1.__dict__[name]
-                diff = self._settings_diff(s0, s1)
-                if diff:
-                    err = (
-                        f'in classes {c0} and {c1} setting has'
-                        f' the following difference(s): {diff}'
-                    )
-                    errors[name].append(str(err))
 
         self.errors = errors
         self.validating = False
@@ -291,20 +289,12 @@ class Settings(metaclass=ConcreteSettingsMeta):
         value = getattr(self, name)
 
         errors = []
-        for validator in setting.validators:
+        validators = setting.validators or self.default_validators
+
+        for validator in validators:
             if isinstance(validator, Validator):
                 validator.set_context(self, setting, name)
             error = validator(value)
             if error:
                 errors.append(error)
         return errors
-
-    def _settings_diff(self, s0, s1) -> Union[None, Dict]:
-        # No checks are performed if setting is overriden
-        if isinstance(s1, OverrideSetting):
-            return None
-
-        if s0.type_hint != s1.type_hint:
-            return f'types differ: {s0.type_hint} != {s1.type_hint}'
-
-        return None

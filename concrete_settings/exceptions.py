@@ -4,8 +4,9 @@ from typing import Union
 class ConcreteSettingsError(Exception):
     """Base class for all concrete_settings exceptions."""
 
-    pass
 
+class SettingsStructureError(ConcreteSettingsError):
+    """Raised when an inconsistency in settings inheritance hierarchy is detected."""
 
 class SettingsValidationError(ConcreteSettingsError):
     default_error = 'Invalid settings'
@@ -22,7 +23,6 @@ class SettingsValidationError(ConcreteSettingsError):
         self.errors = errors
 
     def __str__(self):
-        breakpoint()
         if isinstance(self.errors, dict):
             return '\n'.join(
                 f"{setting}: {'; '.join(errors)}"

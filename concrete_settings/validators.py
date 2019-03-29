@@ -42,7 +42,15 @@ class ValueTypeValidator(Validator):
         self.strict = strict
 
     def __call__(self, value):
-        pass
+        valid = True
+        if self.strict:
+            valid = type(value) == self.type_hint
+        else:
+            valid = isinstance(value, self.type_hint)
+
+        if not valid:
+            return f'Expected value of type `{self.type_hint}` got value of type `{type(value)}`'
+        return None
 
     def set_context(self, settings, setting, _):
         if self.type_hint is None:
