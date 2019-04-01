@@ -19,6 +19,8 @@ tox = '*'
 black = "==18.9b0"
 flake8 = '*'
 flake8-bugbear = '*'
+coverage = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.6"

@@ -217,7 +217,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
         self.validating = False
         self._validated = False
         self._build_internal_helpers()
-        self._check_structure()
+        self._validate_structure()
 
     def _build_internal_helpers(self):
         # self._settings_classes is helper list used in
@@ -236,7 +236,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
                     settings_classes[attr].append(cls)
         self._settings_classes = settings_classes
 
-    def _check_structure(self):
+    def _validate_structure(self):
         # validate whether the setting on Nth level of the inheritance hierarchy
         # corresponds to the setting on N-1th level of the hierarchy.
         for name, classes in self._settings_classes.items():
@@ -275,7 +275,8 @@ class Settings(metaclass=ConcreteSettingsMeta):
         # validate each setting individually
         for name in self._settings_classes:
             st_errors = self._validate_setting(name)
-            errors[name] += st_errors
+            if st_errors:
+                errors[name] += st_errors
 
         self.errors = errors
         self.validating = False

@@ -185,3 +185,14 @@ def test_value_type_validator():
     with pytest.raises(exceptions.SettingsValidationError) as e:
         S().is_valid(raise_exception=True)
     e.match("Expected value of type `<class 'str'>` got value of type `<class 'int'>`")
+
+
+def test_value_type_validator_with_inheritance():
+    class S0(Settings):
+        T: str = 10
+
+    class S1(S0):
+        T = 'abc'
+
+    assert S1().is_valid()
+

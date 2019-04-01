@@ -3,7 +3,7 @@ PIPENV=PYTHONPATH=${PYTHONPATH}:${PWD} pipenv
 ifdef TESTS
 	PYTEST_ARGS = -k $(TESTS)
 else
-	PYTEST_ARGS =
+	PYTEST_ARGS = --cov=concrete_settings
 endif
 
 

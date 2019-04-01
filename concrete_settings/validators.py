@@ -4,11 +4,11 @@ from typing import Callable
 
 
 class Validator:
-    def __call__(self, value):
+    def __call__(self, value):  # pragma: no cover
         return None
 
     def set_context(self, settings, setting, name):
-        pass
+        pass  # pragma: no cover
 
 
 class DeprecatedValidator(Validator):
