@@ -8,10 +8,11 @@ class ConcreteSettingsError(Exception):
 class SettingsStructureError(ConcreteSettingsError):
     """Raised when an inconsistency in settings inheritance hierarchy is detected."""
 
-class SettingsValidationError(ConcreteSettingsError):
-    default_error = 'Invalid settings'
 
-    def __init__(self, errors: Union[dict, list, str] = None):
+class SettingsValidationError(ConcreteSettingsError):
+    default_error = 'Invalid Setting'
+
+    def __init__(self, errors: Union[dict, list, str]):
 
         if errors is None:
             errors = self.default_errors

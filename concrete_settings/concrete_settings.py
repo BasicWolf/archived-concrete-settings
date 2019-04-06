@@ -3,7 +3,8 @@ import warnings
 from collections import defaultdict
 from typing import Any, Callable, Sequence, Union, Dict, List, DefaultDict
 
-from . import docreader, exceptions
+from . import docreader
+from . exceptions import SettingsStructureError, SettingsValidationError
 from .validators import DeprecatedValidator, ValueTypeValidator, Validator
 from .utils import guess_type_hint
 
@@ -246,13 +247,12 @@ class Settings(metaclass=ConcreteSettingsMeta):
                 s1 = c1.__dict__[name]
                 diff = self._settings_diff(s0, s1)
                 if diff:
-                    raise exceptions.SettingsStructureError(
+                    raise SettingsStructureError(
                         f'in classes {c0} and {c1} setting {name} has'
                         f' the following difference(s): {diff}'
                     )
 
-
-    def _settings_diff(self, s0, s1) -> Union[None, Dict]:
+    def _settings_diff(self, s0: Setting, s1: Setting) -> Union[None, Dict]:
         # No checks are performed if setting is overriden
         if isinstance(s1, OverrideSetting):
             return None
@@ -274,16 +274,16 @@ class Settings(metaclass=ConcreteSettingsMeta):
 
         # validate each setting individually
         for name in self._settings_classes:
-            st_errors = self._validate_setting(name)
-            if st_errors:
-                errors[name] += st_errors
+            try:
+                self._validate_setting(name)
+            except SettingsValidationError as e:
+                if raise_exception:
+                    raise e
+                errors[name] += str(e)
 
         self.errors = errors
         self.validating = False
         self._validated = True
-
-        if errors and raise_exception:
-            raise exceptions.SettingsValidationError(errors)
 
     def _validate_setting(self, name: str) -> Sequence[str]:
         setting = getattr(self.__class__, name)

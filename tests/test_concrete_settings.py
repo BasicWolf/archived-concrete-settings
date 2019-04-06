@@ -4,7 +4,7 @@ import pytest
 
 from concrete_settings import Settings, Setting, OverrideSetting, DeprecatedSetting
 
-from concrete_settings import exceptions
+from concrete_settings.exceptions import SettingsStructureError, SettingsValidationError
 
 
 def test_smoke():
@@ -141,7 +141,7 @@ def test_structure_error_without_override(rint, rstr):
     class S1(S):
         T: str = rstr
 
-    with pytest.raises(exceptions.SettingsStructureError) as e:
+    with pytest.raises(SettingsStructureError) as e:
         S1()
     e.match('types differ')
 
@@ -182,7 +182,7 @@ def test_value_type_validator():
     class S(Settings):
         T: str = 10
 
-    with pytest.raises(exceptions.SettingsValidationError) as e:
+    with pytest.raises(SettingsValidationError) as e:
         S().is_valid(raise_exception=True)
     e.match("Expected value of type `<class 'str'>` got value of type `<class 'int'>`")
 
@@ -196,3 +196,19 @@ def test_value_type_validator_with_inheritance():
 
     assert S1().is_valid()
 
+
+def test_settings_default_validators():
+    def is_positive(val):
+        if val <= 0:
+            raise SettingsValidationError('Value should be positive')
+
+    class S(Settings):
+        default_validators = (is_positive,)
+
+        T0 = 0
+        T1 = 10
+        T2 = 20
+
+    s = S()
+    assert not s.is_valid()
+    assert 'T0' in s.errors

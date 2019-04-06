@@ -2,10 +2,12 @@ import warnings
 
 from typing import Callable
 
+from .exceptions import SettingsValidationError
+
 
 class Validator:
     def __call__(self, value):  # pragma: no cover
-        return None
+        pass
 
     def set_context(self, settings, setting, name):
         pass  # pragma: no cover
@@ -22,8 +24,8 @@ class DeprecatedValidator(Validator):
         warnings.warn(self.msg, DeprecationWarning)
 
         if self.validate_as_error:
-            return self.msg
-        return None
+            raise SettingsValidationError(self.msg)
+
 
     def set_context(self, settings, setting, name):
         self.msg = self._msg_template.format(cls=type(settings), name=name)
@@ -49,8 +51,8 @@ class ValueTypeValidator(Validator):
             valid = isinstance(value, self.type_hint)
 
         if not valid:
-            return f'Expected value of type `{self.type_hint}` got value of type `{type(value)}`'
-        return None
+            raise SettingsValidationError(f'Expected value of type `{self.type_hint}` got value of type `{type(value)}`')
+
 
     def set_context(self, settings, setting, _):
         if self.type_hint is None:
