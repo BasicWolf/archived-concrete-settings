@@ -9,3 +9,11 @@ endif
 
 test:
 	${PIPENV} run pytest -s $(PYTEST_ARGS)
+
+all:
+	@echo "Available targets:"
+	@echo "test - run tests"
+
+clean:
+	python setup.py clean
+	rm -r concrete_settings.egg_info
