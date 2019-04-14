@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Any, Callable, Sequence, Union, Dict, List, DefaultDict
 
 from . import docreader
-from . exceptions import SettingsStructureError, SettingsValidationError
+from .exceptions import SettingsStructureError, SettingsValidationError
 from .validators import DeprecatedValidator, ValueTypeValidator, Validator
 from .utils import guess_type_hint
 
@@ -209,6 +209,7 @@ class ConcreteSettingsMeta(type):
 
 class Settings(metaclass=ConcreteSettingsMeta):
     default_validators: tuple = (ValueTypeValidator(),)
+    mandatory_validators: tuple = ()
 
     validating: bool
     _validated: bool
@@ -279,7 +280,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
             except SettingsValidationError as e:
                 if raise_exception:
                     raise e
-                errors[name] += str(e)
+                errors[name].append(str(e))
 
         self.errors = errors
         self.validating = False
@@ -291,6 +292,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
 
         errors = []
         validators = setting.validators or self.default_validators
+        validators += self.mandatory_validators
 
         for validator in validators:
             if isinstance(validator, Validator):

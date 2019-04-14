@@ -228,8 +228,30 @@ def test_settings_default_validators():
 
         T0 = 0
         T1 = 10
-        T2 = 20
 
     s = S()
     assert not s.is_valid()
     assert 'T0' in s.errors
+
+    assert s.errors['T0'] == ['Value should be positive']
+    assert 'T1' not in s.errors
+
+
+def test_settings_mandatory_validators():
+    def is_positive(val):
+        if val <= 0:
+            raise SettingsValidationError('Value should be positive')
+
+    def is_less_that_10(val):
+        if val >= 10:
+            raise SettingsValidationError('Value should be less that 10')
+
+    class S(Settings):
+        mandatory_validators = (is_positive,)
+
+        T0: int = Setting(0, validators=(is_less_that_10,))
+
+    s = S()
+    assert not s.is_valid()
+    assert 'T0' in s.errors
+    assert s.errors['T0'] == ['Value should be positive']
