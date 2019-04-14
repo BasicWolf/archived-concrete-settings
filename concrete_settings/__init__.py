@@ -3,7 +3,6 @@ import sys
 from .concrete_settings import Settings, Setting, OverrideSetting, DeprecatedSetting
 
 name = "concrete_settings"
-
 PY_VERSION = (sys.version_info.major, sys.version_info.minor)
 PY_36 = (3, 6)
 

@@ -1,10 +1,22 @@
+import importlib
 import types
+import sys
+from collections import namedtuple
 
 import pytest
 
+import concrete_settings
 from concrete_settings import Settings, Setting, OverrideSetting, DeprecatedSetting
 
 from concrete_settings.exceptions import SettingsStructureError, SettingsValidationError
+
+
+@pytest.fixture
+def unsupported_python_version_info():
+    VersionInfo = namedtuple(
+        'version_info', ['major', 'minor', 'micro', 'releaselevel', 'serial']
+    )
+    return VersionInfo(3, 5, 0, 'final', 0)
 
 
 def test_smoke():
@@ -13,6 +25,15 @@ def test_smoke():
 
 def test_cls_init_empty_settings():
     Settings()
+
+
+def test_import_in_unsupported_python_fails(mocker, unsupported_python_version_info):
+    mocked_vinfo = mocker.patch.object(
+        sys, 'version_info', unsupported_python_version_info
+    )
+    # mocked_sys.version_info = unsupported_python_version_info
+    with pytest.raises(ImportError) as e:
+        importlib.reload(concrete_settings)
 
 
 def test_setting_ctor(rint):
