@@ -7,7 +7,6 @@ black==18.9b0
 certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
-concrete-settings==0.0.1
 docutils==0.14
 entrypoints==0.3
 factory-boy==2.11.1

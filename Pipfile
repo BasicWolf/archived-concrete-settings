@@ -21,6 +21,7 @@ flake8 = '*'
 flake8-bugbear = '*'
 coverage = "*"
 pytest-cov = "*"
+setuptools = ">=41.0"
 
 [requires]
 python_version = "3.6"

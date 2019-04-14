@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "da1c835c79a888e36cd46253c900e920f62d365de5973e7dd7353f99ae2a27dc"
+            "sha256": "a334f569dbf73cd659c4eebe553f39170fa341525159af4505e2c60ec4e4875c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -111,10 +111,10 @@
         },
         "faker": {
             "hashes": [
-                "sha256:00b7011757c4907546f17d0e47df098b542ea2b04c966ee0e80a493aae2c13c8",
-                "sha256:745ac8b9c9526e338696e07b7f2e206e5e317e5744e22fdd7c2894bf19af41f1"
+                "sha256:167cef2454482dc2fbd8b0ff6a5ba3dbac8d3a3ebdee6ba819d008100d9d9428",
+                "sha256:3f2f4570df28df2eb8f39b00520eb610081d6552975e926c6a2cbc64fd89c4c1"
             ],
-            "version": "==1.0.4"
+            "version": "==1.0.5"
         },
         "filelock": {
             "hashes": [
@@ -258,11 +258,11 @@
         },
         "tox": {
             "hashes": [
-                "sha256:365656eb2a61053c3715d801f2fcc833eb3721155e52285111c63836ec3f0efc",
-                "sha256:57b0b5c90aadeae5110f4cd1c82fb3ac207f5c8f31b4201ae13b7fa5f754dbb4"
+                "sha256:69620e19de33a6b7ee8aeda5478791b3618ff58f0b869dbd0319fb71aa903deb",
+                "sha256:e5cdb1653aa27b3e46b5c390de6b6d51d31afcfdbd9d1222d82d76b82ad03d9b"
             ],
             "index": "pypi",
-            "version": "==3.8.4"
+            "version": "==3.8.6"
         },
         "urwid": {
             "hashes": [
