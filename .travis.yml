@@ -20,10 +20,11 @@ script:
 deploy:
   provider: pages
   skip_cleanup: true
-  github_token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
   keep-history: true
+  local_dir: docs/_build/html/
+  github_token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
   on:
     branch: master
     python: '3.7'
 
-    local_dir: _build/html/
+
