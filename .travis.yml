@@ -8,13 +8,9 @@ python:
   - "3.6"
   - "3.7"
 
-install:
-  - pip install -r requirements.dev.txt
+install: pip install -r requirements.dev.txt
 
-jobs:
-  include:
-    - stage: test
-      script: make test
+script: make test
 
 
     # - stage: build-html-docs
