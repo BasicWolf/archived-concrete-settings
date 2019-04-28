@@ -1,4 +1,5 @@
 import types
+import typing
 import warnings
 from collections import defaultdict
 from typing import Any, Callable, Sequence, Union, Dict, List, DefaultDict
@@ -6,21 +7,30 @@ from typing import Any, Callable, Sequence, Union, Dict, List, DefaultDict
 from . import docreader
 from .exceptions import SettingsStructureError, SettingsValidationError
 from .validators import DeprecatedValidator, ValueTypeValidator, Validator
-from .utils import guess_type_hint
 
 
-class Undefined:
-    """A special value which indicates
+class UndefinedMeta(type):
+    def __bool__(self):
+        return False
+
+    def __str__(self):
+        return 'Undefined value'
+
+
+class Undefined(metaclass=UndefinedMeta):
+    """`Undefined` is a special value which indicates
     that something has not been explicitly set by a user.
     """
 
-    def __bool__(self):
-        return False
+    pass
 
 
 class GuessSettingType:
     """A special value for Setting.type_hint, which indicates
-       that a Setting type should be guessed from the default value."""
+       that a Setting type should be guessed from the default value.
+
+    For an `Undefined` or an unknown type, the guessed type hint is `typing.Any`.
+    """
 
     pass
 
@@ -63,9 +73,7 @@ class Setting:
         return getattr(obj, f"__setting_{self.name}_value", self.value)
 
     def __set__(self, obj: 'Settings', val):
-        assert isinstance(
-            obj, Settings
-        ), "obj should be an instance of Settings"
+        assert isinstance(obj, Settings), "obj should be an instance of Settings"
         setattr(obj, f"__setting_{self.name}_value", val)
 
 
@@ -89,9 +97,9 @@ class PropertySetting(Setting):
         if not self.__doc__:
             self.__doc__ = fget.__doc__
 
-        if not self.type_hint:
+        if self.type_hint is GuessSettingType:
             self.type_hint = fget.__annotations__.get('return', self.type_hint)
-
+        return self
 
     def __get__(self, obj: 'Settings', objtype=None):
         # == class-level access ==
@@ -175,7 +183,6 @@ class ConcreteSettingsMeta(type):
             if (
                 isinstance(new_field, Setting)
                 and new_field.type_hint is GuessSettingType
-                and new_field.value is not Undefined
             ):
                 new_field.type_hint = guess_type_hint(new_field.value)
 
@@ -191,12 +198,12 @@ class ConcreteSettingsMeta(type):
 
     @staticmethod
     def is_setting_name(name: str) -> bool:
-        """Return true if name is written in upper case"""
+        """Return True if name is written in the upper case"""
         return name.upper() == name and not name.startswith("_")
 
     @staticmethod
     def is_safe_setting_type(field: Any) -> bool:
-        """Return false if field should not be converted to setting automatically"""
+        """Return False if field should not be converted to a Setting automatically"""
         callable_types = (property, types.FunctionType, classmethod, staticmethod)
         return not isinstance(field, callable_types)
 
@@ -336,3 +343,28 @@ class Settings(metaclass=ConcreteSettingsMeta):
             if error:
                 errors.append(error)
         return errors
+
+
+def guess_type_hint(val):
+    if val is Undefined:
+        return Any
+
+    known_types = [
+        bool,  # bool MUST come before int, as e.g. isinstance(True, int) == True
+        int,
+        float,
+        complex,
+        list,
+        tuple,
+        range,
+        bytes,
+        str,
+        frozenset,
+        set,
+        dict,
+    ]
+
+    for t in known_types:
+        if isinstance(val, t):
+            return t
+    return typing.Any

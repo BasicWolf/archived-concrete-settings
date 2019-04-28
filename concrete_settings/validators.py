@@ -26,7 +26,6 @@ class DeprecatedValidator(Validator):
         if self.validate_as_error:
             raise SettingsValidationError(self.msg)
 
-
     def set_context(self, settings, setting, name):
         self.msg = self._msg_template.format(cls=type(settings), name=name)
 
@@ -51,8 +50,9 @@ class ValueTypeValidator(Validator):
             valid = isinstance(value, self.type_hint)
 
         if not valid:
-            raise SettingsValidationError(f'Expected value of type `{self.type_hint}` got value of type `{type(value)}`')
-
+            raise SettingsValidationError(
+                f'Expected value of type `{self.type_hint}` got value of type `{type(value)}`'
+            )
 
     def set_context(self, settings, setting, _):
         if self.type_hint is None:

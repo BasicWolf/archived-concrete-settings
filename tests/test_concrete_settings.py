@@ -1,14 +1,21 @@
 import importlib
 import types
+import typing
 import sys
 from collections import namedtuple
 
 import pytest
 
 import concrete_settings
-from concrete_settings import Settings, Setting, setting, OverrideSetting, DeprecatedSetting
-
+from concrete_settings import (
+    Settings,
+    Setting,
+    setting,
+    OverrideSetting,
+    DeprecatedSetting,
+)
 from concrete_settings.exceptions import SettingsStructureError, SettingsValidationError
+from concrete_settings.validators import Validator
 
 
 @pytest.fixture
@@ -65,6 +72,7 @@ def test_setting_set(rint):
 
     assert S0().DEMO != S1().DEMO
 
+
 def test_guess_type():
     class S(Settings):
         # Numeric types
@@ -102,17 +110,41 @@ def test_guess_type():
     assert d["DICT"].type_hint is dict
 
 
-def test_property_setting(rint):
-    class S(Settings):
-        @setting
-        def T(self):
-            """T docs"""
-            return rint
+class TestPropertySetting:
+    def test_with_setting_attrs_decorated_method(self, rint):
+        class S(Settings):
+            @setting
+            def T(self) -> int:
+                """T docs"""
+                return rint
 
-    s = S()
-    assert s.T == rint
-    assert s.T.__doc__ == "T docs"
+        assert S.T.__doc__ == "T docs"
+        assert S.T.validators == tuple()
+        assert S.T.type_hint == int
+        s = S()
+        assert s.T == rint
 
+    def test_no_return_type_hint(self):
+        class S(Settings):
+            @setting
+            def T(self):
+                return rint
+
+        assert S.T.type_hint is typing.Any
+
+    def test_with_setting_attrs_defined_as_argument(self):
+        class DummyValidator(Validator):
+            pass
+
+        class S(Settings):
+            @setting(type_hint=int, doc="T arg docs", validators=(DummyValidator(),))
+            def T(self):
+                return rint
+
+        assert S.T.__doc__ == "T arg docs"
+        assert S.T.type_hint == int
+        assert len(S.T.validators) == 1
+        assert isinstance(S.T.validators[0], DummyValidator)
 
 
 def test_callable_types_are_not_settings(rint, rstr):
