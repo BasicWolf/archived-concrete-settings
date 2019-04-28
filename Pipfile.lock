@@ -1,10 +1,12 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ff3d70f93595d079a1d19a3404e1dc21ce668707c07f64eb97640737c295c282"
+            "sha256": "022a7458b3eba230c754b1c5963a0419a58b3bb940f7c7d5e895ff1778b68c65"
         },
         "pipfile-spec": 6,
-        "requires": {},
+        "requires": {
+            "python": "3.7"
+        },
         "sources": [
             {
                 "name": "pypi",
@@ -275,6 +277,9 @@
                 "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"
             ],
             "version": "==7.0"
+        },
+        "concrete-settings": {
+            "path": "."
         },
         "coverage": {
             "hashes": [

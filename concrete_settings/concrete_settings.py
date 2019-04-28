@@ -10,11 +10,12 @@ from .utils import guess_type_hint
 
 
 class Undefined:
-    """A special value for which indicates
+    """A special value which indicates
     that something has not been explicitly set by a user.
     """
 
-    pass
+    def __bool__(self):
+        return False
 
 
 class GuessSettingType:
@@ -53,23 +54,57 @@ class Setting:
     def __set_name__(self, _, name):
         self.name = name
 
-    def __get__(self, settings: 'Settings', settings_type):
+    def __get__(self, obj: 'Settings', objtype=None):
         # == class-level access ==
-        if not settings:
+        if not obj:
             return self
 
         # == object-level access ==
-        return getattr(settings, f"__setting_{self.name}_value", self.value)
+        return getattr(obj, f"__setting_{self.name}_value", self.value)
 
-    def __set__(self, settings: 'Settings', val):
+    def __set__(self, obj: 'Settings', val):
         assert isinstance(
-            settings, Settings
-        ), "settings should be an instance of Settings"
-        setattr(settings, f"__setting_{self.name}_value", val)
+            obj, Settings
+        ), "obj should be an instance of Settings"
+        setattr(obj, f"__setting_{self.name}_value", val)
 
 
 class OverrideSetting(Setting):
     pass
+
+
+class PropertySetting(Setting):
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
+            super().__init__()
+            self.__call__(args[0])
+        else:
+            super().__init__(*args, **kwargs)
+            self.fget = None
+
+    def __call__(self, fget: Callable):
+        self.fget = fget
+
+        # Extract __doc__ and return type hint from the decorated function
+        if not self.__doc__:
+            self.__doc__ = fget.__doc__
+
+        if not self.type_hint:
+            self.type_hint = fget.__annotations__.get('return', self.type_hint)
+
+
+    def __get__(self, obj: 'Settings', objtype=None):
+        # == class-level access ==
+        if not obj:
+            return self
+
+        if self.fget is None:
+            raise AttributeError("Unreadable attribute")
+
+        return self.fget(obj)
+
+
+setting = PropertySetting
 
 
 class DeprecatedSetting(Setting):

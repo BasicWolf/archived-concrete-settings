@@ -6,7 +6,7 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import Settings, Setting, OverrideSetting, DeprecatedSetting
+from concrete_settings import Settings, Setting, setting, OverrideSetting, DeprecatedSetting
 
 from concrete_settings.exceptions import SettingsStructureError, SettingsValidationError
 
@@ -65,7 +65,6 @@ def test_setting_set(rint):
 
     assert S0().DEMO != S1().DEMO
 
-
 def test_guess_type():
     class S(Settings):
         # Numeric types
@@ -101,6 +100,19 @@ def test_guess_type():
     assert d["SET"].type_hint is set
     assert d["FROZENSET"].type_hint is frozenset
     assert d["DICT"].type_hint is dict
+
+
+def test_property_setting(rint):
+    class S(Settings):
+        @setting
+        def T(self):
+            """T docs"""
+            return rint
+
+    s = S()
+    assert s.T == rint
+    assert s.T.__doc__ == "T docs"
+
 
 
 def test_callable_types_are_not_settings(rint, rstr):

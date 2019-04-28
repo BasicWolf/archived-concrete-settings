@@ -21,3 +21,4 @@ def guess_type_hint(val):
         if isinstance(val, t):
             return t
     return typing.Any
+
