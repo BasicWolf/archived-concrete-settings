@@ -146,6 +146,18 @@ class TestPropertySetting:
         assert len(S.T.validators) == 1
         assert isinstance(S.T.validators[0], DummyValidator)
 
+    def test_property_setting_using_other_settings(self):
+        class S(Settings):
+            A: int = 10
+            B: str = 'hello world'
+
+            @setting
+            def AB(self) -> str:
+                return f'{self.A} {self.B}'
+
+        s = S()
+        assert s.AB == '10 hello world'
+
 
 def test_callable_types_are_not_settings(rint, rstr):
     class S(Settings):

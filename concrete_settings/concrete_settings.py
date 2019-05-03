@@ -49,9 +49,9 @@ class Setting:
     def __init__(
         self,
         value: Any = Undefined,
-        doc: Union[str, Undefined] = Undefined,
-        validators: Union[Sequence[Callable]] = (),
         type_hint: Any = GuessSettingType,
+        validators: Union[Sequence[Callable]] = (),
+        doc: Union[str, Undefined] = Undefined,
     ):
         self.value = value
         self.type_hint = type_hint
