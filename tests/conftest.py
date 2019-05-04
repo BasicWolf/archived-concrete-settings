@@ -1,12 +1,12 @@
 import tempfile
 import random
 
-import pytest
-
-
 import factory
+import pytest
 from factory import fuzzy
 
+from concrete_settings.exceptions import SettingsValidationError
+from concrete_settings.validators import Validator
 
 seed = random.randint(1, 1e9)
 print(f"Running tests with seed: {seed:0>10}")
@@ -36,7 +36,9 @@ def mock_module(mocker):
         if path:
             mod.__file__ = path
         else:
-            tmp_file = tempfile.NamedTemporaryFile(mode='w+', prefix=f'tmp_{name}', suffix='.py')
+            tmp_file = tempfile.NamedTemporaryFile(
+                mode='w+', prefix=f'tmp_{name}', suffix='.py'
+            )
             tmp_file.write(code)
             tmp_file.flush()
             mod.__file__ = tmp_file.name
@@ -48,3 +50,30 @@ def mock_module(mocker):
 
     for f in tmp_files:
         f.close()
+
+
+@pytest.fixture
+def is_positive():
+    def is_positive(val, **kwargs):
+        if val <= 0:
+            raise SettingsValidationError('Value should be positive')
+
+    return is_positive
+
+
+@pytest.fixture
+def is_less_that_10():
+    def is_less_that_10(val, **kwargs):
+        if val >= 10:
+            raise SettingsValidationError('Value should be less that 10')
+
+    return is_less_that_10
+
+
+@pytest.fixture
+def DummyValidator():
+    class DummyValidator(Validator):
+        def __call__(self, value, **kwargs):
+            pass
+
+    return DummyValidator

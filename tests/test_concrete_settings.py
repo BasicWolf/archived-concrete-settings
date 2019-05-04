@@ -132,10 +132,7 @@ class TestPropertySetting:
 
         assert S.T.type_hint is typing.Any
 
-    def test_with_setting_attrs_defined_as_argument(self):
-        class DummyValidator(Validator):
-            pass
-
+    def test_with_setting_attrs_defined_as_argument(self, DummyValidator):
         class S(Settings):
             @setting(type_hint=int, doc="T arg docs", validators=(DummyValidator(),))
             def T(self):
@@ -274,11 +271,7 @@ def test_value_type_validator_with_inheritance():
     assert S1().is_valid()
 
 
-def test_settings_default_validators():
-    def is_positive(val):
-        if val <= 0:
-            raise SettingsValidationError('Value should be positive')
-
+def test_settings_default_validators(is_positive):
     class S(Settings):
         default_validators = (is_positive,)
 
@@ -293,21 +286,16 @@ def test_settings_default_validators():
     assert 'T1' not in s.errors
 
 
-def test_settings_mandatory_validators():
-    def is_positive(val):
-        if val <= 0:
-            raise SettingsValidationError('Value should be positive')
-
-    def is_less_that_10(val):
-        if val >= 10:
-            raise SettingsValidationError('Value should be less that 10')
-
+def test_settings_mandatory_validators(is_positive, is_less_that_10):
     class S(Settings):
         mandatory_validators = (is_positive,)
 
         T0: int = Setting(0, validators=(is_less_that_10,))
+        T1: int = Setting(11, validators=(is_less_that_10,))
 
     s = S()
     assert not s.is_valid()
     assert 'T0' in s.errors
+    assert 'T1' in s.errors
     assert s.errors['T0'] == ['Value should be positive']
+    assert s.errors['T1'] == ['Value should be less that 10']

@@ -1,3 +1,4 @@
+import abc
 import warnings
 
 from typing import Callable
@@ -5,29 +6,38 @@ from typing import Callable
 from .exceptions import SettingsValidationError
 
 
-class Validator:
-    def __call__(self, value):  # pragma: no cover
-        pass
+class Validator(metaclass=abc.ABCMeta):
+    """A validator is a callable that raises an exception if a value is wrong.
 
-    def set_context(self, settings, setting, name):
-        pass  # pragma: no cover
+    A validator accepts a value as a mandatory argument, and keyword-only arguments
+    referring to settings, setting and setting's name."""
+
+    @abc.abstractmethod
+    def __call__(self, value, *, settings=None, setting=None, name=None):
+        """Validate a value. Raise `SettingsValidationError` if value is wrong."""
+        pass
 
 
 class DeprecatedValidator(Validator):
-    __slots__ = ('msg', '_msg_template', 'validate_as_error')
+    __slots__ = ('msg', 'validate_as_error')
 
     def __init__(self, msg, validate_as_error):
-        self._msg_template = msg
+        self.msg = msg
         self.validate_as_error = validate_as_error
 
-    def __call__(self, _):
-        warnings.warn(self.msg, DeprecationWarning)
+    def __call__(self, value, *, settings, setting, name):
+        msg = self.msg.format(
+            value=value,
+            settings=settings,
+            cls=type(settings),
+            setting=setting,
+            name=name,
+        )
+
+        warnings.warn(msg, DeprecationWarning)
 
         if self.validate_as_error:
-            raise SettingsValidationError(self.msg)
-
-    def set_context(self, settings, setting, name):
-        self.msg = self._msg_template.format(cls=type(settings), name=name)
+            raise SettingsValidationError(msg)
 
 
 class ValueTypeValidator(Validator):
@@ -42,7 +52,10 @@ class ValueTypeValidator(Validator):
         self.type_hint = type_hint
         self.strict = strict
 
-    def __call__(self, value):
+    def __call__(self, value, setting, **kwargs):
+        if self.type_hint is None:
+            self.type_hint = setting.type_hint
+
         valid = True
         if self.strict:
             valid = type(value) == self.type_hint
@@ -53,7 +66,3 @@ class ValueTypeValidator(Validator):
             raise SettingsValidationError(
                 f'Expected value of type `{self.type_hint}` got value of type `{type(value)}`'
             )
-
-    def set_context(self, settings, setting, _):
-        if self.type_hint is None:
-            self.type_hint = setting.type_hint

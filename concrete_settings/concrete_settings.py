@@ -49,9 +49,9 @@ class Setting:
     def __init__(
         self,
         value: Any = Undefined,
-        type_hint: Any = GuessSettingType,
-        validators: Union[Sequence[Callable]] = (),
         doc: Union[str, Undefined] = Undefined,
+        validators: Union[Sequence[Callable]] = (),
+        type_hint: Any = GuessSettingType,
     ):
         self.value = value
         self.type_hint = type_hint
@@ -128,8 +128,11 @@ class DeprecatedSetting(Setting):
         """
         :param deprecation_message: The deprecation warning message template.
                                     Formatting arguments:
+                                    * value - setting value.
                                     * name - setting name.
-                                    * cls - settings class.
+                                    * setting - setting field instance.
+                                    * settings - settings object instance.
+                                    * cls - settings object type.
         :param validate_as_error: Fail validation with deprecation message as error.
         """
         super().__init__(*args, **kwargs)
@@ -316,19 +319,16 @@ class Settings(metaclass=ConcreteSettingsMeta):
         errors = defaultdict(list)
 
         # validate each setting individually
-        for name in self._settings_classes:
-            try:
-                self._validate_setting(name)
-            except SettingsValidationError as e:
-                if raise_exception:
-                    raise e
-                errors[name].append(str(e))
+        for cls_name in self._settings_classes:
+            setting_errors = self._validate_setting(cls_name, raise_exception)
+            if setting_errors:
+                errors[cls_name] += setting_errors
 
         self.errors = errors
         self.validating = False
         self._validated = True
 
-    def _validate_setting(self, name: str) -> Sequence[str]:
+    def _validate_setting(self, name: str, raise_exception=False) -> Sequence[str]:
         setting = getattr(self.__class__, name)
         value = getattr(self, name)
 
@@ -337,11 +337,12 @@ class Settings(metaclass=ConcreteSettingsMeta):
         validators += self.mandatory_validators
 
         for validator in validators:
-            if isinstance(validator, Validator):
-                validator.set_context(self, setting, name)
-            error = validator(value)
-            if error:
-                errors.append(error)
+            try:
+                validator(value, settings=self, setting=setting, name=name)
+            except SettingsValidationError as e:
+                if raise_exception:
+                    raise e
+                errors.append(str(e))
         return errors
 
 
