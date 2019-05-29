@@ -251,6 +251,16 @@ def test_deprecated_setting_raises_warning_when_accessed():
         assert len(w) == 1
 
 
+def test_deprecated_setting_only():
+    from concrete_settings import Deprecated
+
+    class S(Settings):
+        D = Setting(10) @ Deprecated()
+
+    with pytest.warns(DeprecationWarning) as w:
+        x = S().D
+
+
 # == ValueTypeValidator == #
 def test_value_type_validator():
     class S(Settings):
