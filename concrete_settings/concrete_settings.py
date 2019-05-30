@@ -6,7 +6,7 @@ from typing import Any, Callable, Sequence, Union, Dict, List, DefaultDict
 
 from . import docreader
 from .exceptions import SettingsStructureError, SettingsValidationError
-from .validators import DeprecatedValidator, ValueTypeValidator, Validator
+from .validators import ValueTypeValidator
 
 
 class UndefinedMeta(type):
@@ -85,7 +85,6 @@ class OverrideSetting(Setting):
     pass
 
 
-
 class PropertySetting(Setting):
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
@@ -157,31 +156,6 @@ class DeprecatedSetting(Setting):
             msg = self.deprecation_message.format(cls=type(settings), name=self.name)
             warnings.warn(msg, DeprecationWarning)
         return super().__set__(settings, val)
-
-
-class Deprecated:
-    def __init__(
-            self,
-            deprecation_message: str = 'Setting `{name}` in class `{cls}` is deprecated.',
-            validate_as_error=False
-    ):
-        self.deprecation_message = deprecation_message
-        self.validate_as_error = validate_as_error
-
-    def __rmatmul__(self, st: Setting):
-        import functools
-
-        original_dget = st.__descriptor__get__
-
-        @functools.wraps(st.__descriptor__get__)
-        def wrapped_dget(me, settings, settings_type):
-            if settings and not settings.validating:
-                msg = self.deprecation_message.format(cls=settings_type, name=me.name)
-                warnings.warn(msg, DeprecationWarning)
-            return original_dget(settings, settings_type)
-
-        st.__descriptor__get__ = types.MethodType(wrapped_dget, st)
-        return st
 
 
 # ==== ConcreteSettings classes ==== #

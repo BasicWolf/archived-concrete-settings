@@ -11,11 +11,8 @@ from concrete_settings import (
     Settings,
     Setting,
     setting,
-    OverrideSetting,
-    DeprecatedSetting,
-)
+    OverrideSetting)
 from concrete_settings.exceptions import SettingsStructureError, SettingsValidationError
-from concrete_settings.validators import Validator
 
 
 @pytest.fixture
@@ -218,47 +215,6 @@ def test_structure_error_without_override(rint, rstr):
     with pytest.raises(SettingsStructureError) as e:
         S1()
     e.match('types differ')
-
-
-# == DeprecatedSetting == #
-
-
-def test_deprecated_setting_raises_warning_when_validated():
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"Setting `D` in class `<class 'test_concrete_settings.test_deprecated_setting_raises_warning_when_validated.<locals>.S'>` is deprecated.",
-    ) as w:
-
-        class S(Settings):
-            D = DeprecatedSetting(100)
-
-        S().is_valid()
-        assert len(w) == 1
-
-
-def test_deprecated_setting_raises_warning_when_accessed():
-    class S(Settings):
-        D = DeprecatedSetting(100)
-
-    with pytest.warns(DeprecationWarning):
-        S().is_valid()
-
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"Setting `D` in class `<class 'test_concrete_settings.test_deprecated_setting_raises_warning_when_accessed.<locals>.S'>` is deprecated",
-    ) as w:
-        x = S().D
-        assert len(w) == 1
-
-
-def test_deprecated_setting_only():
-    from concrete_settings import Deprecated
-
-    class S(Settings):
-        D = Setting(10) @ Deprecated()
-
-    with pytest.warns(DeprecationWarning) as w:
-        x = S().D
 
 
 # == ValueTypeValidator == #

@@ -6,8 +6,8 @@ from .concrete_settings import (
     setting,
     OverrideSetting,
     DeprecatedSetting,
-    Deprecated,
 )
+from concrete_settings.behaviors import Deprecated
 
 name = "concrete_settings"
 PY_VERSION = (sys.version_info.major, sys.version_info.minor)
