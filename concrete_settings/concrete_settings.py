@@ -6,7 +6,7 @@ from typing import Any, Callable, Sequence, Union, Dict, List, DefaultDict
 
 from . import docreader
 from .exceptions import SettingsStructureError, SettingsValidationError
-from .validators import DeprecatedValidator, ValueTypeValidator, Validator
+from .validators import ValueTypeValidator
 
 
 class UndefinedMeta(type):
@@ -40,8 +40,6 @@ class GuessSettingType:
 
 
 class Setting:
-    __slots__ = ('value', 'type_hint', 'validators', 'name', '__doc__')
-
     value: Any
     type_hint: Any
     validators: List[Callable]
@@ -65,6 +63,13 @@ class Setting:
         self.name = name
 
     def __get__(self, obj: 'Settings', objtype=None):
+        return self.__descriptor__get__(obj, objtype)
+
+    def __set__(self, obj: 'Settings', val):
+        assert isinstance(obj, Settings), "obj should be an instance of Settings"
+        self.__descriptor__set__(obj, val)
+
+    def __descriptor__get__(self, obj, objtype):
         # == class-level access ==
         if not obj:
             return self
@@ -72,8 +77,7 @@ class Setting:
         # == object-level access ==
         return getattr(obj, f"__setting_{self.name}_value", self.value)
 
-    def __set__(self, obj: 'Settings', val):
-        assert isinstance(obj, Settings), "obj should be an instance of Settings"
+    def __descriptor__set__(self, obj, val):
         setattr(obj, f"__setting_{self.name}_value", val)
 
 
@@ -112,62 +116,18 @@ class PropertySetting(Setting):
         return self.fget(obj)
 
 
-setting = PropertySetting
-
-
-class DeprecatedSetting(Setting):
-    __slots__ = Setting.__slots__ + ('deprecation_message',)
-
-    def __init__(
-        self,
-        *args,
-        deprecation_message: str = 'Setting `{name}` in class `{cls}` is deprecated.',
-        validate_as_error=False,
-        **kwargs,
-    ):
-        """
-        :param deprecation_message: The deprecation warning message template.
-                                    Formatting arguments:
-                                    * value - setting value.
-                                    * name - setting name.
-                                    * setting - setting field instance.
-                                    * settings - settings object instance.
-                                    * cls - settings object type.
-        :param validate_as_error: Fail validation with deprecation message as error.
-        """
-        super().__init__(*args, **kwargs)
-
-        self.validators = (
-            DeprecatedValidator(deprecation_message, validate_as_error),
-        ) + self.validators
-
-        self.deprecation_message = deprecation_message
-
-    def __get__(self, settings, settings_type):
-        if settings and not settings.validating:
-            msg = self.deprecation_message.format(cls=settings_type, name=self.name)
-            warnings.warn(msg, DeprecationWarning)
-        return super().__get__(settings, settings_type)
-
-    def __set__(self, settings, val):
-        if not settings.validating:
-            msg = self.deprecation_message.format(cls=type(settings), name=self.name)
-            warnings.warn(msg, DeprecationWarning)
-        return super().__set__(settings, val)
-
-
 # ==== ConcreteSettings classes ==== #
 # ================================== #
 
 
 class ConcreteSettingsMeta(type):
-    def __new__(cls, name, bases, class_dict):
-        new_dict = cls.class_dict_to_settings(class_dict)
-        cls.add_settings_help(name, new_dict)
-        return super().__new__(cls, name, bases, new_dict)
+    def __new__(mcls, name, bases, class_dict):
+        new_dict = mcls.class_dict_to_settings(class_dict)
+        mcls.add_settings_help(name, new_dict)
+        return super().__new__(mcls, name, bases, new_dict)
 
     @classmethod
-    def class_dict_to_settings(cls: type, class_dict: dict):
+    def class_dict_to_settings(mcls: type, class_dict: dict):
         new_dict = {}
         annotations = class_dict.get("__annotations__", {})
 
@@ -177,10 +137,10 @@ class ConcreteSettingsMeta(type):
             # Make a Setting out of ALL_UPPERCASE_ATTRIBUTE
             if (
                 not isinstance(field, Setting)
-                and cls.is_setting_name(attr)
-                and cls.is_safe_setting_type(field)
+                and mcls.is_setting_name(attr)
+                and mcls.is_safe_setting_type(field)
             ):
-                new_field = cls.make_setting_from_attr(attr, field, annotations)
+                new_field = mcls.make_setting_from_attr(attr, field, annotations)
 
             # Should we try to guess a type_hint for a Setting?
             if (
@@ -264,7 +224,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
         self.validating = False
         self._validated = False
         self._build_internal_helpers()
-        self._validate_structure()
+        self._verify_structure()
 
     def _build_internal_helpers(self):
         # self._settings_classes is helper list used in
@@ -283,8 +243,8 @@ class Settings(metaclass=ConcreteSettingsMeta):
                     settings_classes[attr].append(cls)
         self._settings_classes = settings_classes
 
-    def _validate_structure(self):
-        # validate whether the setting on Nth level of the inheritance hierarchy
+    def _verify_structure(self):
+        # verify whether the setting on Nth level of the inheritance hierarchy
         # corresponds to the setting on N-1th level of the hierarchy.
         for name, classes in self._settings_classes.items():
             for c0, c1 in zip(classes, classes[1:]):
@@ -338,7 +298,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
 
         for validator in validators:
             try:
-                validator(value, settings=self, setting=setting, name=name)
+                validator(value, name=name, owner=self, setting=setting)
             except SettingsValidationError as e:
                 if raise_exception:
                     raise e

@@ -13,31 +13,23 @@ class Validator(metaclass=abc.ABCMeta):
     referring to settings, setting and setting's name."""
 
     @abc.abstractmethod
-    def __call__(self, value, *, settings=None, setting=None, name=None):
+    def __call__(self, value, *, name=None, owner=None, setting=None):
         """Validate a value. Raise `SettingsValidationError` if value is wrong."""
         pass
 
 
 class DeprecatedValidator(Validator):
-    __slots__ = ('msg', 'validate_as_error')
-
-    def __init__(self, msg, validate_as_error):
+    def __init__(self, msg, raise_exception):
         self.msg = msg
-        self.validate_as_error = validate_as_error
+        self.raise_exception = raise_exception
 
-    def __call__(self, value, *, settings, setting, name):
-        msg = self.msg.format(
-            value=value,
-            settings=settings,
-            cls=type(settings),
-            setting=setting,
-            name=name,
-        )
+    def __call__(self, value, *, name, owner, **ignore):
+        msg = self.msg.format(name=name, owner=type(owner))
 
-        warnings.warn(msg, DeprecationWarning)
-
-        if self.validate_as_error:
+        if self.raise_exception:
             raise SettingsValidationError(msg)
+        else:
+            warnings.warn(msg, DeprecationWarning)
 
 
 class ValueTypeValidator(Validator):
@@ -52,17 +44,16 @@ class ValueTypeValidator(Validator):
         self.type_hint = type_hint
         self.strict = strict
 
-    def __call__(self, value, setting, **kwargs):
-        if self.type_hint is None:
-            self.type_hint = setting.type_hint
+    def __call__(self, value, *, setting, **kwargs):
+        type_hint = setting.type_hint if self.type_hint is None else self.type_hint
 
         valid = True
         if self.strict:
-            valid = type(value) == self.type_hint
+            valid = type(value) == type_hint
         else:
-            valid = isinstance(value, self.type_hint)
+            valid = isinstance(value, type_hint)
 
         if not valid:
             raise SettingsValidationError(
-                f'Expected value of type `{self.type_hint}` got value of type `{type(value)}`'
+                f'Expected value of type `{type_hint}` got value of type `{type(value)}`'
             )

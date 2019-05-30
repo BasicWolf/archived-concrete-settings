@@ -1,6 +1,9 @@
 import sys
 
-from .concrete_settings import Settings, Setting, setting, OverrideSetting, DeprecatedSetting
+from .concrete_settings import Settings, Setting, OverrideSetting, PropertySetting
+from concrete_settings.behaviors import Deprecated
+
+setting = PropertySetting
 
 name = "concrete_settings"
 PY_VERSION = (sys.version_info.major, sys.version_info.minor)

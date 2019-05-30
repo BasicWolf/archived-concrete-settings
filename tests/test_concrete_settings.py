@@ -7,15 +7,8 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import (
-    Settings,
-    Setting,
-    setting,
-    OverrideSetting,
-    DeprecatedSetting,
-)
+from concrete_settings import Settings, Setting, setting, OverrideSetting
 from concrete_settings.exceptions import SettingsStructureError, SettingsValidationError
-from concrete_settings.validators import Validator
 
 
 @pytest.fixture
@@ -220,45 +213,16 @@ def test_structure_error_without_override(rint, rstr):
     e.match('types differ')
 
 
-# == DeprecatedSetting == #
-
-
-def test_deprecated_setting_raises_warning_when_validated():
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"Setting `D` in class `<class 'test_concrete_settings.test_deprecated_setting_raises_warning_when_validated.<locals>.S'>` is deprecated.",
-    ) as w:
-
-        class S(Settings):
-            D = DeprecatedSetting(100)
-
-        S().is_valid()
-        assert len(w) == 1
-
-
-def test_deprecated_setting_raises_warning_when_accessed():
-    class S(Settings):
-        D = DeprecatedSetting(100)
-
-    with pytest.warns(DeprecationWarning):
-        S().is_valid()
-
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"Setting `D` in class `<class 'test_concrete_settings.test_deprecated_setting_raises_warning_when_accessed.<locals>.S'>` is deprecated",
-    ) as w:
-        x = S().D
-        assert len(w) == 1
-
-
 # == ValueTypeValidator == #
 def test_value_type_validator():
     class S(Settings):
         T: str = 10
 
-    with pytest.raises(SettingsValidationError) as e:
+    with pytest.raises(
+        SettingsValidationError,
+        match="Expected value of type `<class 'str'>` got value of type `<class 'int'>`",
+    ):
         S().is_valid(raise_exception=True)
-    e.match("Expected value of type `<class 'str'>` got value of type `<class 'int'>`")
 
 
 def test_value_type_validator_with_inheritance():
