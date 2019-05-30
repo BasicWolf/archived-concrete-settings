@@ -28,11 +28,10 @@ def test_cls_init_empty_settings():
 
 
 def test_import_in_unsupported_python_fails(mocker, unsupported_python_version_info):
-    mocked_vinfo = mocker.patch.object(
-        sys, 'version_info', unsupported_python_version_info
-    )
-    # mocked_sys.version_info = unsupported_python_version_info
-    with pytest.raises(ImportError) as e:
+    mocker.patch.object(sys, 'version_info', unsupported_python_version_info)
+    with pytest.raises(
+        ImportError, match="Python 3.6 or higher is required by concrete_settings"
+    ):
         importlib.reload(concrete_settings)
 
 
@@ -117,7 +116,7 @@ class TestPropertySetting:
         s = S()
         assert s.T == rint
 
-    def test_no_return_type_hint(self):
+    def test_no_return_type_hint(self, rint):
         class S(Settings):
             @setting
             def T(self):
@@ -125,7 +124,7 @@ class TestPropertySetting:
 
         assert S.T.type_hint is typing.Any
 
-    def test_with_setting_attrs_defined_as_argument(self, DummyValidator):
+    def test_with_setting_attrs_defined_as_argument(self, DummyValidator, rint):
         class S(Settings):
             @setting(type_hint=int, doc="T arg docs", validators=(DummyValidator(),))
             def T(self):
@@ -175,7 +174,7 @@ def test_callable_types_are_not_settings(rint, rstr):
     assert isinstance(S.STATIC_METH, types.FunctionType)
 
     s = S()
-    assert s.PROP_BOOLEAN == False
+    assert not s.PROP_BOOLEAN
     assert s.FUNC() == rstr
     assert s.CLASS_METH() == S
     assert s.STATIC_METH() == rstr
