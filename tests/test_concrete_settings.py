@@ -7,11 +7,7 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import (
-    Settings,
-    Setting,
-    setting,
-    OverrideSetting)
+from concrete_settings import Settings, Setting, setting, OverrideSetting
 from concrete_settings.exceptions import SettingsStructureError, SettingsValidationError
 
 
@@ -222,9 +218,11 @@ def test_value_type_validator():
     class S(Settings):
         T: str = 10
 
-    with pytest.raises(SettingsValidationError) as e:
+    with pytest.raises(
+        SettingsValidationError,
+        match="Expected value of type `<class 'str'>` got value of type `<class 'int'>`",
+    ):
         S().is_valid(raise_exception=True)
-    e.match("Expected value of type `<class 'str'>` got value of type `<class 'int'>`")
 
 
 def test_value_type_validator_with_inheritance():

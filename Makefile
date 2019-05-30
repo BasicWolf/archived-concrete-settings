@@ -7,15 +7,16 @@ else
 endif
 
 
+all:
+	@echo "Available targets:"
+	@echo "test - run tests"
+
+
 test:
 	${PIPENV} run pytest -s $(PYTEST_ARGS)
 
 tox:
 	tox
-
-all:
-	@echo "Available targets:"
-	@echo "test - run tests"
 
 docs:
 	$(MAKE) html -C docs

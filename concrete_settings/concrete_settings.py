@@ -77,7 +77,7 @@ class Setting:
         # == object-level access ==
         return getattr(obj, f"__setting_{self.name}_value", self.value)
 
-    def __descriptor__set__(self, obj, objtype):
+    def __descriptor__set__(self, obj, val):
         setattr(obj, f"__setting_{self.name}_value", val)
 
 
@@ -114,48 +114,6 @@ class PropertySetting(Setting):
             raise AttributeError("Unreadable attribute")
 
         return self.fget(obj)
-
-
-setting = PropertySetting
-
-
-class DeprecatedSetting(Setting):
-    def __init__(
-        self,
-        *args,
-        deprecation_message: str = 'Setting `{name}` in class `{cls}` is deprecated.',
-        validate_as_error=False,
-        **kwargs,
-    ):
-        """
-        :param deprecation_message: The deprecation warning message template.
-                                    Formatting arguments:
-                                    * value - setting value.
-                                    * name - setting name.
-                                    * setting - setting field instance.
-                                    * settings - settings object instance.
-                                    * cls - settings object type.
-        :param validate_as_error: Fail validation with deprecation message as error.
-        """
-        super().__init__(*args, **kwargs)
-
-        self.validators = (
-            DeprecatedValidator(deprecation_message, validate_as_error),
-        ) + self.validators
-
-        self.deprecation_message = deprecation_message
-
-    def __get__(self, settings, settings_type):
-        if settings and not settings.validating:
-            msg = self.deprecation_message.format(cls=settings_type, name=self.name)
-            warnings.warn(msg, DeprecationWarning)
-        return super().__get__(settings, settings_type)
-
-    def __set__(self, settings, val):
-        if not settings.validating:
-            msg = self.deprecation_message.format(cls=type(settings), name=self.name)
-            warnings.warn(msg, DeprecationWarning)
-        return super().__set__(settings, val)
 
 
 # ==== ConcreteSettings classes ==== #
@@ -340,7 +298,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
 
         for validator in validators:
             try:
-                validator(value, settings=self, setting=setting, name=name)
+                validator(value, name=name, owner=self, setting=setting)
             except SettingsValidationError as e:
                 if raise_exception:
                     raise e
