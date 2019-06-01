@@ -10,10 +10,81 @@ if typing.TYPE_CHECKING:
 
 
 class SettingBehavior:
-    pass
+    def __call__(self, setting: 'concrete_Settings.Setting'):
+        return self.inject(setting)
+
+    def __rmatmul__(self, setting: 'concrete_settings.Setting'):
+        return self.inject(setting)
+
+    def inject(
+        self, setting: 'concrete_settings.Setting'
+    ) -> 'concrete_settings.Setting':
+        setting.behaviors.inject(self)
+        return setting
+
+    def get_setting_value(self, setting, owner, get_value):
+        return get_value()
+
+    def set_setting_value(self, setting, owner, val, set_value):
+        set_value(val)
 
 
-class Deprecated(SettingBehavior):
+class Behaviors(list):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def inject(self, behavior):
+        self.insert(0, behavior)
+
+    def get_setting_value(self, setting, owner, get_value):
+        """Chain and invoke get_setting_value() of each behavior."""
+
+        def _get_value(i=0):
+            if i < len(self):
+                return self[i].get_setting_value(
+                    setting, owner, functools.partial(_get_value, i + 1)
+                )
+            else:
+                return get_value(owner, type(owner))
+
+        return _get_value()
+
+    def set_setting_value(self, setting, owner, val, set_value):
+        """Chain and invoke set_setting_value() of each behavior."""
+
+        def _set_value(v, i=0):
+            if i < len(self):
+                self[i].set_setting_value(
+                    setting, owner, v, functools.partial(_set_value, i=i + 1)
+                )
+            else:
+                set_value(owner, v)
+
+        return _set_value(val)
+
+
+def generic_behavior_init(f_init):
+    """Class-decorator's __init__() method wrapper.
+
+    Allows a class-decorator to be invoked on a function/method
+    without supplying arguments. In other words:
+    make @decorator and @decorator() work likewise."""
+
+    @functools.wraps(f_init)
+    def wrapped_init(self, *args, **kwargs):
+        assert isinstance(self, SettingBehavior)
+
+        if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
+            f_init(self)
+            self.__call__(args[0])
+        else:
+            f_init(self, *args, **kwargs)
+
+    return wrapped_init
+
+
+class deprecated(SettingBehavior):
+    @generic_behavior_init
     def __init__(
         self,
         deprecation_message: str = 'Setting `{name}` in class `{owner}` is deprecated.',
@@ -29,35 +100,24 @@ class Deprecated(SettingBehavior):
         self.warn_on_get = warn_on_get
         self.warn_on_set = warn_on_set
 
-    def __rmatmul__(self, st: 'concrete_settings.Setting'):
+    def inject(self, setting):
         if self.warn_on_validation or self.error_on_validation:
-            st.validators = (
+            setting.validators = (
                 DeprecatedValidator(self.deprecation_message, self.error_on_validation),
-            ) + st.validators
+            ) + setting.validators
 
+        return super().inject(setting)
+
+    def get_setting_value(self, setting, owner, get_value):
         if self.warn_on_get:
-            original_dget = st.__descriptor__get__
+            if owner and not owner.validating:
+                msg = self.deprecation_message.format(owner=owner, name=setting.name)
+                warnings.warn(msg, DeprecationWarning)
+        return get_value()
 
-            @functools.wraps(st.__descriptor__get__)
-            def wrapped_dget(me, instance, owner):
-                if instance and not instance.validating:
-                    msg = self.deprecation_message.format(owner=owner, name=me.name)
-                    warnings.warn(msg, DeprecationWarning)
-                return original_dget(instance, owner)
-
-            st.__descriptor__get__ = types.MethodType(wrapped_dget, st)
-
+    def set_setting_value(self, setting, owner, val, set_value):
         if self.warn_on_set:
-            original_dset = st.__descriptor__set__
-
-            @functools.wraps(st.__descriptor__set__)
-            def wrapped_dset(me, instance, value):
-                if not instance.validating:
-                    msg = self.deprecation_message.format(
-                        owner=type(instance), name=me.name
-                    )
-                    warnings.warn(msg, DeprecationWarning)
-                original_dset(instance, value)
-
-            st.__descriptor__set__ = types.MethodType(wrapped_dset, st)
-        return st
+            if not owner.validating:
+                msg = self.deprecation_message.format(owner=owner, name=setting.name)
+                warnings.warn(msg, DeprecationWarning)
+        set_value(val)

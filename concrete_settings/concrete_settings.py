@@ -1,9 +1,9 @@
 import types
 import typing
-import warnings
 from collections import defaultdict
-from typing import Any, Callable, Sequence, Union, Dict, List, DefaultDict
+from typing import Any, Callable, Sequence, Union, List, DefaultDict
 
+from concrete_settings.behaviors import Behaviors
 from . import docreader
 from .exceptions import SettingsStructureError, SettingsValidationError
 from .validators import ValueTypeValidator
@@ -37,23 +37,25 @@ class GuessSettingType:
 
 # ==== Settings classes ==== #
 # ========================== #
-
-
 class Setting:
     value: Any
     type_hint: Any
     validators: List[Callable]
+    behaviors: Behaviors
 
     def __init__(
         self,
         value: Any = Undefined,
+        *,
         doc: Union[str, Undefined] = Undefined,
         validators: Union[Sequence[Callable]] = (),
         type_hint: Any = GuessSettingType,
+        behaviors: List = None
     ):
         self.value = value
         self.type_hint = type_hint
         self.validators = tuple(validators)
+        self.behaviors = Behaviors(behaviors or [])
 
         self.__doc__ = doc
 
@@ -62,23 +64,23 @@ class Setting:
     def __set_name__(self, _, name):
         self.name = name
 
-    def __get__(self, obj: 'Settings', objtype=None):
-        return self.__descriptor__get__(obj, objtype)
-
-    def __set__(self, obj: 'Settings', val):
-        assert isinstance(obj, Settings), "obj should be an instance of Settings"
-        self.__descriptor__set__(obj, val)
-
-    def __descriptor__get__(self, obj, objtype):
+    def __get__(self, owner: 'Settings', owner_type=None):
         # == class-level access ==
-        if not obj:
+        if not owner:
             return self
 
         # == object-level access ==
-        return getattr(obj, f"__setting_{self.name}_value", self.value)
+        return self.behaviors.get_setting_value(self, owner, self.__descriptor__get__)
 
-    def __descriptor__set__(self, obj, val):
-        setattr(obj, f"__setting_{self.name}_value", val)
+    def __set__(self, owner: 'Settings', val):
+        assert isinstance(owner, Settings), "owner should be an instance of Settings"
+        self.behaviors.set_setting_value(self, owner, val, self.__descriptor__set__)
+
+    def __descriptor__get__(self, owner, owner_type):
+        return getattr(owner, f"__setting_{self.name}_value", self.value)
+
+    def __descriptor__set__(self, owner, val):
+        setattr(owner, f"__setting_{self.name}_value", val)
 
 
 class OverrideSetting(Setting):
@@ -105,15 +107,15 @@ class PropertySetting(Setting):
             self.type_hint = fget.__annotations__.get('return', self.type_hint)
         return self
 
-    def __get__(self, obj: 'Settings', objtype=None):
+    def __get__(self, owner: 'Settings', owner_type=None):
         # == class-level access ==
-        if not obj:
+        if not owner:
             return self
 
         if self.fget is None:
             raise AttributeError("Unreadable attribute")
 
-        return self.fget(obj)
+        return self.fget(owner)
 
 
 # ==== ConcreteSettings classes ==== #
@@ -157,7 +159,7 @@ class ConcreteSettingsMeta(type):
     def make_setting_from_attr(attr, val, annotations):
         type_hint = annotations.get(attr, GuessSettingType)
         doc = ""
-        return Setting(val, doc, type_hint=type_hint)
+        return Setting(val, doc=doc, type_hint=type_hint)
 
     @staticmethod
     def is_setting_name(name: str) -> bool:
