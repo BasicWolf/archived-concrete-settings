@@ -251,22 +251,26 @@ class Settings(metaclass=ConcreteSettingsMeta):
                 # start with setting object of the first classes
                 s0 = c0.__dict__[name]
                 s1 = c1.__dict__[name]
-                diff = self._settings_diff(s0, s1)
-                if diff:
+                differences = self._settings_diff(s0, s1)
+                if differences:
+                    diff = '; '.join(differences)
                     raise SettingsStructureError(
                         f'in classes {c0} and {c1} setting {name} has'
                         f' the following difference(s): {diff}'
                     )
 
-    def _settings_diff(self, s0: Setting, s1: Setting) -> Union[None, Dict]:
+    def _settings_diff(self, s0: Setting, s1: Setting) -> List[str]:
+        NO_DIFF = []
+        differences = []
+
         # No checks are performed if setting is overriden
         if isinstance(s1, OverrideSetting):
-            return None
+            return NO_DIFF
 
         if s0.type_hint != s1.type_hint:
-            return f'types differ: {s0.type_hint} != {s1.type_hint}'
+            differences.append(f'types differ: {s0.type_hint} != {s1.type_hint}')
 
-        return None
+        return differences
 
     def is_valid(self, raise_exception=False) -> bool:
         """Validate settings and return a boolean indicate whether settings are valid"""
