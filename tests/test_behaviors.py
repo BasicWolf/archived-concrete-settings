@@ -1,13 +1,32 @@
 import pytest
 
-from concrete_settings.behaviors import (
-    deprecated,
-    SettingBehavior,
-    generic_behavior_init,
-)
+from concrete_settings import Settings, Setting, setting
+from concrete_settings.behaviors import deprecated, SettingBehavior
 from concrete_settings.exceptions import SettingsValidationError
 
-from concrete_settings import Settings, Setting, setting
+
+@pytest.fixture
+def div():
+    class Div(SettingBehavior):
+        def __init__(self, divisor):
+            self.divisor = divisor
+
+        def get_setting_value(self, setting, owner, get_value):
+            return get_value() / self.divisor
+
+    return Div
+
+
+@pytest.fixture
+def plus():
+    class Plus(SettingBehavior):
+        def __init__(self, summand):
+            self.summand = summand
+
+        def get_setting_value(self, setting, owner, get_value):
+            return get_value() + self.summand
+
+    return Plus
 
 
 # == SettingsBehavior == #
@@ -47,34 +66,48 @@ def test_setting_behavior_set():
     assert set_was_called
 
 
-def test_setting_behavior_call_order():
-    class Div(SettingBehavior):
-        def __init__(self, divisor):
-            self.divisor = divisor
-
-        def get_setting_value(self, setting, owner, get_value):
-            return get_value() / self.divisor
-
+def test_setting_behavior_call_order(div, plus):
     class S(Settings):
-        D = Setting(100) @ Div(2) @ Div(5)
+        D = Setting(23) @ plus(2) @ div(5)
 
     s = S()
-    assert s.D == 10
+    assert s.D == 5
+
+    class S(Settings):
+        D = Setting(25) @ div(5) @ plus(2)
+
+    s = S()
+    assert s.D == 7
 
 
-# def test_generic_behavior_init_with_default_args():
-#     class bhv(SettingBehavior):
-#         @generic_behavior_init
-#         def __init__(self, x='I am X'):
-#             self.x = x
+def test_setting_behavior_with_property_setting(div):
+    class S(Settings):
+        @div(5)
+        @setting
+        def D(self):
+            return 30
 
-#     class S(Settings):
-#         @bhv
-#         @setting
-#         def D(self):
-#             return getattr(type(self), 'D').x
+    assert S().D == 6
 
-#     assert S().D == 'I am x'
+
+def test_setting_behavior_with_property_setting_order(div, plus):
+    class S(Settings):
+        @div(2)
+        @plus(5)
+        @setting
+        def D(self):
+            return 15
+
+    assert S().D == 10
+
+    class S(Settings):
+        @div(5)
+        @plus(2)
+        @setting
+        def D(self):
+            return 18
+
+    assert S().D == 4
 
 
 # == Deprecated == #

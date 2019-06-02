@@ -45,7 +45,7 @@ class Behaviors(list):
                     setting, owner, functools.partial(_get_value, i + 1)
                 )
             else:
-                return get_value(owner, type(owner))
+                return get_value()
 
         return _get_value()
 
@@ -58,33 +58,12 @@ class Behaviors(list):
                     setting, owner, v, functools.partial(_set_value, i=i + 1)
                 )
             else:
-                set_value(owner, v)
+                set_value(v)
 
         return _set_value(val)
 
 
-def generic_behavior_init(f_init):
-    """Class-decorator's __init__() method wrapper.
-
-    Allows a class-decorator to be invoked on a function/method
-    without supplying arguments. In other words:
-    make @decorator and @decorator() work likewise."""
-
-    @functools.wraps(f_init)
-    def wrapped_init(self, *args, **kwargs):
-        assert isinstance(self, SettingBehavior)
-
-        if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
-            f_init(self)
-            self.__call__(args[0])
-        else:
-            f_init(self, *args, **kwargs)
-
-    return wrapped_init
-
-
 class deprecated(SettingBehavior):
-    @generic_behavior_init
     def __init__(
         self,
         deprecation_message: str = 'Setting `{name}` in class `{owner}` is deprecated.',

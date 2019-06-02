@@ -1,3 +1,4 @@
+import functools
 import types
 import typing
 from collections import defaultdict
@@ -50,7 +51,7 @@ class Setting:
         doc: Union[str, Undefined] = Undefined,
         validators: Union[Sequence[Callable]] = (),
         type_hint: Any = GuessSettingType,
-        behaviors: List = None
+        behaviors: List = None,
     ):
         self.value = value
         self.type_hint = type_hint
@@ -70,11 +71,15 @@ class Setting:
             return self
 
         # == object-level access ==
-        return self.behaviors.get_setting_value(self, owner, self.__descriptor__get__)
+        return self.behaviors.get_setting_value(
+            self, owner, functools.partial(self.__descriptor__get__, owner, type(owner))
+        )
 
     def __set__(self, owner: 'Settings', val):
         assert isinstance(owner, Settings), "owner should be an instance of Settings"
-        self.behaviors.set_setting_value(self, owner, val, self.__descriptor__set__)
+        self.behaviors.set_setting_value(
+            self, owner, val, functools.partial(self.__descriptor__set__, owner)
+        )
 
     def __descriptor__get__(self, owner, owner_type):
         return getattr(owner, f"__setting_{self.name}_value", self.value)
@@ -115,7 +120,9 @@ class PropertySetting(Setting):
         if self.fget is None:
             raise AttributeError("Unreadable attribute")
 
-        return self.fget(owner)
+        return self.behaviors.get_setting_value(
+            self, owner, functools.partial(self.fget, owner)
+        )
 
 
 # ==== ConcreteSettings classes ==== #
