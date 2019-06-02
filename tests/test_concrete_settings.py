@@ -35,32 +35,35 @@ def test_import_in_unsupported_python_fails(mocker, unsupported_python_version_i
         importlib.reload(concrete_settings)
 
 
-def test_setting_ctor(rint):
+def test_setting_ctor(v_int):
     validators = (lambda x: x,)
-    s = Setting(rint, "docstring", validators, int)
+    s = Setting(
+        v_int, type_hint=int, validators=validators, doc="docstring", behaviors=[]
+    )
 
-    assert s.value == rint
+    assert s.value == v_int
     assert s.__doc__ == "docstring"
     assert s.validators is validators
     assert s.type_hint is int
+    assert s.behaviors == []
 
 
-def test_settings_converted_from_attributes(rint):
+def test_settings_converted_from_attributes(v_int):
     class S0(Settings):
-        DEMO: int = rint
-        demo: str = rint
+        DEMO: int = v_int
+        demo: str = v_int
 
     assert isinstance(S0.DEMO, Setting)
     assert S0.__dict__["DEMO"].type_hint is int
     assert isinstance(S0.demo, int)
 
 
-def test_setting_set(rint):
+def test_setting_set(v_int):
     class S0(Settings):
-        DEMO: int = rint
+        DEMO: int = v_int
 
     class S1(Settings):
-        DEMO = rint + 1
+        DEMO = v_int + 1
 
     assert S0().DEMO != S1().DEMO
 
@@ -103,32 +106,32 @@ def test_guess_type():
 
 
 class TestPropertySetting:
-    def test_with_setting_attrs_decorated_method(self, rint):
+    def test_with_setting_attrs_decorated_method(self, v_int):
         class S(Settings):
             @setting
             def T(self) -> int:
                 """T docs"""
-                return rint
+                return v_int
 
         assert S.T.__doc__ == "T docs"
         assert S.T.validators == tuple()
         assert S.T.type_hint == int
         s = S()
-        assert s.T == rint
+        assert s.T == v_int
 
-    def test_no_return_type_hint(self, rint):
+    def test_no_return_type_hint(self, v_int):
         class S(Settings):
             @setting
             def T(self):
-                return rint
+                return v_int
 
         assert S.T.type_hint is typing.Any
 
-    def test_with_setting_attrs_defined_as_argument(self, DummyValidator, rint):
+    def test_with_setting_attrs_defined_as_argument(self, DummyValidator, v_int):
         class S(Settings):
             @setting(type_hint=int, doc="T arg docs", validators=(DummyValidator(),))
             def T(self):
-                return rint
+                return v_int
 
         assert S.T.__doc__ == "T arg docs"
         assert S.T.type_hint == int
@@ -148,16 +151,16 @@ class TestPropertySetting:
         assert s.AB == '10 hello world'
 
 
-def test_callable_types_are_not_settings(rint, rstr):
+def test_callable_types_are_not_settings(v_int, v_str):
     class S(Settings):
-        INT = rint
+        INT = v_int
 
         @property
         def PROP_BOOLEAN(self):
             return False
 
         def FUNC(self):
-            return rstr
+            return v_str
 
         @classmethod
         def CLASS_METH(cls):
@@ -165,9 +168,9 @@ def test_callable_types_are_not_settings(rint, rstr):
 
         @staticmethod
         def STATIC_METH():
-            return rstr
+            return v_str
 
-    assert S.INT.value == rint
+    assert S.INT.value == v_int
     assert isinstance(S.PROP_BOOLEAN, property)
     assert isinstance(S.FUNC, types.FunctionType)
     assert isinstance(S.CLASS_METH, types.MethodType)
@@ -175,9 +178,9 @@ def test_callable_types_are_not_settings(rint, rstr):
 
     s = S()
     assert not s.PROP_BOOLEAN
-    assert s.FUNC() == rstr
+    assert s.FUNC() == v_str
     assert s.CLASS_METH() == S
-    assert s.STATIC_METH() == rstr
+    assert s.STATIC_METH() == v_str
 
 
 def test_validate_smoke():
@@ -188,24 +191,24 @@ def test_validate_smoke():
     s.is_valid()
 
 
-def test_validate_override_smoke(rint, rstr):
+def test_validate_override_smoke(v_int, v_str):
     class S(Settings):
-        T: int = rint
+        T: int = v_int
 
     class S1(S):
-        T: str = OverrideSetting(rstr)
+        T: str = OverrideSetting(v_str)
 
     s1 = S1()
     s1.is_valid()
-    assert s1.T == rstr
+    assert s1.T == v_str
 
 
-def test_structure_error_without_override(rint, rstr):
+def test_structure_error_without_override(v_int, v_str):
     class S(Settings):
-        T: int = rint
+        T: int = v_int
 
     class S1(S):
-        T: str = rstr
+        T: str = v_str
 
     with pytest.raises(SettingsStructureError) as e:
         S1()

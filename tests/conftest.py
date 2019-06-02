@@ -14,12 +14,12 @@ factory.fuzzy.reseed_random(seed)
 
 
 @pytest.fixture
-def rint():
+def v_int():
     return fuzzy.FuzzyInteger(-10e10, 10e10).fuzz()
 
 
 @pytest.fixture
-def rstr():
+def v_str():
     return fuzzy.FuzzyText(length=100).fuzz()
 
 
