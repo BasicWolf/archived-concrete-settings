@@ -1,6 +1,12 @@
 import sys
 
-from .concrete_settings import Settings, Setting, OverrideSetting, PropertySetting
+from .concrete_settings import (
+    Settings,
+    Setting,
+    OverrideSetting,
+    PropertySetting,
+    universal_behavior,
+)
 
 setting = PropertySetting
 

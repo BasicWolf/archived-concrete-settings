@@ -1,14 +1,15 @@
 import pytest
 
-from concrete_settings import Settings, Setting, setting
-from concrete_settings.behaviors import deprecated, SettingBehavior
+from concrete_settings import Settings, Setting, setting, universal_behavior
+from concrete_settings.concrete_settings import SettingBehavior, deprecated
 from concrete_settings.exceptions import SettingsValidationError
 
 
 @pytest.fixture
 def div():
+    @universal_behavior
     class Div(SettingBehavior):
-        def __init__(self, divisor):
+        def __init__(self, divisor=2):
             self.divisor = divisor
 
         def get_setting_value(self, setting, owner, get_value):
@@ -66,6 +67,24 @@ def test_setting_behavior_set():
     assert set_was_called
 
 
+def test_universal_behavior_matmul_on_right_side(div):
+    class S(Settings):
+        D = Setting(10) @ div
+        E = Setting(9) @ div(3)
+
+    assert S().D == 5
+    assert S().E == 3
+
+
+def test_universal_behavior_value_on_left_side(div):
+    class S(Settings):
+        D = 10 @ div
+        E = 9 @ div(3)
+
+    assert S().D == 5
+    assert S().E == 3
+
+
 def test_setting_behavior_call_order(div, plus):
     class S(Settings):
         D = Setting(23) @ plus(2) @ div(5)
@@ -111,11 +130,9 @@ def test_setting_behavior_with_property_setting_order(div, plus):
 
 
 # == Deprecated == #
-
-
 def test_deprecated_warns_when_validating():
     class S(Settings):
-        D = Setting(10) @ deprecated()
+        D = 10 @ deprecated
 
     with pytest.warns(DeprecationWarning):
         S().is_valid()
@@ -165,3 +182,14 @@ def test_deprecated_not_warns():
         S().is_valid()
         S().D
         S().D = 20
+
+
+def test_deprecated_on_property_setting():
+    class S(Settings):
+        @deprecated
+        @setting
+        def D(self):
+            return 30
+
+    with pytest.warns(DeprecationWarning):
+        assert S().is_valid()
