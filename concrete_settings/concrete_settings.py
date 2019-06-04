@@ -72,25 +72,20 @@ class Setting:
             return self
 
         # == object-level access ==
-        return self.behaviors.get_setting_value(
-            self, owner, functools.partial(self.__descriptor__get__, owner, type(owner))
-        )
+        get_value = functools.partial(self.__descriptor__get__, owner, type(owner))
+        return self.behaviors.get_setting_value(self, owner, get_value)
 
     def __set__(self, owner: 'Settings', val):
         assert isinstance(owner, Settings), "owner should be an instance of Settings"
-        self.behaviors.set_setting_value(
-            self, owner, val, functools.partial(self.__descriptor__set__, owner)
-        )
+
+        set_value = functools.partial(self.__descriptor__set__, owner)
+        self.behaviors.set_setting_value(self, owner, val, set_value)
 
     def __descriptor__get__(self, owner, owner_type):
         return getattr(owner, f"__setting_{self.name}_value", self.value)
 
     def __descriptor__set__(self, owner, val):
         setattr(owner, f"__setting_{self.name}_value", val)
-
-
-class OverrideSetting(Setting):
-    pass
 
 
 class PropertySetting(Setting):
@@ -274,7 +269,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
         differences = []
 
         # No checks are performed if setting is overriden
-        if isinstance(s1, OverrideSetting):
+        if override in s1.behaviors:
             return NO_DIFF
 
         if s0.type_hint != s1.type_hint:
@@ -420,6 +415,14 @@ def universal_behavior(behavior: SettingBehavior):
             return bhv(setting)
 
     return SettingsBehaviorWrapper()
+
+
+@universal_behavior
+class Override(SettingBehavior):
+    pass
+
+
+override = Override()
 
 
 @universal_behavior

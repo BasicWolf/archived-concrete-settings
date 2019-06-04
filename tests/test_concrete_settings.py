@@ -7,7 +7,7 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import Settings, Setting, setting, OverrideSetting
+from concrete_settings import Settings, Setting, setting, override
 from concrete_settings.exceptions import SettingsStructureError, SettingsValidationError
 
 
@@ -196,7 +196,7 @@ def test_validate_override_smoke(v_int, v_str):
         T: int = v_int
 
     class S1(S):
-        T: str = OverrideSetting(v_str)
+        T: str = v_str @ override
 
     s1 = S1()
     s1.is_valid()

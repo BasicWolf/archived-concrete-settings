@@ -3,9 +3,10 @@ import sys
 from .concrete_settings import (
     Settings,
     Setting,
-    OverrideSetting,
     PropertySetting,
     universal_behavior,
+    deprecated,
+    override,
 )
 
 setting = PropertySetting

@@ -140,7 +140,7 @@ def test_deprecated_warns_when_validating():
 
 def test_deprecated_warning_message():
     class S(Settings):
-        D = Setting(10) @ deprecated()
+        D = 10 @ deprecated()
 
     with pytest.warns(
         DeprecationWarning,
@@ -152,7 +152,7 @@ def test_deprecated_warning_message():
 
 def test_deprecated_error_when_validating():
     class S(Settings):
-        D = Setting(10) @ deprecated(error_on_validation=True)
+        D = 10 @ deprecated(error_on_validation=True)
 
     with pytest.raises(SettingsValidationError):
         S().is_valid(raise_exception=True)
@@ -160,7 +160,7 @@ def test_deprecated_error_when_validating():
 
 def test_deprecated_warns_on_get():
     class S(Settings):
-        D = Setting(10) @ deprecated(warn_on_get=True)
+        D = 10 @ deprecated(warn_on_get=True)
 
     with pytest.warns(DeprecationWarning):
         S().D
@@ -168,7 +168,7 @@ def test_deprecated_warns_on_get():
 
 def test_deprecated_warns_on_set():
     class S(Settings):
-        D = Setting(10) @ deprecated(warn_on_set=True)
+        D = 10 @ deprecated(warn_on_set=True)
 
     with pytest.warns(DeprecationWarning):
         S().D = 20
@@ -176,7 +176,7 @@ def test_deprecated_warns_on_set():
 
 def test_deprecated_not_warns():
     class S(Settings):
-        D = Setting(10) @ deprecated(warn_on_validation=False)
+        D = 10 @ deprecated(warn_on_validation=False)
 
     with pytest.warns(None):
         S().is_valid()
