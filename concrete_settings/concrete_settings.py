@@ -417,12 +417,13 @@ def universal_behavior(behavior: SettingBehavior):
     return SettingsBehaviorWrapper()
 
 
+override = universal_behavior(SettingBehavior)()
+
+
 @universal_behavior
-class Override(SettingBehavior):
-    pass
-
-
-override = Override()
+class required(SettingBehavior):
+    def __init__(self, message='Setting `{name}` is required to have a value.'):
+        self.message_tempalte = message
 
 
 @universal_behavior

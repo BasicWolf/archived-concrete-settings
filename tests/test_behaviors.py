@@ -1,6 +1,13 @@
 import pytest
 
-from concrete_settings import Settings, Setting, setting, universal_behavior
+from concrete_settings import (
+    Settings,
+    Setting,
+    Undefined,
+    setting,
+    universal_behavior,
+    required,
+)
 from concrete_settings.concrete_settings import SettingBehavior, deprecated
 from concrete_settings.exceptions import SettingsValidationError
 
@@ -130,6 +137,8 @@ def test_setting_behavior_with_property_setting_order(div, plus):
 
 
 # == Deprecated == #
+
+
 def test_deprecated_warns_when_validating():
     class S(Settings):
         D = 10 @ deprecated
@@ -193,3 +202,16 @@ def test_deprecated_on_property_setting():
 
     with pytest.warns(DeprecationWarning):
         assert S().is_valid()
+
+
+# == required == #
+
+
+def test_required():
+    class S(Settings):
+        D = Undefined @ required
+
+    with pytest.raises(
+        SettingsValidationError, match="'Setting `{name}` is required to have a value.'"
+    ):
+        S().is_valid(raise_exception=True)
