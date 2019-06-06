@@ -1,9 +1,9 @@
 import abc
 import warnings
-
 from typing import Callable
 
 from .exceptions import SettingsValidationError
+from .undefined import Undefined
 
 
 class Validator(metaclass=abc.ABCMeta):
@@ -30,6 +30,16 @@ class DeprecatedValidator(Validator):
             raise SettingsValidationError(msg)
         else:
             warnings.warn(msg, DeprecationWarning)
+
+
+class RequiredValidator(Validator):
+    def __init__(self, message):
+        self.message = message
+
+    def __call__(self, value, *, name, owner, **ignore):
+        if self.value == Undefined:
+            msg = self.message.format(name=name, owner=type(owner))
+            raise SettingsValidationError(msg)
 
 
 class ValueTypeValidator(Validator):

@@ -5,36 +5,43 @@ import warnings
 from collections import defaultdict
 from typing import Any, Callable, Sequence, Union, List, DefaultDict
 
-from concrete_settings.validators import DeprecatedValidator
 from . import docreader
 from .exceptions import SettingsStructureError, SettingsValidationError
-from .validators import ValueTypeValidator
+from .validators import DeprecatedValidator, RequiredValidator, ValueTypeValidator
+from .undefined import Undefined
 
 
-class UndefinedMeta(type):
-    def __bool__(self):
-        return False
-
-    def __str__(self):
-        return 'Undefined value'
-
-
-class Undefined(metaclass=UndefinedMeta):
-    """`Undefined` is a special value which indicates
-    that something has not been explicitly set by a user.
-    """
-
-    pass
-
-
-class GuessSettingType:
+class _GuessSettingType:
     """A special value for Setting.type_hint, which indicates
        that a Setting type should be guessed from the default value.
 
     For an `Undefined` or an unknown type, the guessed type hint is `typing.Any`.
     """
 
-    pass
+    @staticmethod
+    def guess_type_hint(val):
+        if val is Undefined:
+            return Any
+
+        known_types = [
+            bool,  # bool MUST come before int, as e.g. isinstance(True, int) == True
+            int,
+            float,
+            complex,
+            list,
+            tuple,
+            range,
+            bytes,
+            str,
+            frozenset,
+            set,
+            dict,
+        ]
+
+        for t in known_types:
+            if isinstance(val, t):
+                return t
+        return typing.Any
 
 
 # ==== Settings classes ==== #
@@ -51,7 +58,7 @@ class Setting:
         *,
         doc: Union[str, Undefined] = Undefined,
         validators: Union[Sequence[Callable]] = (),
-        type_hint: Any = GuessSettingType,
+        type_hint: Any = _GuessSettingType,
         behaviors: List = None,
     ):
         self.value = value
@@ -104,7 +111,7 @@ class PropertySetting(Setting):
         if not self.__doc__:
             self.__doc__ = fget.__doc__
 
-        if self.type_hint is GuessSettingType:
+        if self.type_hint is _GuessSettingType:
             self.type_hint = fget.__annotations__.get('return', self.type_hint)
         return self
 
@@ -150,9 +157,9 @@ class ConcreteSettingsMeta(type):
             # Should we try to guess a type_hint for a Setting?
             if (
                 isinstance(new_field, Setting)
-                and new_field.type_hint is GuessSettingType
+                and new_field.type_hint is _GuessSettingType
             ):
-                new_field.type_hint = guess_type_hint(new_field.value)
+                new_field.type_hint = _GuessSettingType.guess_type_hint(new_field.value)
 
             new_dict[attr] = new_field
 
@@ -160,7 +167,7 @@ class ConcreteSettingsMeta(type):
 
     @staticmethod
     def make_setting_from_attr(attr, val, annotations):
-        type_hint = annotations.get(attr, GuessSettingType)
+        type_hint = annotations.get(attr, _GuessSettingType)
         doc = ""
         return Setting(val, doc=doc, type_hint=type_hint)
 
@@ -313,31 +320,6 @@ class Settings(metaclass=ConcreteSettingsMeta):
                     raise e
                 errors.append(str(e))
         return errors
-
-
-def guess_type_hint(val):
-    if val is Undefined:
-        return Any
-
-    known_types = [
-        bool,  # bool MUST come before int, as e.g. isinstance(True, int) == True
-        int,
-        float,
-        complex,
-        list,
-        tuple,
-        range,
-        bytes,
-        str,
-        frozenset,
-        set,
-        dict,
-    ]
-
-    for t in known_types:
-        if isinstance(val, t):
-            return t
-    return typing.Any
 
 
 class SettingBehavior:

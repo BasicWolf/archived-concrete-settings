@@ -1,5 +1,4 @@
 import sys
-
 from .concrete_settings import (
     Settings,
     Setting,
