@@ -276,7 +276,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
         differences = []
 
         # No checks are performed if setting is overriden
-        if override in s1.behaviors:
+        if any(isinstance(b, override) for b in s1.behaviors):
             return NO_DIFF
 
         if s0.type_hint != s1.type_hint:
@@ -322,7 +322,24 @@ class Settings(metaclass=ConcreteSettingsMeta):
         return errors
 
 
-class SettingBehavior:
+class SettingBehaviorMeta(type):
+    def __call__(self, *args, **kwargs):
+        if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], Setting):
+            bhv = super().__call__()
+            return bhv(args[0])
+        else:
+            bhv = super().__call__(*args, **kwargs)
+            return bhv
+
+    def __rmatmul__(self, setting: Union[Setting, Any]):
+        if not isinstance(setting, Setting):
+            setting = Setting(setting)
+
+        bhv = self()
+        return bhv(setting)
+
+
+class SettingBehavior(metaclass=SettingBehaviorMeta):
     def __call__(self, setting: Setting):
         return self.inject(setting)
 
@@ -377,38 +394,20 @@ class Behaviors(list):
         return _set_value(val)
 
 
-def universal_behavior(behavior: SettingBehavior):
-    assert issubclass(behavior, SettingBehavior)
-
-    class SettingsBehaviorWrapper:
-        def __call__(self, *args, **kwargs):
-            if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], Setting):
-                bhv = behavior()
-                return bhv(args[0])
-            else:
-                bhv = behavior(*args, **kwargs)
-                return bhv
-
-        def __rmatmul__(self, setting: Union[Setting, Any]):
-            if not isinstance(setting, Setting):
-                setting = Setting(setting)
-
-            bhv = behavior()
-            return bhv(setting)
-
-    return SettingsBehaviorWrapper()
+class override(SettingBehavior):
+    pass
 
 
-override = universal_behavior(SettingBehavior)()
-
-
-@universal_behavior
 class required(SettingBehavior):
     def __init__(self, message='Setting `{name}` is required to have a value.'):
-        self.message_tempalte = message
+        self.message = message
+
+    def inject(self, setting):
+        setting.validators = (RequiredValidator(self.message),) + setting.validators
+
+        return super().inject(setting)
 
 
-@universal_behavior
 class deprecated(SettingBehavior):
     def __init__(
         self,

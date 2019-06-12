@@ -4,7 +4,6 @@ from .concrete_settings import (
     Setting,
     PropertySetting,
     Undefined,
-    universal_behavior,
     deprecated,
     override,
     required,

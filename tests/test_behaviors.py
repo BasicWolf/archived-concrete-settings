@@ -5,7 +5,6 @@ from concrete_settings import (
     Setting,
     Undefined,
     setting,
-    universal_behavior,
     required,
 )
 from concrete_settings.concrete_settings import SettingBehavior, deprecated
@@ -14,7 +13,6 @@ from concrete_settings.exceptions import SettingsValidationError
 
 @pytest.fixture
 def div():
-    @universal_behavior
     class Div(SettingBehavior):
         def __init__(self, divisor=2):
             self.divisor = divisor
@@ -209,9 +207,11 @@ def test_deprecated_on_property_setting():
 
 def test_required():
     class S(Settings):
+        default_validators = ()
+
         D = Undefined @ required
 
     with pytest.raises(
-        SettingsValidationError, match="'Setting `{name}` is required to have a value.'"
+        SettingsValidationError, match="Setting `D` is required to have a value."
     ):
         S().is_valid(raise_exception=True)

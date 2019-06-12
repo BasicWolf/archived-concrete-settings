@@ -37,7 +37,7 @@ class RequiredValidator(Validator):
         self.message = message
 
     def __call__(self, value, *, name, owner, **ignore):
-        if self.value == Undefined:
+        if value == Undefined:
             msg = self.message.format(name=name, owner=type(owner))
             raise SettingsValidationError(msg)
 
