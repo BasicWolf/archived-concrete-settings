@@ -5,36 +5,43 @@ import warnings
 from collections import defaultdict
 from typing import Any, Callable, Sequence, Union, List, DefaultDict
 
-from concrete_settings.validators import DeprecatedValidator
 from . import docreader
 from .exceptions import SettingsStructureError, SettingsValidationError
-from .validators import ValueTypeValidator
+from .validators import DeprecatedValidator, RequiredValidator, ValueTypeValidator
+from .undefined import Undefined
 
 
-class UndefinedMeta(type):
-    def __bool__(self):
-        return False
-
-    def __str__(self):
-        return 'Undefined value'
-
-
-class Undefined(metaclass=UndefinedMeta):
-    """`Undefined` is a special value which indicates
-    that something has not been explicitly set by a user.
-    """
-
-    pass
-
-
-class GuessSettingType:
+class _GuessSettingType:
     """A special value for Setting.type_hint, which indicates
        that a Setting type should be guessed from the default value.
 
     For an `Undefined` or an unknown type, the guessed type hint is `typing.Any`.
     """
 
-    pass
+    @staticmethod
+    def guess_type_hint(val):
+        if val is Undefined:
+            return Any
+
+        known_types = [
+            bool,  # bool MUST come before int, as e.g. isinstance(True, int) == True
+            int,
+            float,
+            complex,
+            list,
+            tuple,
+            range,
+            bytes,
+            str,
+            frozenset,
+            set,
+            dict,
+        ]
+
+        for t in known_types:
+            if isinstance(val, t):
+                return t
+        return typing.Any
 
 
 # ==== Settings classes ==== #
@@ -51,7 +58,7 @@ class Setting:
         *,
         doc: Union[str, Undefined] = Undefined,
         validators: Union[Sequence[Callable]] = (),
-        type_hint: Any = GuessSettingType,
+        type_hint: Any = _GuessSettingType,
         behaviors: List = None,
     ):
         self.value = value
@@ -104,7 +111,7 @@ class PropertySetting(Setting):
         if not self.__doc__:
             self.__doc__ = fget.__doc__
 
-        if self.type_hint is GuessSettingType:
+        if self.type_hint is _GuessSettingType:
             self.type_hint = fget.__annotations__.get('return', self.type_hint)
         return self
 
@@ -150,9 +157,9 @@ class ConcreteSettingsMeta(type):
             # Should we try to guess a type_hint for a Setting?
             if (
                 isinstance(new_field, Setting)
-                and new_field.type_hint is GuessSettingType
+                and new_field.type_hint is _GuessSettingType
             ):
-                new_field.type_hint = guess_type_hint(new_field.value)
+                new_field.type_hint = _GuessSettingType.guess_type_hint(new_field.value)
 
             new_dict[attr] = new_field
 
@@ -160,7 +167,7 @@ class ConcreteSettingsMeta(type):
 
     @staticmethod
     def make_setting_from_attr(attr, val, annotations):
-        type_hint = annotations.get(attr, GuessSettingType)
+        type_hint = annotations.get(attr, _GuessSettingType)
         doc = ""
         return Setting(val, doc=doc, type_hint=type_hint)
 
@@ -269,7 +276,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
         differences = []
 
         # No checks are performed if setting is overriden
-        if override in s1.behaviors:
+        if any(isinstance(b, override) for b in s1.behaviors):
             return NO_DIFF
 
         if s0.type_hint != s1.type_hint:
@@ -315,32 +322,24 @@ class Settings(metaclass=ConcreteSettingsMeta):
         return errors
 
 
-def guess_type_hint(val):
-    if val is Undefined:
-        return Any
+class SettingBehaviorMeta(type):
+    def __call__(self, *args, **kwargs):
+        if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], Setting):
+            bhv = super().__call__()
+            return bhv(args[0])
+        else:
+            bhv = super().__call__(*args, **kwargs)
+            return bhv
 
-    known_types = [
-        bool,  # bool MUST come before int, as e.g. isinstance(True, int) == True
-        int,
-        float,
-        complex,
-        list,
-        tuple,
-        range,
-        bytes,
-        str,
-        frozenset,
-        set,
-        dict,
-    ]
+    def __rmatmul__(self, setting: Union[Setting, Any]):
+        if not isinstance(setting, Setting):
+            setting = Setting(setting)
 
-    for t in known_types:
-        if isinstance(val, t):
-            return t
-    return typing.Any
+        bhv = self()
+        return bhv(setting)
 
 
-class SettingBehavior:
+class SettingBehavior(metaclass=SettingBehaviorMeta):
     def __call__(self, setting: Setting):
         return self.inject(setting)
 
@@ -395,37 +394,20 @@ class Behaviors(list):
         return _set_value(val)
 
 
-def universal_behavior(behavior: SettingBehavior):
-    assert issubclass(behavior, SettingBehavior)
-
-    class SettingsBehaviorWrapper:
-        def __call__(self, *args, **kwargs):
-            if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], Setting):
-                bhv = behavior()
-                return bhv(args[0])
-            else:
-                bhv = behavior(*args, **kwargs)
-                return bhv
-
-        def __rmatmul__(self, setting: Union[Setting, Any]):
-            if not isinstance(setting, Setting):
-                setting = Setting(setting)
-
-            bhv = behavior()
-            return bhv(setting)
-
-    return SettingsBehaviorWrapper()
-
-
-@universal_behavior
-class Override(SettingBehavior):
+class override(SettingBehavior):
     pass
 
 
-override = Override()
+class required(SettingBehavior):
+    def __init__(self, message='Setting `{name}` is required to have a value.'):
+        self.message = message
+
+    def inject(self, setting):
+        setting.validators = (RequiredValidator(self.message),) + setting.validators
+
+        return super().inject(setting)
 
 
-@universal_behavior
 class deprecated(SettingBehavior):
     def __init__(
         self,

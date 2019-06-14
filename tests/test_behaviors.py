@@ -1,13 +1,12 @@
 import pytest
 
-from concrete_settings import Settings, Setting, setting, universal_behavior
+from concrete_settings import Settings, Setting, Undefined, setting, required
 from concrete_settings.concrete_settings import SettingBehavior, deprecated
 from concrete_settings.exceptions import SettingsValidationError
 
 
 @pytest.fixture
 def div():
-    @universal_behavior
     class Div(SettingBehavior):
         def __init__(self, divisor=2):
             self.divisor = divisor
@@ -67,7 +66,7 @@ def test_setting_behavior_set():
     assert set_was_called
 
 
-def test_universal_behavior_matmul_on_right_side(div):
+def test_universal_constructor_matmul_on_right_side(div):
     class S(Settings):
         D = Setting(10) @ div
         E = Setting(9) @ div(3)
@@ -76,7 +75,7 @@ def test_universal_behavior_matmul_on_right_side(div):
     assert S().E == 3
 
 
-def test_universal_behavior_value_on_left_side(div):
+def test_universal_constructor_value_on_left_side(div):
     class S(Settings):
         D = 10 @ div
         E = 9 @ div(3)
@@ -130,6 +129,8 @@ def test_setting_behavior_with_property_setting_order(div, plus):
 
 
 # == Deprecated == #
+
+
 def test_deprecated_warns_when_validating():
     class S(Settings):
         D = 10 @ deprecated
@@ -193,3 +194,27 @@ def test_deprecated_on_property_setting():
 
     with pytest.warns(DeprecationWarning):
         assert S().is_valid()
+
+
+# == required == #
+
+
+def test_required():
+    class S(Settings):
+        default_validators = ()
+
+        D = Undefined @ required
+
+    with pytest.raises(
+        SettingsValidationError, match="Setting `D` is required to have a value."
+    ):
+        S().is_valid(raise_exception=True)
+
+
+def test_required_setting_has_value_does_not_raise_exception():
+    class S(Settings):
+        default_validators = ()
+
+        D = 10 @ required
+
+    assert S().is_valid()
