@@ -15,7 +15,7 @@ class SettingsValidationError(ConcreteSettingsError):
     def __init__(self, errors: Union[dict, list, str]):
 
         if errors is None:
-            errors = self.default_errors
+            errors = self.default_error
 
         # For validation failures, we may collect many errors together,
         # so the errors should always be coerced to a list if not already.

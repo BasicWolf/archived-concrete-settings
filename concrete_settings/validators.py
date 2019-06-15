@@ -2,6 +2,8 @@ import abc
 import warnings
 from typing import Callable
 
+from typeguard import check_type
+
 from .exceptions import SettingsValidationError
 from .undefined import Undefined
 
@@ -45,25 +47,15 @@ class RequiredValidator(Validator):
 class ValueTypeValidator(Validator):
     __slots__ = ('type_hint', 'strict')
 
-    def __init__(self, type_hint=None, strict: bool = True):
-        """
-        :param strict: Indicates whether a strict type equivalence is required:
-                       When True: type(value) == type_hint
-                       When False: isinstance(value, type_hint)
-        """
+    def __init__(self, type_hint=None):
         self.type_hint = type_hint
-        self.strict = strict
 
-    def __call__(self, value, *, setting, **kwargs):
+    def __call__(self, value, *, name, setting, **ignore):
         type_hint = setting.type_hint if self.type_hint is None else self.type_hint
 
-        valid = True
-        if self.strict:
-            valid = type(value) == type_hint
-        else:
-            valid = isinstance(value, type_hint)
-
-        if not valid:
+        try:
+            check_type(name, value, type_hint)
+        except TypeError as e:
             raise SettingsValidationError(
                 f'Expected value of type `{type_hint}` got value of type `{type(value)}`'
-            )
+            ) from e

@@ -295,10 +295,10 @@ class Settings(metaclass=ConcreteSettingsMeta):
         errors = defaultdict(list)
 
         # validate each setting individually
-        for cls_name in self._settings_classes:
-            setting_errors = self._validate_setting(cls_name, raise_exception)
+        for setting_name in self._settings_classes:
+            setting_errors = self._validate_setting(setting_name, raise_exception)
             if setting_errors:
-                errors[cls_name] += setting_errors
+                errors[setting_name] += setting_errors
 
         self.errors = errors
         self.validating = False
@@ -306,7 +306,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
 
     def _validate_setting(self, name: str, raise_exception=False) -> Sequence[str]:
         setting = getattr(self.__class__, name)
-        value = getattr(self, name)
+        value: Setting = getattr(self, name)
 
         errors = []
         validators = setting.validators or self.default_validators
@@ -319,6 +319,12 @@ class Settings(metaclass=ConcreteSettingsMeta):
                 if raise_exception:
                     raise e
                 errors.append(str(e))
+
+        # nested Settings
+        if isinstance(value, Settings):
+            value.is_valid(raise_exception=raise_exception)
+            errors.append(value.errors)
+
         return errors
 
 
