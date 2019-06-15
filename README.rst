@@ -3,12 +3,14 @@ Welcome
 
 **concrete-settings** is a small library which helps handling settings in large projects.
 
-It is built on the following concepts:
+The settings specification DSP aims to be simple and easy readible.
+It is designed with these concepts in mind:
 
-* Settings are declared in classes.
-* Settings should be documented and there should be a way to easily fetch documentation.
+* Specifications are declared in classes.
+* Settings should be documented and there should be an easy way to bundle the documentation.
 * Settings should be type-annotated and validated.
 * Settings should be mixable and nestable.
+
 
 
 .. code-block:: python
@@ -39,7 +41,7 @@ Overriding settings
 
    # Override is required
    class S2(S):
-       SPEED: str = OverrideSetting('hello')
+       SPEED: str = 'hello' @override
 
     >>> S2();
     >>> S2.is_valid()
@@ -52,7 +54,7 @@ Deprecated settings
 .. code-block:: python
 
    class S0(Settings):
-       SPEED: int = DeprecatedSetting(10)
+       SPEED: int = 10 @deprecated
 
 
    >>> S0()
