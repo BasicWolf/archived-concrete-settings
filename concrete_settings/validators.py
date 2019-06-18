@@ -15,7 +15,14 @@ class Validator(metaclass=abc.ABCMeta):
     referring to settings, setting and setting's name."""
 
     @abc.abstractmethod
-    def __call__(self, value, *, name=None, owner=None, setting=None):
+    def __call__(
+        self,
+        value,
+        *,
+        name: str = None,
+        owner: 'concrete_settings.Settings' = None,
+        setting: 'concrete_settings.Setting' = None,
+    ):
         """Validate a value. Raise `SettingsValidationError` if value is wrong."""
         pass
 

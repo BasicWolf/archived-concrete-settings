@@ -1,9 +1,8 @@
 import functools
 import types
-import typing
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, Sequence, Union, List, DefaultDict
+from typing import Any, Callable, Dict, Type, Sequence, Union, List, DefaultDict
 
 from . import docreader
 from .exceptions import SettingsStructureError, SettingsValidationError
@@ -41,7 +40,7 @@ class _GuessSettingType:
         for t in known_types:
             if isinstance(val, t):
                 return t
-        return typing.Any
+        return Any
 
 
 # ==== Settings classes ==== #
@@ -230,16 +229,30 @@ class Settings(metaclass=ConcreteSettingsMeta):
 
     validating: bool
     _validated: bool
-    _settings_classes: DefaultDict[str, List]
 
     def __init__(self):
         self.validating = False
         self._validated = False
-        self._build_internal_helpers()
         self._verify_structure()
 
-    def _build_internal_helpers(self):
-        # self._settings_classes is helper list used in
+    def _verify_structure(self):
+        # verify whether the setting on Nth level of the inheritance hierarchy
+        # corresponds to the setting on N-1th level of the hierarchy.
+        for name, classes in self._get_settings_classes().items():
+            for c0, c1 in zip(classes, classes[1:]):
+                # start with setting object of the first classes
+                s0 = c0.__dict__[name]
+                s1 = c1.__dict__[name]
+                differences = self._settings_diff(s0, s1)
+                if differences:
+                    diff = '; '.join(differences)
+                    raise SettingsStructureError(
+                        f'in classes {c0} and {c1} setting {name} has'
+                        f' the following difference(s): {diff}'
+                    )
+
+    def _get_settings_classes(self) -> Dict[str, List[Type['Settings']]]:
+        # _settings_classes is helper list which can be used in
         # settings reading and validation routines.
         # 1. Iterate through __mro__ classes in reverse order - so that
         #    iteration happens from the most-base class to the current one.
@@ -253,23 +266,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
             for attr, val in cls.__dict__.items():
                 if isinstance(val, Setting):
                     settings_classes[attr].append(cls)
-        self._settings_classes = settings_classes
-
-    def _verify_structure(self):
-        # verify whether the setting on Nth level of the inheritance hierarchy
-        # corresponds to the setting on N-1th level of the hierarchy.
-        for name, classes in self._settings_classes.items():
-            for c0, c1 in zip(classes, classes[1:]):
-                # start with setting object of the first classes
-                s0 = c0.__dict__[name]
-                s1 = c1.__dict__[name]
-                differences = self._settings_diff(s0, s1)
-                if differences:
-                    diff = '; '.join(differences)
-                    raise SettingsStructureError(
-                        f'in classes {c0} and {c1} setting {name} has'
-                        f' the following difference(s): {diff}'
-                    )
+        return dict(settings_classes)
 
     def _settings_diff(self, s0: Setting, s1: Setting) -> List[str]:
         NO_DIFF = []
@@ -290,22 +287,29 @@ class Settings(metaclass=ConcreteSettingsMeta):
             self._validate(raise_exception)
         return self.errors == {}
 
+    def _get_settings_attributes(self):
+        for name in dir(self.__class__):
+            attr = getattr(self.__class__, name)
+            if isinstance(attr, Setting):
+                yield name, attr
+
     def _validate(self, raise_exception=False):
         self.validating = True
         errors = defaultdict(list)
 
         # validate each setting individually
-        for setting_name in self._settings_classes:
-            setting_errors = self._validate_setting(setting_name, raise_exception)
+        for name, setting in self._get_settings_attributes():
+            setting_errors = self._validate_setting(name, setting, raise_exception)
             if setting_errors:
-                errors[setting_name] += setting_errors
+                errors[name] += setting_errors
 
         self.errors = errors
         self.validating = False
         self._validated = True
 
-    def _validate_setting(self, name: str, raise_exception=False) -> Sequence[str]:
-        setting = getattr(self.__class__, name)
+    def _validate_setting(
+        self, name: str, setting: Setting, raise_exception=False
+    ) -> Sequence[str]:
         value: Setting = getattr(self, name)
 
         errors = []
@@ -316,6 +320,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
             try:
                 validator(value, name=name, owner=self, setting=setting)
             except SettingsValidationError as e:
+                e.prepend_source(self.__class__.__qualname__)
                 if raise_exception:
                     raise e
                 errors.append(str(e))

@@ -224,7 +224,7 @@ def test_settings_default_validators(is_positive):
     assert not s.is_valid()
     assert 'T0' in s.errors
 
-    assert s.errors['T0'] == ['Value should be positive']
+    assert s.errors['T0'] == [f'{S.__qualname__}: Value should be positive']
     assert 'T1' not in s.errors
 
 
@@ -239,8 +239,8 @@ def test_settings_mandatory_validators(is_positive, is_less_that_10):
     assert not s.is_valid()
     assert 'T0' in s.errors
     assert 'T1' in s.errors
-    assert s.errors['T0'] == ['Value should be positive']
-    assert s.errors['T1'] == ['Value should be less that 10']
+    assert s.errors['T0'] == [f'{S.__qualname__}: Value should be positive']
+    assert s.errors['T1'] == [f'{S.__qualname__}: Value should be less that 10']
 
 
 def test_nested_settings_smoke():
