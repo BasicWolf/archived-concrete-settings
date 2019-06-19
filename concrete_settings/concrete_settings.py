@@ -9,6 +9,8 @@ from .exceptions import SettingsStructureError, SettingsValidationError
 from .validators import DeprecatedValidator, RequiredValidator, ValueTypeValidator
 from .undefined import Undefined
 
+SettingsErrorsType = List[Union[str, Dict[str, 'SettingsErrorsType']]]
+
 
 class _GuessSettingType:
     """A special value for Setting.type_hint, which indicates
@@ -309,7 +311,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
 
     def _validate_setting(
         self, name: str, setting: Setting, raise_exception=False
-    ) -> Sequence[str]:
+    ) -> SettingsErrorsType:
         value: Setting = getattr(self, name)
 
         errors = []
@@ -320,15 +322,20 @@ class Settings(metaclass=ConcreteSettingsMeta):
             try:
                 validator(value, name=name, owner=self, setting=setting)
             except SettingsValidationError as e:
-                e.prepend_source(self.__class__.__qualname__)
                 if raise_exception:
                     raise e
                 errors.append(str(e))
 
         # nested Settings
         if isinstance(value, Settings):
-            value.is_valid(raise_exception=raise_exception)
-            errors.append(value.errors)
+            try:
+                value.is_valid(raise_exception=raise_exception)
+            except SettingsValidationError as e:
+                assert raise_exception
+                e.prepend_source(name)
+                raise e
+
+            errors.append({name: value.errors})
 
         return errors
 
