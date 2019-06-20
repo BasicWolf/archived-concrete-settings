@@ -263,7 +263,34 @@ def test_nested_settings_validation_raises():
 
     with pytest.raises(
         SettingsValidationError,
-        #        match="Expected value of type `<class 'str'>` got value of type `<class 'int'>`",
+        match="T_S0: Expected value of type `<class 'str'>` got value of type `<class 'int'>`",
     ) as e:
         s = S()
         s.is_valid(raise_exception=True)
+
+
+def test_nested_triple_nested_validation_errors():
+    class S3(Settings):
+        Т: str = 10
+
+    class S2(Settings):
+        T_S3 = S3()
+
+    class S1(Settings):
+        T_S2 = S2()
+
+    s1 = S1()
+    assert not s1.is_valid()
+    assert s1.errors == {
+        'T_S2': [
+            {
+                'T_S3': [
+                    {
+                        'Т': [
+                            "Expected value of type `<class 'str'>` got value of type `<class 'int'>`"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }

@@ -9,7 +9,7 @@ from .exceptions import SettingsStructureError, SettingsValidationError
 from .validators import DeprecatedValidator, RequiredValidator, ValueTypeValidator
 from .undefined import Undefined
 
-SettingsErrorsType = List[Union[str, Dict[str, 'SettingsErrorsType']]]
+TSettingsErrors = List[Union[str, Dict[str, 'TSettingsErrors']]]
 
 
 class _GuessSettingType:
@@ -228,6 +228,7 @@ class ConcreteSettingsMeta(type):
 class Settings(metaclass=ConcreteSettingsMeta):
     default_validators: tuple = (ValueTypeValidator(),)
     mandatory_validators: tuple = ()
+    errors: TSettingsErrors = {}
 
     validating: bool
     _validated: bool
@@ -305,13 +306,13 @@ class Settings(metaclass=ConcreteSettingsMeta):
             if setting_errors:
                 errors[name] += setting_errors
 
-        self.errors = errors
+        self.errors = dict(errors)
         self.validating = False
         self._validated = True
 
     def _validate_setting(
         self, name: str, setting: Setting, raise_exception=False
-    ) -> SettingsErrorsType:
+    ) -> TSettingsErrors:
         value: Setting = getattr(self, name)
 
         errors = []
@@ -334,8 +335,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
                 assert raise_exception
                 e.prepend_source(name)
                 raise e
-
-            errors.append({name: value.errors})
+            errors.append(value.errors)
 
         return errors
 
