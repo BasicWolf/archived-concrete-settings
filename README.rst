@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/BasicWolf/concrete-settings.svg?branch=master
+    :target: https://travis-ci.org/BasicWolf/concrete-settings
+
 Welcome
 #######
 
