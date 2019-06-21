@@ -7,7 +7,8 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import Settings, Setting, setting, override
+from concrete_settings import Settings, Setting, setting
+from concrete_settings.behaviors import override
 from concrete_settings.exceptions import SettingsValidationError
 
 
@@ -281,16 +282,8 @@ def test_nested_triple_nested_validation_errors():
 
     s1 = S1()
     assert not s1.is_valid()
-    assert s1.errors == {
-        'T_S2': [
-            {
-                'T_S3': [
-                    {
-                        'Т': [
-                            "Expected value of type `<class 'str'>` got value of type `<class 'int'>`"
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
+    # fmt: off
+    assert s1.errors == {'T_S2': [{'T_S3': [{'Т': [
+        "Expected value of type `<class 'str'>` got value of type `<class 'int'>`"
+    ]}]}]}
+    # fmt: on

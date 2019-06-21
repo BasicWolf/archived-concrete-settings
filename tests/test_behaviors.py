@@ -1,7 +1,7 @@
 import pytest
 
-from concrete_settings import Settings, Setting, Undefined, setting, required, override
-from concrete_settings.concrete_settings import SettingBehavior, deprecated
+from concrete_settings import Settings, Setting, Undefined, setting
+from concrete_settings.behaviors import SettingBehavior, deprecated, required, override
 from concrete_settings.exceptions import SettingsValidationError, SettingsStructureError
 
 
