@@ -1,14 +1,16 @@
 import functools
 import types
-import typing
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, Sequence, Union, List, DefaultDict
+from typing import Any, Callable, Dict, Type, Sequence, Union, List, DefaultDict
 
 from . import docreader
+from .behaviors import Behaviors, override
 from .exceptions import SettingsStructureError, SettingsValidationError
 from .validators import DeprecatedValidator, RequiredValidator, ValueTypeValidator
 from .undefined import Undefined
+
+TSettingsErrors = List[Union[str, Dict[str, 'TSettingsErrors']]]
 
 
 class _GuessSettingType:
@@ -41,7 +43,7 @@ class _GuessSettingType:
         for t in known_types:
             if isinstance(val, t):
                 return t
-        return typing.Any
+        return Any
 
 
 # ==== Settings classes ==== #
@@ -227,19 +229,34 @@ class ConcreteSettingsMeta(type):
 class Settings(metaclass=ConcreteSettingsMeta):
     default_validators: tuple = (ValueTypeValidator(),)
     mandatory_validators: tuple = ()
+    errors: TSettingsErrors = {}
 
     validating: bool
     _validated: bool
-    _settings_classes: DefaultDict[str, List]
 
     def __init__(self):
         self.validating = False
         self._validated = False
-        self._build_internal_helpers()
         self._verify_structure()
 
-    def _build_internal_helpers(self):
-        # self._settings_classes is helper list used in
+    def _verify_structure(self):
+        # verify whether the setting on Nth level of the inheritance hierarchy
+        # corresponds to the setting on N-1th level of the hierarchy.
+        for name, classes in self._get_settings_classes().items():
+            for c0, c1 in zip(classes, classes[1:]):
+                # start with setting object of the first classes
+                s0 = c0.__dict__[name]
+                s1 = c1.__dict__[name]
+                differences = self._settings_diff(s0, s1)
+                if differences:
+                    diff = '; '.join(differences)
+                    raise SettingsStructureError(
+                        f'in classes {c0} and {c1} setting {name} has'
+                        f' the following difference(s): {diff}'
+                    )
+
+    def _get_settings_classes(self) -> Dict[str, List[Type['Settings']]]:
+        # _settings_classes is helper list which can be used in
         # settings reading and validation routines.
         # 1. Iterate through __mro__ classes in reverse order - so that
         #    iteration happens from the most-base class to the current one.
@@ -253,23 +270,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
             for attr, val in cls.__dict__.items():
                 if isinstance(val, Setting):
                     settings_classes[attr].append(cls)
-        self._settings_classes = settings_classes
-
-    def _verify_structure(self):
-        # verify whether the setting on Nth level of the inheritance hierarchy
-        # corresponds to the setting on N-1th level of the hierarchy.
-        for name, classes in self._settings_classes.items():
-            for c0, c1 in zip(classes, classes[1:]):
-                # start with setting object of the first classes
-                s0 = c0.__dict__[name]
-                s1 = c1.__dict__[name]
-                differences = self._settings_diff(s0, s1)
-                if differences:
-                    diff = '; '.join(differences)
-                    raise SettingsStructureError(
-                        f'in classes {c0} and {c1} setting {name} has'
-                        f' the following difference(s): {diff}'
-                    )
+        return dict(settings_classes)
 
     def _settings_diff(self, s0: Setting, s1: Setting) -> List[str]:
         NO_DIFF = []
@@ -290,23 +291,30 @@ class Settings(metaclass=ConcreteSettingsMeta):
             self._validate(raise_exception)
         return self.errors == {}
 
+    def _get_settings_attributes(self):
+        for name in dir(self.__class__):
+            attr = getattr(self.__class__, name)
+            if isinstance(attr, Setting):
+                yield name, attr
+
     def _validate(self, raise_exception=False):
         self.validating = True
         errors = defaultdict(list)
 
         # validate each setting individually
-        for cls_name in self._settings_classes:
-            setting_errors = self._validate_setting(cls_name, raise_exception)
+        for name, setting in self._get_settings_attributes():
+            setting_errors = self._validate_setting(name, setting, raise_exception)
             if setting_errors:
-                errors[cls_name] += setting_errors
+                errors[name] += setting_errors
 
-        self.errors = errors
+        self.errors = dict(errors)
         self.validating = False
         self._validated = True
 
-    def _validate_setting(self, name: str, raise_exception=False) -> Sequence[str]:
-        setting = getattr(self.__class__, name)
-        value = getattr(self, name)
+    def _validate_setting(
+        self, name: str, setting: Setting, raise_exception=False
+    ) -> TSettingsErrors:
+        value: Setting = getattr(self, name)
 
         errors = []
         validators = setting.validators or self.default_validators
@@ -319,129 +327,15 @@ class Settings(metaclass=ConcreteSettingsMeta):
                 if raise_exception:
                     raise e
                 errors.append(str(e))
+
+        # nested Settings
+        if isinstance(value, Settings):
+            try:
+                value.is_valid(raise_exception=raise_exception)
+            except SettingsValidationError as e:
+                assert raise_exception
+                e.prepend_source(name)
+                raise e
+            errors.append(value.errors)
+
         return errors
-
-
-class SettingBehaviorMeta(type):
-    def __call__(self, *args, **kwargs):
-        if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], Setting):
-            bhv = super().__call__()
-            return bhv(args[0])
-        else:
-            bhv = super().__call__(*args, **kwargs)
-            return bhv
-
-    def __rmatmul__(self, setting: Union[Setting, Any]):
-        if not isinstance(setting, Setting):
-            setting = Setting(setting)
-
-        bhv = self()
-        return bhv(setting)
-
-
-class SettingBehavior(metaclass=SettingBehaviorMeta):
-    def __call__(self, setting: Setting):
-        return self.inject(setting)
-
-    def __rmatmul__(self, setting: Union[Setting, Any]):
-        if not isinstance(setting, Setting):
-            setting = Setting(setting)
-
-        return self.inject(setting)
-
-    def inject(self, setting: Setting) -> Setting:
-        setting.behaviors.inject(self)
-        return setting
-
-    def get_setting_value(self, setting, owner, get_value):
-        return get_value()
-
-    def set_setting_value(self, setting, owner, val, set_value):
-        set_value(val)
-
-
-class Behaviors(list):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def inject(self, behavior):
-        self.insert(0, behavior)
-
-    def get_setting_value(self, setting, owner, get_value):
-        """Chain and invoke get_setting_value() of each behavior."""
-
-        def _get_value(i=0):
-            if i < len(self):
-                return self[i].get_setting_value(
-                    setting, owner, functools.partial(_get_value, i + 1)
-                )
-            else:
-                return get_value()
-
-        return _get_value()
-
-    def set_setting_value(self, setting, owner, val, set_value):
-        """Chain and invoke set_setting_value() of each behavior."""
-
-        def _set_value(v, i=0):
-            if i < len(self):
-                self[i].set_setting_value(
-                    setting, owner, v, functools.partial(_set_value, i=i + 1)
-                )
-            else:
-                set_value(v)
-
-        return _set_value(val)
-
-
-class override(SettingBehavior):
-    pass
-
-
-class required(SettingBehavior):
-    def __init__(self, message='Setting `{name}` is required to have a value.'):
-        self.message = message
-
-    def inject(self, setting):
-        setting.validators = (RequiredValidator(self.message),) + setting.validators
-
-        return super().inject(setting)
-
-
-class deprecated(SettingBehavior):
-    def __init__(
-        self,
-        deprecation_message: str = 'Setting `{name}` in class `{owner}` is deprecated.',
-        *,
-        warn_on_validation=True,
-        error_on_validation=False,
-        warn_on_get=False,
-        warn_on_set=False,
-    ):
-        self.deprecation_message = deprecation_message
-        self.error_on_validation = error_on_validation
-        self.warn_on_validation = warn_on_validation
-        self.warn_on_get = warn_on_get
-        self.warn_on_set = warn_on_set
-
-    def inject(self, setting):
-        if self.warn_on_validation or self.error_on_validation:
-            setting.validators = (
-                DeprecatedValidator(self.deprecation_message, self.error_on_validation),
-            ) + setting.validators
-
-        return super().inject(setting)
-
-    def get_setting_value(self, setting, owner, get_value):
-        if self.warn_on_get:
-            if owner and not owner.validating:
-                msg = self.deprecation_message.format(owner=owner, name=setting.name)
-                warnings.warn(msg, DeprecationWarning)
-        return get_value()
-
-    def set_setting_value(self, setting, owner, val, set_value):
-        if self.warn_on_set:
-            if not owner.validating:
-                msg = self.deprecation_message.format(owner=owner, name=setting.name)
-                warnings.warn(msg, DeprecationWarning)
-        set_value(val)

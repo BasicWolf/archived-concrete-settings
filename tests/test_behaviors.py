@@ -1,8 +1,8 @@
 import pytest
 
-from concrete_settings import Settings, Setting, Undefined, setting, required
-from concrete_settings.concrete_settings import SettingBehavior, deprecated
-from concrete_settings.exceptions import SettingsValidationError
+from concrete_settings import Settings, Setting, Undefined, setting
+from concrete_settings.behaviors import SettingBehavior, deprecated, required, override
+from concrete_settings.exceptions import SettingsValidationError, SettingsStructureError
 
 
 @pytest.fixture
@@ -218,3 +218,28 @@ def test_required_setting_has_value_does_not_raise_exception():
         D = 10 @ required
 
     assert S().is_valid()
+
+
+# == override == #
+def test_validate_override_smoke(v_int, v_str):
+    class S(Settings):
+        T: int = v_int
+
+    class S1(S):
+        T: str = v_str @ override
+
+    s1 = S1()
+    s1.is_valid()
+    assert s1.T == v_str
+
+
+def test_structure_error_without_override(v_int, v_str):
+    class S(Settings):
+        T: int = v_int
+
+    class S1(S):
+        T: str = v_str
+
+    with pytest.raises(SettingsStructureError) as e:
+        S1()
+    e.match('types differ')

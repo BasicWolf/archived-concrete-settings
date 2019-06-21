@@ -10,24 +10,18 @@ class SettingsStructureError(ConcreteSettingsError):
 
 
 class SettingsValidationError(ConcreteSettingsError):
-    default_error = 'Invalid Setting'
+    """Raised by a setting validator when a setting value is invalid"""
 
-    def __init__(self, errors: Union[dict, list, str]):
+    def __init__(self, description: str):
+        self.description = description
+        self.sources = []
 
-        if errors is None:
-            errors = self.default_errors
-
-        # For validation failures, we may collect many errors together,
-        # so the errors should always be coerced to a list if not already.
-        if not isinstance(errors, dict) and not isinstance(errors, list):
-            errors = [errors]
-        self.errors = errors
+    def prepend_source(self, source):
+        self.sources.insert(0, source)
 
     def __str__(self):
-        if isinstance(self.errors, dict):
-            return '\n'.join(
-                f"{setting}: {'; '.join(errors)}"
-                for setting, errors in self.errors.items()
-            )
+        if self.sources:
+            source = '.'.join(self.sources)
+            return f'{source}: {self.description}'
         else:
-            return '; '.join(self.errors)
+            return self.description

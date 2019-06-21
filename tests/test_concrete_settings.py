@@ -7,8 +7,9 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import Settings, Setting, setting, override
-from concrete_settings.exceptions import SettingsStructureError, SettingsValidationError
+from concrete_settings import Settings, Setting, setting
+from concrete_settings.behaviors import override
+from concrete_settings.exceptions import SettingsValidationError
 
 
 @pytest.fixture
@@ -191,30 +192,6 @@ def test_validate_smoke():
     s.is_valid()
 
 
-def test_validate_override_smoke(v_int, v_str):
-    class S(Settings):
-        T: int = v_int
-
-    class S1(S):
-        T: str = v_str @ override
-
-    s1 = S1()
-    s1.is_valid()
-    assert s1.T == v_str
-
-
-def test_structure_error_without_override(v_int, v_str):
-    class S(Settings):
-        T: int = v_int
-
-    class S1(S):
-        T: str = v_str
-
-    with pytest.raises(SettingsStructureError) as e:
-        S1()
-    e.match('types differ')
-
-
 # == ValueTypeValidator == #
 def test_value_type_validator():
     class S(Settings):
@@ -248,7 +225,7 @@ def test_settings_default_validators(is_positive):
     assert not s.is_valid()
     assert 'T0' in s.errors
 
-    assert s.errors['T0'] == ['Value should be positive']
+    assert s.errors['T0'] == [f'Value should be positive']
     assert 'T1' not in s.errors
 
 
@@ -265,3 +242,48 @@ def test_settings_mandatory_validators(is_positive, is_less_that_10):
     assert 'T1' in s.errors
     assert s.errors['T0'] == ['Value should be positive']
     assert s.errors['T1'] == ['Value should be less that 10']
+
+
+def test_nested_settings_smoke():
+    class S0(Settings):
+        T = 10
+
+    class S(Settings):
+        T_S0 = S0()
+
+    s = S()
+    s.is_valid()
+
+
+def test_nested_settings_validation_raises():
+    class S0(Settings):
+        T: str = 10
+
+    class S(Settings):
+        T_S0 = S0()
+
+    with pytest.raises(
+        SettingsValidationError,
+        match="T_S0: Expected value of type `<class 'str'>` got value of type `<class 'int'>`",
+    ) as e:
+        s = S()
+        s.is_valid(raise_exception=True)
+
+
+def test_nested_triple_nested_validation_errors():
+    class S3(Settings):
+        Т: str = 10
+
+    class S2(Settings):
+        T_S3 = S3()
+
+    class S1(Settings):
+        T_S2 = S2()
+
+    s1 = S1()
+    assert not s1.is_valid()
+    # fmt: off
+    assert s1.errors == {'T_S2': [{'T_S3': [{'Т': [
+        "Expected value of type `<class 'str'>` got value of type `<class 'int'>`"
+    ]}]}]}
+    # fmt: on

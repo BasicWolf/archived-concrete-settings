@@ -25,6 +25,7 @@ coverage = "*"
 pytest-cov = "*"
 setuptools = ">=41.0"
 sphinx = '*'
+typeguard = "*"
 
 [requires]
 python = "3.7"

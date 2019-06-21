@@ -3,7 +3,7 @@ import setuptools
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
-
+# fmt: off
 setuptools.setup(
     name="concrete_settings",
     version="0.0.1",
@@ -14,7 +14,10 @@ setuptools.setup(
     long_description_content_type="text/x-rst",
     url="https://github.com/basicwolf/concrete-settings",
     packages=setuptools.find_packages(),
-    install_requires=['sphinx>=1.8.4'],
+    install_requires=[
+        'sphinx>=1.8.4',
+        'typeguard>=2.3.1',
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
