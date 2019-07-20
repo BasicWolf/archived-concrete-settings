@@ -192,7 +192,11 @@ def test_validate_smoke():
     s.is_valid()
 
 
-# == ValueTypeValidator == #
+#
+# ValueTypeValidator
+#
+
+
 def test_value_type_validator():
     class S(Settings):
         T: str = 10
@@ -244,15 +248,36 @@ def test_settings_mandatory_validators(is_positive, is_less_that_10):
     assert s.errors['T1'] == ['Value should be less that 10']
 
 
+#
+# Nested settings
+#
+
+
 def test_nested_settings_smoke():
     class S0(Settings):
         T = 10
 
     class S(Settings):
-        T_S0 = S0()
+        NESTED_S0 = S0()
 
     s = S()
     s.is_valid()
+
+
+def test_nested_setting_values():
+    class S3(Settings):
+        VAL3 = 30
+
+    class S2(Settings):
+        VAL2 = 20
+        NESTED_S3 = S3()
+
+    class S1(Settings):
+        NESTED_S2 = S2()
+
+    s1 = S1()
+    assert s1.NESTED_S2.VAL2 == 20
+    assert s1.NESTED_S2.NESTED_S3.VAL3 == 30
 
 
 def test_nested_settings_validation_raises():
@@ -275,15 +300,63 @@ def test_nested_triple_nested_validation_errors():
         Т: str = 10
 
     class S2(Settings):
-        T_S3 = S3()
+        NESTED_S3 = S3()
 
     class S1(Settings):
-        T_S2 = S2()
+        NESTED_S2 = S2()
 
     s1 = S1()
     assert not s1.is_valid()
     # fmt: off
-    assert s1.errors == {'T_S2': [{'T_S3': [{'Т': [
+    assert s1.errors == {'NESTED_S2': [{'NESTED_S3': [{'Т': [
         "Expected value of type `<class 'str'>` got value of type `<class 'int'>`"
     ]}]}]}
     # fmt: on
+
+
+#
+# Settings.update()
+#
+
+
+def test_update_empty_dict():
+    class S(Settings):
+        pass
+
+    S().update({})
+
+
+def test_update_with_extra_data_has_no_effect_on_settings():
+    class S(Settings):
+        pass
+
+    s = S()
+    s.update({'x': 10})
+    assert not hasattr(s, 'x')
+
+
+def test_update_top_level_setting():
+    class S(Settings):
+        T: int = 10
+
+    s = S()
+    s.update({'T': 100})
+    assert s.T == 100
+
+
+def test_update_nested_setting():
+    class S(Settings):
+        T: int = 10
+
+    class S1(Settings):
+        NESTED_S = S()
+
+    s1 = S1()
+    # fmt: off
+    s1.update({
+        'NESTED_S': {
+            'T': 20
+        }
+    })
+    # fmt: on
+    assert s1.NESTED_S.T == 20

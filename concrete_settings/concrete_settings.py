@@ -1,49 +1,17 @@
 import functools
 import types
-import warnings
 from collections import defaultdict
-from typing import Any, Callable, Dict, Type, Sequence, Union, List, DefaultDict
+from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
 
 from . import docreader
 from .behaviors import Behaviors, override
 from .exceptions import SettingsStructureError, SettingsValidationError
-from .validators import DeprecatedValidator, RequiredValidator, ValueTypeValidator
-from .undefined import Undefined
+from .validators import ValueTypeValidator
+from .sources import get_source, TAnySource
+from .types import Undefined, GuessSettingType
+
 
 TSettingsErrors = List[Union[str, Dict[str, 'TSettingsErrors']]]
-
-
-class _GuessSettingType:
-    """A special value for Setting.type_hint, which indicates
-       that a Setting type should be guessed from the default value.
-
-    For an `Undefined` or an unknown type, the guessed type hint is `typing.Any`.
-    """
-
-    @staticmethod
-    def guess_type_hint(val):
-        if val is Undefined:
-            return Any
-
-        known_types = [
-            bool,  # bool MUST come before int, as e.g. isinstance(True, int) == True
-            int,
-            float,
-            complex,
-            list,
-            tuple,
-            range,
-            bytes,
-            str,
-            frozenset,
-            set,
-            dict,
-        ]
-
-        for t in known_types:
-            if isinstance(val, t):
-                return t
-        return Any
 
 
 # ==== Settings classes ==== #
@@ -60,7 +28,7 @@ class Setting:
         *,
         doc: Union[str, Undefined] = Undefined,
         validators: Union[Sequence[Callable]] = (),
-        type_hint: Any = _GuessSettingType,
+        type_hint: Any = GuessSettingType,
         behaviors: List = None,
     ):
         self.value = value
@@ -113,7 +81,7 @@ class PropertySetting(Setting):
         if not self.__doc__:
             self.__doc__ = fget.__doc__
 
-        if self.type_hint is _GuessSettingType:
+        if self.type_hint is GuessSettingType:
             self.type_hint = fget.__annotations__.get('return', self.type_hint)
         return self
 
@@ -159,9 +127,9 @@ class ConcreteSettingsMeta(type):
             # Should we try to guess a type_hint for a Setting?
             if (
                 isinstance(new_field, Setting)
-                and new_field.type_hint is _GuessSettingType
+                and new_field.type_hint is GuessSettingType
             ):
-                new_field.type_hint = _GuessSettingType.guess_type_hint(new_field.value)
+                new_field.type_hint = GuessSettingType.guess_type_hint(new_field.value)
 
             new_dict[attr] = new_field
 
@@ -169,7 +137,7 @@ class ConcreteSettingsMeta(type):
 
     @staticmethod
     def make_setting_from_attr(attr, val, annotations):
-        type_hint = annotations.get(attr, _GuessSettingType)
+        type_hint = annotations.get(attr, GuessSettingType)
         doc = ""
         return Setting(val, doc=doc, type_hint=type_hint)
 
@@ -226,15 +194,20 @@ class ConcreteSettingsMeta(type):
                 pass
 
 
-class Settings(metaclass=ConcreteSettingsMeta):
-    default_validators: tuple = (ValueTypeValidator(),)
-    mandatory_validators: tuple = ()
+class Settings(Setting, metaclass=ConcreteSettingsMeta):
+    default_validators: Tuple = (ValueTypeValidator(),)
+    mandatory_validators: Tuple = ()
     errors: TSettingsErrors = {}
 
     validating: bool
     _validated: bool
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        assert (
+            'value' not in kwargs
+        ), 'value argument should not be passed to Settings.__init__()'
+        super().__init__(self, **kwargs)
+
         self.validating = False
         self._validated = False
         self._verify_structure()
@@ -263,10 +236,10 @@ class Settings(metaclass=ConcreteSettingsMeta):
         # 2. Store found settigns as {name: [cls, ...]} to settings_classes
         settings_classes = defaultdict(list)
 
-        assert self.__class__.__mro__[-2] is Settings
+        assert self.__class__.__mro__[-3] is Settings
 
         # __mro__[:-2] - skip ConcreteSettings and object bases
-        for cls in reversed(self.__class__.__mro__[:-2]):
+        for cls in reversed(self.__class__.__mro__[:-3]):
             for attr, val in cls.__dict__.items():
                 if isinstance(val, Setting):
                     settings_classes[attr].append(cls)
@@ -291,7 +264,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
             self._validate(raise_exception)
         return self.errors == {}
 
-    def _get_settings_attributes(self):
+    def _iter_settings_attributes(self):
         for name in dir(self.__class__):
             attr = getattr(self.__class__, name)
             if isinstance(attr, Setting):
@@ -302,7 +275,7 @@ class Settings(metaclass=ConcreteSettingsMeta):
         errors = defaultdict(list)
 
         # validate each setting individually
-        for name, setting in self._get_settings_attributes():
+        for name, setting in self._iter_settings_attributes():
             setting_errors = self._validate_setting(name, setting, raise_exception)
             if setting_errors:
                 errors[name] += setting_errors
@@ -339,3 +312,20 @@ class Settings(metaclass=ConcreteSettingsMeta):
             errors.append(value.errors)
 
         return errors
+
+    def update(self, *sources: List[TAnySource]):
+        for s in sources:
+            if isinstance(s, dict):
+                self._update(self, s)
+            else:
+                source = get_source(s)
+                self._update(self, source.read())
+
+    @staticmethod
+    def _update(settings: 'Settings', d: Dict):
+        '''Recursively update settings object from dictionary'''
+        for name, setting in settings._iter_settings_attributes():
+            if isinstance(setting, Settings):
+                settings._update(setting, d[name])
+            else:
+                setattr(settings, name, d[name])

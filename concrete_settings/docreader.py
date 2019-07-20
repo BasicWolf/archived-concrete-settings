@@ -20,4 +20,3 @@ def extract_doc_comments_from_class_or_module(module_name, cls_name=None):
 def extract_docstrings_from_code(code):
     parser = Parser(code)
     parser.parse()
-    pass

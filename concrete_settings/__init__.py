@@ -1,5 +1,6 @@
 import sys
 from .concrete_settings import Settings, Setting, PropertySetting, Undefined
+from .sources import register_source
 
 setting = PropertySetting
 

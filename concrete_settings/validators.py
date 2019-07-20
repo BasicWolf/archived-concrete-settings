@@ -5,7 +5,7 @@ from typing import Callable
 from typeguard import check_type
 
 from .exceptions import SettingsValidationError
-from .undefined import Undefined
+from .types import Undefined
 
 
 class Validator(metaclass=abc.ABCMeta):
