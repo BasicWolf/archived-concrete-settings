@@ -1,4 +1,4 @@
-from typing import Type, Union, Any, List, Dict
+from typing import Type, Union, Any, Dict
 
 from .exceptions import ConcreteSettingsError
 
