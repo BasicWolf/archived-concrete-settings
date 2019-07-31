@@ -1,4 +1,5 @@
-from typing import Type, Union, Any, Dict
+import os
+from typing import Type, Union, Any, Dict, Tuple
 
 from .exceptions import ConcreteSettingsError
 
@@ -20,6 +21,9 @@ class NoSuitableSourceFoundError(ConcreteSettingsError):
 
 
 def get_source(src: TAnySource) -> 'Source':
+    if isinstance(src, Source):
+        return src
+
     for src_cls in _registered_sources:
         source = src_cls.get_source(src)
         if source is not CannotHandle:
@@ -33,23 +37,13 @@ class Source:
     def get_source(src: TAnySource) -> bool:
         return CannotHandle
 
-    def read(self) -> dict:
+    def read(self, name, parents: Tuple[str] = ()) -> Any:
         pass
-
-
-class DummySource(Source):
-    """"""
-
-    def get_source(src: TAnySource) -> bool:
-        return DummySource()
-
-    def read(self) -> dict:
-        return {}
 
 
 @register_source
 class DictSource(Source):
-    def __init__(self, s: TAnySource):
+    def __init__(self, s: dict):
         self.data: dict = s
 
     @staticmethod
@@ -59,5 +53,28 @@ class DictSource(Source):
         else:
             return CannotHandle
 
-    def read(self) -> dict:
-        return self.data
+    def read(self, name, parents: Tuple[str] = ()) -> Any:
+        d = self.data
+        for key in parents:
+            d = d[key]
+
+        val = d[name]
+        return val
+
+
+class EnvVarSource(Source):
+    def __init__(self):
+        self.data = os.environ
+
+    @staticmethod
+    def get_source(src: TAnySource) -> bool:
+        if isinstance(src, EnvVarSource):
+            return src
+        else:
+            return CannotHandle
+
+    def read(self, name, parents: Tuple[str] = ()) -> Any:
+        parents_upper = map(str.upper, parents)
+        key = (*parents_upper, name).join('_')
+        val = os.environ[key]
+        return val
