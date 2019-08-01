@@ -325,4 +325,4 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
             if isinstance(setting, Settings):
                 settings._update(setting, source, (*parents, name))
             else:
-                setattr(settings, name, source.read(name, parents))
+                setattr(settings, name, source.read(setting, parents))

@@ -1,5 +1,5 @@
 import os
-from typing import Type, Union, Any, Dict, Tuple
+from typing import Type, Union, Any, Dict, Tuple, Callable
 
 from .exceptions import ConcreteSettingsError
 
@@ -37,8 +37,17 @@ class Source:
     def get_source(src: TAnySource) -> bool:
         return CannotHandle
 
-    def read(self, name, parents: Tuple[str] = ()) -> Any:
+    def read(self, name, parents: Tuple[str] = (), type_hint: Callable = str) -> Any:
         pass
+
+
+class StringSourceMixin:
+    @staticmethod
+    def convert_value(val: str, type_hint: Any = None) -> Any:
+        """Convert given string value to type based on `type_hint`"""
+        if type_hint in (int, float):
+            return type_hint(val)
+        return val
 
 
 @register_source
@@ -53,16 +62,17 @@ class DictSource(Source):
         else:
             return CannotHandle
 
-    def read(self, name, parents: Tuple[str] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str] = ()) -> Any:
         d = self.data
         for key in parents:
             d = d[key]
 
-        val = d[name]
+        val = d[setting.name]
         return val
 
 
-class EnvVarSource(Source):
+@register_source
+class EnvVarSource(StringSourceMixin, Source):
     def __init__(self):
         self.data = os.environ
 
@@ -73,8 +83,8 @@ class EnvVarSource(Source):
         else:
             return CannotHandle
 
-    def read(self, name, parents: Tuple[str] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str] = ()) -> Any:
         parents_upper = map(str.upper, parents)
-        key = '_'.join(*parents_upper, name)
+        key = '_'.join(*parents_upper, setting.name)
         val = os.environ[key]
         return val
