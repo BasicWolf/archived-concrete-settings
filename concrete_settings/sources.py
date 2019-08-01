@@ -75,6 +75,6 @@ class EnvVarSource(Source):
 
     def read(self, name, parents: Tuple[str] = ()) -> Any:
         parents_upper = map(str.upper, parents)
-        key = (*parents_upper, name).join('_')
+        key = '_'.join(*parents_upper, name)
         val = os.environ[key]
         return val
