@@ -47,6 +47,12 @@ class StringSourceMixin:
         """Convert given string value to type based on `type_hint`"""
         if type_hint in (int, float):
             return type_hint(val)
+        elif type_hint is bool:
+            if val.lower() == 'true':
+                return True
+            elif val.lower() == 'false':
+                return False
+
         return val
 
 
@@ -87,4 +93,4 @@ class EnvVarSource(StringSourceMixin, Source):
         parents_upper = map(str.upper, parents)
         key = '_'.join(*parents_upper, setting.name)
         val = os.environ[key]
-        return val
+        return self.convert_value(val, setting.type_hint)
