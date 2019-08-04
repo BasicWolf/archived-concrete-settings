@@ -1,4 +1,5 @@
-from typing import Type, Union, Any, List, Dict
+import os
+from typing import Type, Union, Any, Dict, Tuple, Callable
 
 from .exceptions import ConcreteSettingsError
 
@@ -20,6 +21,9 @@ class NoSuitableSourceFoundError(ConcreteSettingsError):
 
 
 def get_source(src: TAnySource) -> 'Source':
+    if isinstance(src, Source):
+        return src
+
     for src_cls in _registered_sources:
         source = src_cls.get_source(src)
         if source is not CannotHandle:
@@ -33,23 +37,28 @@ class Source:
     def get_source(src: TAnySource) -> bool:
         return CannotHandle
 
-    def read(self) -> dict:
+    def read(self, name, parents: Tuple[str] = (), type_hint: Callable = str) -> Any:
         pass
 
 
-class DummySource(Source):
-    """"""
+class StringSourceMixin:
+    @staticmethod
+    def convert_value(val: str, type_hint: Any = None) -> Any:
+        """Convert given string value to type based on `type_hint`"""
+        if type_hint in (int, float):
+            return type_hint(val)
+        elif type_hint is bool:
+            if val.lower() == 'true':
+                return True
+            elif val.lower() == 'false':
+                return False
 
-    def get_source(src: TAnySource) -> bool:
-        return DummySource()
-
-    def read(self) -> dict:
-        return {}
+        return val
 
 
 @register_source
 class DictSource(Source):
-    def __init__(self, s: TAnySource):
+    def __init__(self, s: dict):
         self.data: dict = s
 
     @staticmethod
@@ -59,5 +68,29 @@ class DictSource(Source):
         else:
             return CannotHandle
 
-    def read(self) -> dict:
-        return self.data
+    def read(self, setting, parents: Tuple[str] = ()) -> Any:
+        d = self.data
+        for key in parents:
+            d = d[key]
+
+        val = d[setting.name]
+        return val
+
+
+@register_source
+class EnvVarSource(StringSourceMixin, Source):
+    def __init__(self):
+        self.data = os.environ
+
+    @staticmethod
+    def get_source(src: TAnySource) -> bool:
+        if isinstance(src, EnvVarSource):
+            return src
+        else:
+            return CannotHandle
+
+    def read(self, setting, parents: Tuple[str] = ()) -> Any:
+        parents_upper = map(str.upper, parents)
+        key = '_'.join(*parents_upper, setting.name)
+        val = os.environ[key]
+        return self.convert_value(val, setting.type_hint)

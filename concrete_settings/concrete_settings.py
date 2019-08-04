@@ -315,17 +315,14 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
 
     def update(self, *sources: List[TAnySource]):
         for s in sources:
-            if isinstance(s, dict):
-                self._update(self, s)
-            else:
-                source = get_source(s)
-                self._update(self, source.read())
+            source = get_source(s)
+            self._update(self, source)
 
     @staticmethod
-    def _update(settings: 'Settings', d: Dict):
+    def _update(settings: 'Settings', source: 'Source', parents: Tuple[str] = ()):
         '''Recursively update settings object from dictionary'''
         for name, setting in settings._iter_settings_attributes():
             if isinstance(setting, Settings):
-                settings._update(setting, d[name])
+                settings._update(setting, source, (*parents, name))
             else:
-                setattr(settings, name, d[name])
+                setattr(settings, name, source.read(setting, parents))

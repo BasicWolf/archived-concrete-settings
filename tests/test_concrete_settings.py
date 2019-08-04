@@ -8,8 +8,10 @@ import pytest
 
 import concrete_settings
 from concrete_settings import Settings, Setting, setting
+from concrete_settings.sources import Source
 from concrete_settings.behaviors import override
 from concrete_settings.exceptions import SettingsValidationError
+from .utils import Match
 
 
 @pytest.fixture
@@ -315,36 +317,48 @@ def test_nested_triple_nested_validation_errors():
 
 
 #
-# Settings.update()
+# Updating
 #
 
 
-def test_update_empty_dict():
-    class S(Settings):
-        pass
-
-    S().update({})
-
-
-def test_update_with_extra_data_has_no_effect_on_settings():
+def test_update_source_is_not_called_on_empty(mocker):
     class S(Settings):
         pass
 
     s = S()
-    s.update({'x': 10})
-    assert not hasattr(s, 'x')
+    src_mock = mocker.Mock(spec=Source)
+
+    s.update(src_mock)
+    src_mock.read.assert_not_called()
 
 
-def test_update_top_level_setting():
+def test_update_top_level_setting_source_is_called(mocker):
     class S(Settings):
         T: int = 10
 
     s = S()
-    s.update({'T': 100})
-    assert s.T == 100
+    src_mock = mocker.Mock(spec=Source)
+    src_mock = mocker.Mock(spec=Source)
+    src_mock.read = mocker.MagicMock(return_value=10)
+
+    s.update(src_mock)
+    src_mock.read.assert_called_with(Match(lambda arg: arg.name == 'T'), ())
 
 
-def test_update_nested_setting():
+def test_update_top_level_setting_from_source(mocker):
+    class S(Settings):
+        T: int = 10
+
+    s = S()
+    src_mock = mocker.Mock(spec=Source)
+    src_mock = mocker.Mock(spec=Source)
+    src_mock.read = mocker.MagicMock(side_effect=lambda *ignore: 10)
+
+    s.update(src_mock)
+    assert s.T == 10
+
+
+def test_update_nested_setting_source_is_called(mocker):
     class S(Settings):
         T: int = 10
 
@@ -352,11 +366,26 @@ def test_update_nested_setting():
         NESTED_S = S()
 
     s1 = S1()
-    # fmt: off
-    s1.update({
-        'NESTED_S': {
-            'T': 20
-        }
-    })
-    # fmt: on
+    src_mock = mocker.Mock(spec=Source)
+    src_mock.read = mocker.MagicMock()
+
+    s1.update(src_mock)
+
+    src_mock.read.assert_called_once_with(
+        Match(lambda arg: arg.name == 'T'), ('NESTED_S',)
+    )
+
+
+def test_update_nested_setting_from_source(mocker):
+    class S(Settings):
+        T: int = 10
+
+    class S1(Settings):
+        NESTED_S = S()
+
+    s1 = S1()
+    src_mock = mocker.Mock(spec=Source)
+    src_mock.read = mocker.MagicMock(return_value=20)
+
+    s1.update(src_mock)
     assert s1.NESTED_S.T == 20
