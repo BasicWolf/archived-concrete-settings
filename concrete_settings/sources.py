@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Type, Union, Any, Dict, Tuple, Callable
 
 from .exceptions import ConcreteSettingsError
@@ -6,7 +7,10 @@ from .exceptions import ConcreteSettingsError
 _registered_sources = set()
 
 TAnySource = Union[Dict[str, Any], str, 'Source']
-CannotHandle = object()
+
+
+class CannotHandle:
+    pass
 
 
 def register_source(source_cls: Type['Source']):
@@ -17,7 +21,10 @@ def register_source(source_cls: Type['Source']):
 
 class NoSuitableSourceFoundError(ConcreteSettingsError):
     def __init__(self, src: TAnySource):
-        super().__init__(f'No suitable source found to handle "{src}"')
+        super().__init__(
+            f'No suitable source found to handle "{src}".'
+            'Perhaps you have forgotten to register the source?'
+        )
 
 
 def get_source(src: TAnySource) -> 'Source':
@@ -34,7 +41,7 @@ def get_source(src: TAnySource) -> 'Source':
 
 class Source:
     @staticmethod
-    def get_source(src: TAnySource) -> bool:
+    def get_source(src: TAnySource) -> Union['Source', CannotHandle]:
         return CannotHandle
 
     def read(self, name, parents: Tuple[str] = (), type_hint: Callable = str) -> Any:
@@ -42,6 +49,9 @@ class Source:
 
 
 class StringSourceMixin:
+    """Extends source by providing a string value to required type
+       conversion method."""
+
     @staticmethod
     def convert_value(val: str, type_hint: Any = None) -> Any:
         """Convert given string value to type based on `type_hint`"""
@@ -62,9 +72,11 @@ class DictSource(Source):
         self.data: dict = s
 
     @staticmethod
-    def get_source(s: TAnySource) -> bool:
-        if isinstance(s, dict):
-            return DictSource(s)
+    def get_source(src: TAnySource) -> Union['DictSource', CannotHandle]:
+        if isinstance(src, dict):
+            return DictSource(src)
+        elif isinstance(src, DictSource):
+            return src
         else:
             return CannotHandle
 
@@ -83,7 +95,7 @@ class EnvVarSource(StringSourceMixin, Source):
         self.data = os.environ
 
     @staticmethod
-    def get_source(src: TAnySource) -> bool:
+    def get_source(src: TAnySource) -> Union['EnvVarSource', CannotHandle]:
         if isinstance(src, EnvVarSource):
             return src
         else:
@@ -94,3 +106,62 @@ class EnvVarSource(StringSourceMixin, Source):
         key = '_'.join(*parents_upper, setting.name)
         val = os.environ[key]
         return self.convert_value(val, setting.type_hint)
+
+
+class FileSource(Source):
+    extensions = []
+
+    def __init__(self, path):
+        self.path = path
+        self.data = {}
+        self._read_file()
+
+    def _read_file(self):
+        try:
+            with open(self.path) as f:
+                raw_data = f.read()
+                self.data = json.loads(raw_data)
+
+        except FileNotFoundError as e:
+            raise ConcreteSettingsError("Source file {self.path} was not found") from e
+
+    def read(self, setting, parents: Tuple[str] = ()) -> Any:
+        d = self.data
+        for key in parents:
+            d = d[key]
+
+        val = d[setting.name]
+        return val
+
+    @classmethod
+    def get_source(cls, src) -> Union['JsonSource', CannotHandle]:
+        if isinstance(src, str):
+            for ext in cls.extensions:
+                if src.endswith(ext):
+                    return JsonSource(src)
+
+        if isinstance(src, JsonSource):
+            return src
+
+        return CannotHandle
+
+
+@register_source
+class JsonSource(FileSource):
+    extensions = ['.json']
+
+
+@register_source
+class YamlSource(FileSource):
+    extensions = ['.yml', '.yaml']
+
+    def __init__(self, path):
+        try:
+            import yaml
+        except ImportError:
+            raise ConcreteSettingError(
+                f'YAML source is not available for `{path}` due to error importing `yaml` package.\n'
+                'Perhaps you have forgotten to install PyYAML?'
+            )
+
+        super().__init__(path)

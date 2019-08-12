@@ -3,8 +3,9 @@ from typing import Dict
 import pytest
 from concrete_settings import Setting
 from concrete_settings.sources import (
-    EnvVarSource,
     DictSource,
+    EnvVarSource,
+    JsonSource,
     NoSuitableSourceFoundError,
     Source,
     StringSourceMixin,
@@ -75,23 +76,142 @@ def test_dict_source_two_levels_nested_dicts_values():
 
 
 def test_get_env_source_returns_env_source():
-    dsrc = get_source(EnvVarSource())
-    assert isinstance(dsrc, EnvVarSource)
+    esrc = get_source(EnvVarSource())
+    assert isinstance(esrc, EnvVarSource)
 
 
 def test_env_source_one_level_values(monkeypatch):
     monkeypatch.setenv('a', '10')
-    dsrc = get_source(EnvVarSource())
-    assert dsrc.read(S('a')) == '10'
+    esrc = get_source(EnvVarSource())
+    assert esrc.read(S('a')) == '10'
 
 
 def test_env_source_int_hint(monkeypatch):
     monkeypatch.setenv('a', '10')
-    dsrc = get_source(EnvVarSource())
-    assert dsrc.read(S('a', int)) == 10
+    esrc = get_source(EnvVarSource())
+    assert esrc.read(S('a', int)) == 10
 
 
 def test_env_source_int_hint(monkeypatch):
     monkeypatch.setenv('a', '10.25')
-    dsrc = get_source(EnvVarSource())
-    assert dsrc.read(S('a', float)) == 10.25
+    esrc = get_source(EnvVarSource())
+    assert esrc.read(S('a', float)) == 10.25
+
+
+#
+# JSON filesource
+#
+
+
+def test_get_json_file_returns_json_source():
+    src = get_source('/test/settings.json')
+    assert isinstance(src, JsonSource)
+
+
+def test_json_source_has_expected_path(fs):
+    fs.create_file('/test/settings.json', contents='')
+    jsrc = get_source('/test/settings.json')
+    assert jsrc.path == '/test/settings.json'
+
+
+def test_json_source_read_int_value(fs):
+    fs.create_file('/test/settings.json', contents='{"A": 10}')
+    jsrc = get_source('/test/settings.json')
+    assert jsrc.read(S('A')) == 10
+
+
+def test_json_source_read_float_value(fs):
+    fs.create_file('/test/settings.json', contents='{"A": 10.25}')
+    jsrc = get_source('/test/settings.json')
+    assert jsrc.read(S('A')) == 10.25
+
+
+def test_json_source_read_str_value(fs):
+    fs.create_file('/test/settings.json', contents='{"A": "abc"}')
+    jsrc = get_source('/test/settings.json')
+    assert jsrc.read(S('A')) == "abc"
+
+
+def test_json_source_read_null_value(fs):
+    fs.create_file('/test/settings.json', contents='{"A": null}')
+    jsrc = get_source('/test/settings.json')
+    assert jsrc.read(S('A')) is None
+
+
+def test_json_source_read_array_value(fs):
+    fs.create_file('/test/settings.json', contents='{"A": [1, 2, 3]}')
+    jsrc = get_source('/test/settings.json')
+    assert jsrc.read(S('A')) == [1, 2, 3]
+
+
+def test_json_source_read_object_value(fs):
+    fs.create_file('/test/settings.json', contents='{"A": {"B": 10}}')
+    jsrc = get_source('/test/settings.json')
+    assert jsrc.read(S('A')) == {"B": 10}
+
+
+def test_json_source_read_nested_object_value(fs):
+    fs.create_file('/test/settings.json', contents='{"A": {"B": 10}}')
+    jsrc = get_source('/test/settings.json')
+    assert jsrc.read(S('B'), parents=('A',)) == 10
+
+
+#
+# YAML source
+#
+
+
+def test_get_yaml_file_returns_yaml_source():
+    src = get_source('/test/settings.yaml')
+    assert isinstance(src, JsonSource)
+
+    src = get_source('/test/settings.yml')
+    assert isinstance(src, JsonSource)
+
+
+# def test_json_source_has_expected_path(fs):
+#     fs.create_file('/test/settings.json', contents='')
+#     jsrc = get_source('/test/settings.json')
+#     assert jsrc.path == '/test/settings.json'
+
+
+# def test_json_source_read_int_value(fs):
+#     fs.create_file('/test/settings.json', contents='{"A": 10}')
+#     jsrc = get_source('/test/settings.json')
+#     jsrc.read(S('A')) == 10
+
+
+# def test_json_source_read_float_value(fs):
+#     fs.create_file('/test/settings.json', contents='{"A": 10.25}')
+#     jsrc = get_source('/test/settings.json')
+#     jsrc.read(S('A')) == 10.25
+
+
+# def test_json_source_read_str_value(fs):
+#     fs.create_file('/test/settings.json', contents='{"A": "abc"}')
+#     jsrc = get_source('/test/settings.json')
+#     jsrc.read(S('A')) == "abc"
+
+
+# def test_json_source_read_null_value(fs):
+#     fs.create_file('/test/settings.json', contents='{"A": null}')
+#     jsrc = get_source('/test/settings.json')
+#     jsrc.read(S('A')) == None
+
+
+# def test_json_source_read_array_value(fs):
+#     fs.create_file('/test/settings.json', contents='{"A": [1, 2, 3]}')
+#     jsrc = get_source('/test/settings.json')
+#     jsrc.read(S('A')) == [1, 2, 3]
+
+
+# def test_json_source_read_object_value(fs):
+#     fs.create_file('/test/settings.json', contents='{"A": {"B": 10}}')
+#     jsrc = get_source('/test/settings.json')
+#     jsrc.read(S('A')) == {"B": 10}
+
+
+# def test_json_source_read_nested_object_value(fs):
+#     fs.create_file('/test/settings.json', contents='{"A": {"B": 10}}')
+#     jsrc = get_source('/test/settings.json')
+#     jsrc.read(S('B'), parents=('A',)) == 10

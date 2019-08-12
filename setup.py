@@ -18,6 +18,9 @@ setuptools.setup(
         'sphinx>=1.8.4',
         'typeguard>=2.3.1',
     ],
+    extras_require={
+        'Reading settings from YAML files': 'pyyaml>=5.1.2',
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
