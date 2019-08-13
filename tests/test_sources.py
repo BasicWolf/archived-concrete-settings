@@ -109,7 +109,7 @@ def test_get_json_file_returns_json_source():
 
 
 def test_json_source_has_expected_path(fs):
-    fs.create_file('/test/settings.json', contents='')
+    fs.create_file('/test/settings.json', contents='{}')
     jsrc = get_source('/test/settings.json')
     assert jsrc.path == '/test/settings.json'
 

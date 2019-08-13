@@ -121,9 +121,10 @@ class FileSource(Source):
             with open(self.path) as f:
                 raw_data = f.read()
                 self.data = json.loads(raw_data)
-
         except FileNotFoundError as e:
-            raise ConcreteSettingsError("Source file {self.path} was not found") from e
+            raise ConcreteSettingsError(f"Source file {self.path} was not found") from e
+        except json.decoder.JSONDecodeError as e:
+            raise ConcreteSettingsError(f"Error parsing JSON from {self.path}: {e}") from e
 
     def read(self, setting, parents: Tuple[str] = ()) -> Any:
         d = self.data
