@@ -9,6 +9,7 @@ from concrete_settings.sources import (
     NoSuitableSourceFoundError,
     Source,
     StringSourceMixin,
+    YamlSource,
     get_source,
 )
 
@@ -163,10 +164,7 @@ def test_json_source_read_nested_object_value(fs):
 
 def test_get_yaml_file_returns_yaml_source():
     src = get_source('/test/settings.yaml')
-    assert isinstance(src, JsonSource)
-
-    src = get_source('/test/settings.yml')
-    assert isinstance(src, JsonSource)
+    assert isinstance(src, YamlSource)
 
 
 # def test_json_source_has_expected_path(fs):

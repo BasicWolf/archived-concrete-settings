@@ -1,6 +1,7 @@
 import os
 import json
-from typing import Type, Union, Any, Dict, Tuple, Callable
+from enum import Enum
+from typing import Type, Union, Any, Dict, Tuple, Callable, List
 
 from .exceptions import ConcreteSettingsError
 
@@ -8,9 +9,10 @@ _registered_sources = set()
 
 TAnySource = Union[Dict[str, Any], str, 'Source']
 
+class CannotHandleType(Enum):
+    token = 0
 
-class CannotHandle:
-    pass
+CannotHandle = CannotHandleType.token
 
 
 def register_source(source_cls: Type['Source']):
@@ -41,7 +43,7 @@ def get_source(src: TAnySource) -> 'Source':
 
 class Source:
     @staticmethod
-    def get_source(src: TAnySource) -> Union['Source', CannotHandle]:
+    def get_source(src: TAnySource) -> Union['Source', CannotHandleType]:
         return CannotHandle
 
     def read(self, name, parents: Tuple[str] = (), type_hint: Callable = str) -> Any:
@@ -72,7 +74,7 @@ class DictSource(Source):
         self.data: dict = s
 
     @staticmethod
-    def get_source(src: TAnySource) -> Union['DictSource', CannotHandle]:
+    def get_source(src: TAnySource) -> Union['DictSource', CannotHandleType]:
         if isinstance(src, dict):
             return DictSource(src)
         elif isinstance(src, DictSource):
@@ -95,7 +97,7 @@ class EnvVarSource(StringSourceMixin, Source):
         self.data = os.environ
 
     @staticmethod
-    def get_source(src: TAnySource) -> Union['EnvVarSource', CannotHandle]:
+    def get_source(src: TAnySource) -> Union['EnvVarSource', CannotHandleType]:
         if isinstance(src, EnvVarSource):
             return src
         else:
@@ -109,40 +111,21 @@ class EnvVarSource(StringSourceMixin, Source):
 
 
 class FileSource(Source):
-    extensions = []
+    extensions: List[str] = []
+
+    path: str
 
     def __init__(self, path):
         self.path = path
-        self.data = {}
-        self._read_file()
-
-    def _read_file(self):
-        try:
-            with open(self.path) as f:
-                raw_data = f.read()
-                self.data = json.loads(raw_data)
-        except FileNotFoundError as e:
-            raise ConcreteSettingsError(f"Source file {self.path} was not found") from e
-        except json.decoder.JSONDecodeError as e:
-            raise ConcreteSettingsError(f"Error parsing JSON from {self.path}: {e}") from e
-
-    def read(self, setting, parents: Tuple[str] = ()) -> Any:
-        d = self.data
-        for key in parents:
-            d = d[key]
-
-        val = d[setting.name]
-        return val
 
     @classmethod
-    def get_source(cls, src) -> Union['JsonSource', CannotHandle]:
-        if isinstance(src, str):
+    def get_source(cls, src) -> Union['FileSource', CannotHandleType]:
+        if isinstance(src, cls):
+            return src
+        elif isinstance(src, str):
             for ext in cls.extensions:
                 if src.endswith(ext):
-                    return JsonSource(src)
-
-        if isinstance(src, JsonSource):
-            return src
+                    return cls(src)
 
         return CannotHandle
 
@@ -150,6 +133,32 @@ class FileSource(Source):
 @register_source
 class JsonSource(FileSource):
     extensions = ['.json']
+
+    def __init__(self, path):
+        super().__init__(path)
+        self._data = None
+
+    def read(self, setting, parents: Tuple[str] = ()) -> Any:
+        if self._data is None:
+            self._data = self.read_file(self.path)
+
+        d = self._data
+        for key in parents:
+            d = d[key]
+
+        val = d[setting.name]
+        return val
+
+    @staticmethod
+    def _read_file(path):
+        try:
+            with open(path) as f:
+                raw_data = f.read()
+                return json.loads(raw_data)
+        except FileNotFoundError as e:
+            raise ConcreteSettingsError(f"Source file {path} was not found") from e
+        except json.decoder.JSONDecodeError as e:
+            raise ConcreteSettingsError(f"Error parsing JSON from {path}: {e}") from e
 
 
 @register_source
@@ -164,5 +173,28 @@ class YamlSource(FileSource):
                 f'YAML source is not available for `{path}` due to error importing `yaml` package.\n'
                 'Perhaps you have forgotten to install PyYAML?'
             )
-
         super().__init__(path)
+        self._data = None
+
+    def read(self, setting, parents: Tuple[str] = ()) -> Any:
+        if self._data is None:
+            self._data = self.read_file(self.path)
+
+        d = self._data
+        for key in parents:
+            d = d[key]
+
+        val = d[setting.name]
+        return val
+
+    @staticmethod
+    def _read_file(path):
+        import yaml
+        try:
+            with open(path) as f:
+                raw_data = f.read()
+                return yaml.safe_load(raw_data)
+        except FileNotFoundError as e:
+            raise ConcreteSettingsError(f"Source file {path} was not found") from e
+        except yaml.YAMLError as e:
+            raise ConcreteSettingsError(f"Error parsing YAML from {path}: {e}") from e
