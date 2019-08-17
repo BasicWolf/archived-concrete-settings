@@ -15,11 +15,11 @@ entrypoints==0.3
 factory-boy==2.12.0
 faker==2.0.0
 filelock==3.0.12
-flake8-bugbear==19.3.0
+flake8-bugbear==19.8.0
 flake8==3.7.8
 idna==2.8
 imagesize==1.1.0
-importlib-metadata==0.19
+importlib-metadata==0.19 ; python_version < '3.8'
 jinja2==2.10.1
 markupsafe==1.1.1
 mccabe==0.6.1
@@ -36,9 +36,10 @@ pyparsing==2.4.2
 pytest-cov==2.7.1
 pytest-mock==1.10.4
 pytest-pudb==0.7.0
-pytest==5.0.1
+pytest==5.1.0
 python-dateutil==2.8.0
 pytz==2019.2
+pyyaml==5.1.2
 requests==2.22.0
 six==1.12.0
 snowballstemmer==1.9.0
@@ -55,6 +56,6 @@ tox==3.13.2
 typeguard==2.4.1
 urllib3==1.25.3
 urwid==2.0.1
-virtualenv==16.7.2
+virtualenv==16.7.3
 wcwidth==0.1.7
 zipp==0.5.2

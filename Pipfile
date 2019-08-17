@@ -29,6 +29,7 @@ setuptools = ">=41.0"
 sphinx = '*'
 typeguard = "*"
 pyfakefs = "*"
+pyyaml = "*"
 
 [requires]
 python = "3.7"
