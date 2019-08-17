@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 sphinx = '*'
+pyyaml = '*'
+concrete-settings = {path = "."}
 
 [dev-packages]
 # self
@@ -26,6 +28,8 @@ pytest-cov = "*"
 setuptools = ">=41.0"
 sphinx = '*'
 typeguard = "*"
+pyfakefs = "*"
+pyyaml = "*"
 
 [requires]
 python = "3.7"
