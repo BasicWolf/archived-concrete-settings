@@ -140,7 +140,7 @@ class JsonSource(FileSource):
 
     def read(self, setting, parents: Tuple[str] = ()) -> Any:
         if self._data is None:
-            self._data = self.read_file(self.path)
+            self._data = self._read_file(self.path)
 
         d = self._data
         for key in parents:
@@ -178,7 +178,7 @@ class YamlSource(FileSource):
 
     def read(self, setting, parents: Tuple[str] = ()) -> Any:
         if self._data is None:
-            self._data = self.read_file(self.path)
+            self._data = self._read_file(self.path)
 
         d = self._data
         for key in parents:

@@ -167,16 +167,16 @@ def test_get_yaml_file_returns_yaml_source():
     assert isinstance(src, YamlSource)
 
 
-# def test_json_source_has_expected_path(fs):
-#     fs.create_file('/test/settings.json', contents='')
-#     jsrc = get_source('/test/settings.json')
-#     assert jsrc.path == '/test/settings.json'
+def test_yaml_source_has_expected_path(fs):
+    fs.create_file('/test/settings.yaml', contents='')
+    ysrc = get_source('/test/settings.yaml')
+    assert ysrc.path == '/test/settings.yaml'
 
 
-# def test_json_source_read_int_value(fs):
-#     fs.create_file('/test/settings.json', contents='{"A": 10}')
-#     jsrc = get_source('/test/settings.json')
-#     jsrc.read(S('A')) == 10
+def test_yaml_source_read_int_value(fs):
+    fs.create_file('/test/settings.yaml', contents='A: 10')
+    ysrc = get_source('/test/settings.yaml')
+    assert ysrc.read(S('A')) == 10
 
 
 # def test_json_source_read_float_value(fs):
