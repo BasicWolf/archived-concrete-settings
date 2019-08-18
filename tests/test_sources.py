@@ -1,7 +1,9 @@
+import sys
 from typing import Dict
 
 import pytest
 from concrete_settings import Setting
+from concrete_settings.exceptions import ConcreteSettingsError
 from concrete_settings.sources import (
     DictSource,
     EnvVarSource,
@@ -160,6 +162,20 @@ def test_json_source_read_nested_object_value(fs):
 #
 # YAML source
 #
+
+def test_yaml_source_throws_import_error_when_module_missing(mocker):
+    # buggy mocker.patch.dict, using manual context resoration
+    _yaml = sys.modules.get('yaml', None)
+    sys.modules['yaml'] = None
+
+    with pytest.raises(ConcreteSettingsError) as excinfo:
+        get_source('/test/settings.yaml')
+    assert isinstance(excinfo.value.__cause__, ImportError)
+
+    if _yaml is not None:
+        sys.modules['yaml'] = _yaml
+    else:
+        del sys.modules['yaml']
 
 
 def test_get_yaml_file_returns_yaml_source():

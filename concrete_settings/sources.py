@@ -168,11 +168,11 @@ class YamlSource(FileSource):
     def __init__(self, path):
         try:
             import yaml
-        except ImportError:
-            raise ConcreteSettingError(
+        except ImportError as e:
+            raise ConcreteSettingsError(
                 f'YAML source is not available for `{path}` due to error importing `yaml` package.\n'
                 'Perhaps you have forgotten to install PyYAML?'
-            )
+            ) from e
         super().__init__(path)
         self._data = None
 
