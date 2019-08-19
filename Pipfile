@@ -4,32 +4,32 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-sphinx = '*'
-pyyaml = '*'
-concrete-settings = {path = "."}
+sphinx = "*"
+pyyaml = "*"
 
 [dev-packages]
-# self
-concrete-settings = {path = "."}
-# debug
-pudb = '*'
-# unit testing
-factory_boy = '*'
+pudb = "*"
+factory_boy = "*"
 pytest = "*"
-pytest-mock = '*'
-pytest-pudb = '*'
-tox = '*'
-# linters / formatters
+pytest-mock = "*"
+pytest-pudb = "*"
+tox = "*"
 black = "==18.9b0"
-flake8 = '*'
-flake8-bugbear = '*'
+flake8 = "*"
+flake8-bugbear = "*"
 coverage = "*"
 pytest-cov = "*"
 setuptools = ">=41.0"
-sphinx = '*'
+sphinx = "*"
 typeguard = "*"
 pyfakefs = "*"
 pyyaml = "*"
 
 [requires]
 python = "3.7"
+
+[packages.concrete-settings]
+path = "."
+
+[dev-packages.concrete-settings]
+path = "."

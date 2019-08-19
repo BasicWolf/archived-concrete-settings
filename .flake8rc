@@ -1,0 +1,4 @@
+[flake8]
+# keep to 79,
+# but when practicality beats purity, go beyond!
+max-line-length = 110

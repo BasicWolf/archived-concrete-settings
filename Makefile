@@ -18,6 +18,9 @@ test:
 tox:
 	tox
 
+flake8:
+	flake8 concrete_settings tests
+
 docs:
 	$(MAKE) html -C docs
 

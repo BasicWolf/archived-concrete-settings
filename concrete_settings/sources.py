@@ -9,8 +9,10 @@ _registered_sources = set()
 
 TAnySource = Union[Dict[str, Any], str, 'Source']
 
+
 class CannotHandleType(Enum):
     token = 0
+
 
 CannotHandle = CannotHandleType.token
 
@@ -167,7 +169,7 @@ class YamlSource(FileSource):
 
     def __init__(self, path):
         try:
-            import yaml
+            import yaml  # noqa: F401 # imported but unused
         except ImportError as e:
             raise ConcreteSettingsError(
                 f'YAML source is not available for `{path}` due to error importing `yaml` package.\n'
@@ -190,6 +192,7 @@ class YamlSource(FileSource):
     @staticmethod
     def _read_file(path):
         import yaml
+
         try:
             with open(path) as f:
                 raw_data = f.read()

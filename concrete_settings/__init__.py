@@ -1,6 +1,14 @@
 import sys
-from .concrete_settings import Settings, Setting, PropertySetting, Undefined
-from .sources import register_source
+
+
+from .concrete_settings import (  # noqa: F401 # imported but unused
+    Settings,
+    Setting,
+    PropertySetting,
+    Undefined,
+)
+
+from .sources import register_source  # noqa: F401 # imported but unused
 
 setting = PropertySetting
 

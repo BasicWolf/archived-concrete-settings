@@ -319,7 +319,11 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
             self._update(self, source)
 
     @staticmethod
-    def _update(settings: 'Settings', source: 'Source', parents: Tuple[str] = ()):
+    def _update(
+        settings: 'Settings',
+        source: 'concrete_settings.sources.Source',
+        parents: Tuple[str] = (),
+    ):
         '''Recursively update settings object from dictionary'''
         for name, setting in settings._iter_settings_attributes():
             if isinstance(setting, Settings):
