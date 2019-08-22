@@ -1,6 +1,3 @@
-from typing import Union
-
-
 class ConcreteSettingsError(Exception):
     """Base class for all concrete_settings exceptions."""
 

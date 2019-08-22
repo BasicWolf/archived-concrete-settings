@@ -1,11 +1,14 @@
 import abc
 import warnings
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from typeguard import check_type
 
 from .exceptions import SettingsValidationError
 from .types import Undefined
+
+if TYPE_CHECKING:
+    from .concrete_settings import Setting, Settings
 
 
 class Validator(metaclass=abc.ABCMeta):
@@ -20,8 +23,8 @@ class Validator(metaclass=abc.ABCMeta):
         value,
         *,
         name: str = None,
-        owner: 'concrete_settings.Settings' = None,
-        setting: 'concrete_settings.Setting' = None,
+        owner: 'Settings' = None,
+        setting: 'Setting' = None,
     ):
         """Validate a value. Raise `SettingsValidationError` if value is wrong."""
         pass
@@ -64,5 +67,6 @@ class ValueTypeValidator(Validator):
             check_type(name, value, type_hint)
         except TypeError as e:
             raise SettingsValidationError(
-                f'Expected value of type `{type_hint}` got value of type `{type(value)}`'
+                f'Expected value of type `{type_hint}` '
+                f'got value of type `{type(value)}`'
             ) from e

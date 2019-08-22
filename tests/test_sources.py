@@ -1,6 +1,4 @@
 import sys
-from typing import Dict
-
 import pytest
 from concrete_settings import Setting
 from concrete_settings.exceptions import ConcreteSettingsError
@@ -9,7 +7,6 @@ from concrete_settings.sources import (
     EnvVarSource,
     JsonSource,
     NoSuitableSourceFoundError,
-    Source,
     StringSourceMixin,
     YamlSource,
     get_source,
@@ -36,12 +33,12 @@ def test_string_source_mixin_convert_float_value():
 
 @pytest.mark.parametrize('true_str', ('true', 'True', 'TRUE'))
 def test_string_source_mixin_convert_true_value(true_str):
-    assert StringSourceMixin.convert_value(true_str, bool) == True
+    assert StringSourceMixin.convert_value(true_str, bool) is True
 
 
 @pytest.mark.parametrize('false_str', ('false', 'False', 'FALSE'))
 def test_string_source_mixin_convert_false_value(false_str):
-    assert StringSourceMixin.convert_value(false_str, bool) == False
+    assert StringSourceMixin.convert_value(false_str, bool) is False
 
 
 #
@@ -95,7 +92,7 @@ def test_env_source_int_hint(monkeypatch):
     assert esrc.read(S('a', int)) == 10
 
 
-def test_env_source_int_hint(monkeypatch):
+def test_env_source_float_hint(monkeypatch):
     monkeypatch.setenv('a', '10.25')
     esrc = get_source(EnvVarSource())
     assert esrc.read(S('a', float)) == 10.25
@@ -163,6 +160,7 @@ def test_json_source_read_nested_object_value(fs):
 # YAML source
 #
 
+
 def test_yaml_source_throws_import_error_when_module_missing(mocker):
     # buggy mocker.patch.dict, using manual context resoration
     _yaml = sys.modules.get('yaml', None)
@@ -210,33 +208,42 @@ def test_yaml_source_read_str_value(fs):
 def test_yaml_source_read_null_value(fs):
     fs.create_file('/test/settings.yaml', contents='A: null')
     ysrc = get_source('/test/settings.yaml')
-    assert ysrc.read(S('A')) == None
+    assert ysrc.read(S('A')) is None
 
 
 def test_yaml_source_read_array_value(fs):
-    fs.create_file('/test/settings.yaml', contents='''
+    fs.create_file(
+        '/test/settings.yaml',
+        contents='''
     A:
       - 1
       - 2
       - 3
-    ''')
+    ''',
+    )
     ysrc = get_source('/test/settings.yaml')
     assert ysrc.read(S('A')) == [1, 2, 3]
 
 
 def test_yaml_source_read_object_value(fs):
-    fs.create_file('/test/settings.yaml', contents='''
+    fs.create_file(
+        '/test/settings.yaml',
+        contents='''
     A:
       B: 10
-    ''')
+    ''',
+    )
     ysrc = get_source('/test/settings.yaml')
     assert ysrc.read(S('A')) == {'B': 10}
 
 
 def test_yaml_source_read_nested_object_value(fs):
-    fs.create_file('/test/settings.yaml', contents='''
+    fs.create_file(
+        '/test/settings.yaml',
+        contents='''
     A:
       B: 10
-    ''')
+    ''',
+    )
     ysrc = get_source('/test/settings.yaml')
     assert ysrc.read(S('B'), parents=('A',)) == 10

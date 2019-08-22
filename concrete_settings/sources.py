@@ -172,7 +172,8 @@ class YamlSource(FileSource):
             import yaml  # noqa: F401 # imported but unused
         except ImportError as e:
             raise ConcreteSettingsError(
-                f'YAML source is not available for `{path}` due to error importing `yaml` package.\n'
+                f'YAML source is not available for `{path}` '
+                'due to error importing `yaml` package.\n'
                 'Perhaps you have forgotten to install PyYAML?'
             ) from e
         super().__init__(path)

@@ -292,7 +292,7 @@ def test_nested_settings_validation_raises():
     with pytest.raises(
         SettingsValidationError,
         match="T_S0: Expected value of type `<class 'str'>` got value of type `<class 'int'>`",
-    ) as e:
+    ):
         s = S()
         s.is_valid(raise_exception=True)
 
