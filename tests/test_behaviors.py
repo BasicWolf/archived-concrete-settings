@@ -145,7 +145,8 @@ def test_deprecated_warning_message():
 
     with pytest.warns(
         DeprecationWarning,
-        match=r"Setting `D` in class `<class 'tests.test_behaviors.test_deprecated_warning_message.<locals>.S'>` is deprecated.",
+        match=(r"Setting `D` in class `<class 'tests.test_behaviors."
+               r"test_deprecated_warning_message.<locals>.S'>` is deprecated."),
     ) as w:
         S().is_valid()
         assert len(w) == 1
@@ -221,25 +222,53 @@ def test_required_setting_has_value_does_not_raise_exception():
 
 
 # == override == #
-def test_validate_override_smoke(v_int, v_str):
+def test_validate_override():
     class S(Settings):
-        T: int = v_int
+        T: int = 10
 
     class S1(S):
-        T: str = v_str @ override
+        T: str = 'abc' @ override
 
     s1 = S1()
-    s1.is_valid()
-    assert s1.T == v_str
+    assert s1.is_valid()
+    assert s1.T == 'abc'
 
 
-def test_structure_error_without_override(v_int, v_str):
+def test_structure_error_without_override():
     class S(Settings):
-        T: int = v_int
+        T: int = 10
 
     class S1(S):
-        T: str = v_str
+        T: str = 'abc'
 
     with pytest.raises(SettingsStructureError) as e:
         S1()
     e.match('types differ')
+
+
+def test_override_on_property_setting():
+    class S(Settings):
+        T: int = 10
+
+    class S1(S):
+        @override
+        @setting
+        def T(self) -> str:
+            return 'abc'
+
+    s1 = S1()
+    assert s1.is_valid()
+    assert s1.T == 'abc'
+
+
+def test_structure_error_without_override_on_property_setting():
+    class S(Settings):
+        T: int = 10
+
+    class S1(S):
+        @setting
+        def T(self) -> str:
+            return 'abc'
+
+    with pytest.raises(SettingsStructureError):
+        S1()

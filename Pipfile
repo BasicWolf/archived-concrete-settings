@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 sphinx = "*"
 pyyaml = "*"
+concrete-settings = {path = "."}
 
 [dev-packages]
 pudb = "*"
@@ -24,9 +25,7 @@ sphinx = "*"
 typeguard = "*"
 pyfakefs = "*"
 pyyaml = "*"
-
-[packages.concrete-settings]
-path = "."
+concrete-settings = {path = "."}
 
 [requires]
 python = "3.7"

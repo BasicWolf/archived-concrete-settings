@@ -19,7 +19,7 @@ tox:
 	tox
 
 flake8:
-	flake8 concrete_settings tests
+	flake8 --config=.flake8rc concrete_settings tests
 
 docs:
 	$(MAKE) html -C docs

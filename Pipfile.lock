@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cd19e7c20173d21f9a947543663e4edcc49d7800e7d705fcac5fa0a33f5eee00"
+            "sha256": "990105a3b84a9e2a332978660d4549b5a55fdd726172d3b7ca57d70f9ee0de79"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -50,6 +50,9 @@
                 "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"
             ],
             "version": "==3.0.4"
+        },
+        "concrete-settings": {
+            "path": "."
         },
         "docutils": {
             "hashes": [
@@ -304,7 +307,6 @@
             "version": "==7.0"
         },
         "concrete-settings": {
-            "editable": true,
             "path": "."
         },
         "coverage": {
@@ -417,6 +419,7 @@
                 "sha256:23d3d873e008a513952355379d93cbcab874c58f4f034ff657c7a87422fa64e8",
                 "sha256:80d2de76188eabfbfcf27e6a37342c2827801e59c4cc14b0371c56fed43820e3"
             ],
+            "markers": "python_version < '3.8'",
             "version": "==0.19"
         },
         "jinja2": {
@@ -682,8 +685,7 @@
         "toml": {
             "hashes": [
                 "sha256:229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c",
-                "sha256:235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e",
-                "sha256:f1db651f9657708513243e61e6cc67d101a39bad662eaa9b5546f789338e07a3"
+                "sha256:235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e"
             ],
             "version": "==0.10.0"
         },

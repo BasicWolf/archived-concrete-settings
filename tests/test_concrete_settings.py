@@ -9,7 +9,6 @@ import pytest
 import concrete_settings
 from concrete_settings import Settings, Setting, setting
 from concrete_settings.sources import Source
-from concrete_settings.behaviors import override
 from concrete_settings.exceptions import SettingsValidationError
 from .utils import Match
 
@@ -291,7 +290,8 @@ def test_nested_settings_validation_raises():
 
     with pytest.raises(
         SettingsValidationError,
-        match="T_S0: Expected value of type `<class 'str'>` got value of type `<class 'int'>`",
+        match=("T_S0: Expected value of type `<class 'str'>` "
+               "got value of type `<class 'int'>`"),
     ):
         s = S()
         s.is_valid(raise_exception=True)
