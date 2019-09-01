@@ -12,7 +12,7 @@ install:
   - pip install -r requirements.test.txt
 
 script:
-  - make flake8
+  - make lint
   - make test
   - if [[ $TRAVIS_PYTHON_VERSION == '3.7' ]]; then make docs; fi
 

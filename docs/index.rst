@@ -6,64 +6,77 @@
 Welcome to Concrete Settings
 ============================
 
-**Concrete Settings** is a small Python library which helps handling configuration in large projects.
+**WARNING!** Concrete Settings is currently in development!
+There is no stable, not even pre-alpha version currently available.
 
-**WARNING!** Concrete Settings is currently in development! There is no stable, not even pre-alpha version currently available.
+Does your application has tens or hundreds of settings
+scattered around files and environmental variables?
+Does dependency management becomes unberable?
+Are you having problems at startup, since it's hard
+to follow where the values are coming from and there is no verifaction?
 
-What are the goals of this library?
+**Concrete Settings** was created to solve all these issues and more!
 
-1. Provide a way to declare setting is an easy-to-read manner.
-   Settings documentation should be the part of the declaration,
-   which makes easy to keep it up-to-date.
-2. Read settings from any source: be it JSON, YAML, environmental variables, python files or any other sources.
-3. Explain a user the resulting settings object: where and how each setting was declared, read from and verified.
-
-
-Let's start with a basic example:
-
-.. code-block:: python
-
-   from concrete_settings import Settings
-
-   class AppSettings(Settings):
-
-       #: Turns debug mode on/off
-       DEBUG: bool = True
-
-
-This example contains important concepts of ConcreteSettings.
-Here we define a settings class with one setting `DEBUG`.
-Its type is `bool` and default value is `True`.
-The docstring of the setting is defined in a `#: ` comment.
-
-This short form definition is an equivalent to the verbose form:
-
-.. code-block:: python
-
-   from concrete_settings import Settings
-   from concrete_settings.validators import ValueTypeValidator
-
-   class AppSettings(Settings):
-
-       DEBUG = Setting(True,
-                       type_hint=bool,
-                       validators=(ValueTypeValidator(), )
-                       doc="Turns debug mode on/off")
-
-
-.. code-block:: python
-
-       # LATER
-
-       #: Application's unique secret key.
-       SECRET_KEY: str = Required
-
-       #: [Deprecated] Secret hash
-       SECRET_HASH: str = deprecated(Setting()
+Concrete Settings is a Python library which facilitates configuration management in large projects.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+
+
+With Concrete Settings a developer can declare the settings in different classes
+and then combine them by composition, inheritance or both!
+Each setting carries the information and functionality
+allowing to initialize, read and validate it at any point of time.
+
+Sounds unbelievable? Let's discover together by looking at some examples:
+
+
+.. code-block:: python
+
+  from concrete_settings import Settings
+
+  class AppSettings(Settings):
+
+      #: Turns debug mode on/off
+      DEBUG: bool = True
+
+  app_settings = AppSettings()
+
+  app_settings.is_valid(raise_exception=True)
+
+  print(app_settings.DEBUG)
+
+
+This example demonstrates the basic concepts of Concrete Settings.
+We define a settings class with a setting called ``DEBUG``.
+Its type is ``bool`` and the default value is ``True``.
+The docstring of the setting is defined in a ``#:`` comment block.
+
+The settings are
+
+
+The equivalent verbose form is:
+
+.. code-block:: python
+
+  from concrete_settings import Settings, Setting
+  from concrete_settings.validators import ValueTypeValidator
+
+  class AppSettings(Settings):
+      DEBUG = Setting(
+          True,
+          type_hint=bool,
+          validators=(ValueTypeValidator(), ),
+          doc="Turns debug mode on/off"
+      )
+
+
+Composition
+-----------
+
+
 
 
 

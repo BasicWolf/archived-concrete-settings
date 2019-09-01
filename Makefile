@@ -9,8 +9,8 @@ endif
 
 all:
 	@echo "Available targets:"
-	@echo "test - run tests"
-
+	@echo "test [TESTS=TEST1,TEST2,...] - run tests"
+	@echo "lint ....................... - run linterns"
 
 test:
 	${PIPENV} run pytest -s $(PYTEST_ARGS)
@@ -18,11 +18,17 @@ test:
 tox:
 	tox
 
+
+lint: flake8
+
+
 flake8:
 	flake8 --config=.flake8rc concrete_settings tests
 
+
 docs:
 	$(MAKE) html -C docs
+
 
 clean:
 	python setup.py clean
