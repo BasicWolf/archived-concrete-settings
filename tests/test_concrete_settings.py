@@ -333,6 +333,22 @@ def test_validate_together_called():
     assert validate_together_called
 
 
+def test_validate_together_should_raise_exception():
+    assert False
+
+
+def test_type_error_when_valdiate_together_not_returns_dict():
+    assert False
+
+
+def test_validate_together_raises_settings_validation_error():
+    assert False
+
+
+def test_validate_together_returns_common_error():
+    assert False
+
+
 #
 # Updating
 #
