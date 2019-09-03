@@ -108,37 +108,37 @@ def test_guess_type():
 
 
 class TestPropertySetting:
-    def test_with_setting_attrs_decorated_method(self, v_int):
+    def test_with_setting_attrs_decorated_method(self):
         class S(Settings):
             @setting
-            def T(self) -> int:
-                """T docs"""
-                return v_int
+            def V(self) -> int:
+                """V docs"""
+                return 10
 
-        assert S.T.__doc__ == "T docs"
-        assert S.T.validators == tuple()
-        assert S.T.type_hint == int
+        assert S.V.__doc__ == "V docs"
+        assert S.V.validators == tuple()
+        assert S.V.type_hint == int
         s = S()
-        assert s.T == v_int
+        assert s.V == 10
 
-    def test_no_return_type_hint(self, v_int):
+    def test_no_return_type_hint(self):
         class S(Settings):
             @setting
-            def T(self):
-                return v_int
+            def V(self):
+                return 10
 
-        assert S.T.type_hint is typing.Any
+        assert S.V.type_hint is typing.Any
 
-    def test_with_setting_attrs_defined_as_argument(self, DummyValidator, v_int):
+    def test_with_setting_attrs_defined_as_argument(self, DummyValidator):
         class S(Settings):
-            @setting(type_hint=int, doc="T arg docs", validators=(DummyValidator(),))
-            def T(self):
-                return v_int
+            @setting(type_hint=int, doc="V arg docs", validators=(DummyValidator(),))
+            def V(self):
+                return 10
 
-        assert S.T.__doc__ == "T arg docs"
-        assert S.T.type_hint == int
-        assert len(S.T.validators) == 1
-        assert isinstance(S.T.validators[0], DummyValidator)
+        assert S.V.__doc__ == "V arg docs"
+        assert S.V.type_hint == int
+        assert len(S.V.validators) == 1
+        assert isinstance(S.V.validators[0], DummyValidator)
 
     def test_property_setting_using_other_settings(self):
         class S(Settings):
@@ -290,8 +290,10 @@ def test_nested_settings_validation_raises():
 
     with pytest.raises(
         SettingsValidationError,
-        match=("T_S0: Expected value of type `<class 'str'>` "
-               "got value of type `<class 'int'>`"),
+        match=(
+            "T_S0: Expected value of type `<class 'str'>` "
+            "got value of type `<class 'int'>`"
+        ),
     ):
         s = S()
         s.is_valid(raise_exception=True)
@@ -314,6 +316,21 @@ def test_nested_triple_nested_validation_errors():
         "Expected value of type `<class 'str'>` got value of type `<class 'int'>`"
     ]}]}]}
     # fmt: on
+
+
+def test_validate_together_called():
+    validate_together_called = False
+
+    class S(Settings):
+        T: str = 'a'
+
+        def _validate_together(self, raise_exception=False):
+            nonlocal validate_together_called
+            validate_together_called = True
+            return {}
+
+    assert S().is_valid()
+    assert validate_together_called
 
 
 #

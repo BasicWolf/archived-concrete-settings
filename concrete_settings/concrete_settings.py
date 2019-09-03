@@ -1,7 +1,7 @@
 import functools
 import types
 from collections import defaultdict
-from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
+from typing import Any, Callable, Dict, Type, TypeVar, Sequence, Union, List, Tuple
 
 from . import docreader
 from .behaviors import Behaviors, override
@@ -11,8 +11,9 @@ from .sources import get_source, TAnySource, Source
 from .types import Undefined, GuessSettingType
 
 
-TSettingsErrors = List[Union[str, Dict[str, 'TSettingsErrors']]]
+SettingsErrors = Union[List[Union[str, 'SettingsErrors']], Dict[str, 'SettingsErrors']]
 
+COMMON_ERRORS = '__common__errors__'
 
 # ==== Settings classes ==== #
 # ========================== #
@@ -197,7 +198,7 @@ class ConcreteSettingsMeta(type):
 class Settings(Setting, metaclass=ConcreteSettingsMeta):
     default_validators: Tuple = (ValueTypeValidator(),)
     mandatory_validators: Tuple = ()
-    errors: TSettingsErrors = {}
+    errors: SettingsErrors = {}
 
     validating: bool
     _validated: bool
@@ -280,13 +281,16 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
             if setting_errors:
                 errors[name] += setting_errors
 
+        if errors == {}:
+            errors_together = self._validate_together(raise_exception)
+
         self.errors = dict(errors)
         self.validating = False
         self._validated = True
 
     def _validate_setting(
         self, name: str, setting: Setting, raise_exception=False
-    ) -> TSettingsErrors:
+    ) -> SettingsErrors:
         value: Setting = getattr(self, name)
 
         errors = []
@@ -312,6 +316,21 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
             errors.append(value.errors)
 
         return errors
+
+    def _validate_together(
+        self, raise_exception: bool = False
+    ) -> Dict[str, 'SettingsErrors']:
+        """Validate settings altogether.
+
+        This is a stub method. It is called after individual
+        settings' validation is completed without any errors only.
+        Override the method in your child Settings classes.
+
+        The return value is a dict of { setting_name: SettingsErrors }.
+        Use concrete_settings.COMMON_ERRORS key as setting name to
+        indicate common class-wide errors.
+        """
+        return {}
 
     def update(self, *sources: List[TAnySource]):
         for s in sources:
