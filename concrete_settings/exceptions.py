@@ -9,7 +9,7 @@ class SettingsStructureError(ConcreteSettingsError):
 class SettingsValidationError(ConcreteSettingsError):
     """Raised by a setting validator when a setting value is invalid"""
 
-    def __init__(self, description: str):
+    def __init__(self, description: str = ''):
         self.description = description
         self.sources = []
 

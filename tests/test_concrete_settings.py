@@ -7,7 +7,7 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import Settings, Setting, setting
+from concrete_settings import Settings, Setting, setting, INVALID_SETTINGS
 from concrete_settings.sources import Source
 from concrete_settings.exceptions import SettingsValidationError
 from .utils import Match
@@ -318,36 +318,27 @@ def test_nested_triple_nested_validation_errors():
     # fmt: on
 
 
-def test_validate_together_called():
-    validate_together_called = False
+def test_validate_called():
+    validate_called = False
 
     class S(Settings):
-        T: str = 'a'
-
-        def _validate_together(self, raise_exception=False):
-            nonlocal validate_together_called
-            validate_together_called = True
+        def validate(self):
+            nonlocal validate_called
+            validate_called = True
             return {}
 
     assert S().is_valid()
-    assert validate_together_called
+    assert validate_called
 
 
-def test_validate_together_should_raise_exception():
-    assert False
+def test_error_preserved_when_validate_raises_settings_validation_error():
+    class S(Settings):
+        def validate(self):
+            raise SettingsValidationError('there was an error')
 
-
-def test_type_error_when_valdiate_together_not_returns_dict():
-    assert False
-
-
-def test_validate_together_raises_settings_validation_error():
-    assert False
-
-
-def test_validate_together_returns_common_error():
-    assert False
-
+    s = S()
+    assert not s.is_valid()
+    assert s.errors == {INVALID_SETTINGS: ['there was an error']}
 
 #
 # Updating

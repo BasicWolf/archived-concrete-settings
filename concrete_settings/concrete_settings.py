@@ -1,7 +1,7 @@
 import functools
 import types
 from collections import defaultdict
-from typing import Any, Callable, Dict, Type, TypeVar, Sequence, Union, List, Tuple
+from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
 
 from . import docreader
 from .behaviors import Behaviors, override
@@ -13,7 +13,8 @@ from .types import Undefined, GuessSettingType
 
 SettingsErrors = Union[List[Union[str, 'SettingsErrors']], Dict[str, 'SettingsErrors']]
 
-COMMON_ERRORS = '__common__errors__'
+INVALID_SETTINGS = '__invalid__settings__'
+
 
 # ==== Settings classes ==== #
 # ========================== #
@@ -262,7 +263,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
     def is_valid(self, raise_exception=False) -> bool:
         """Validate settings and return a boolean indicate whether settings are valid"""
         if not self._validated:
-            self._validate(raise_exception)
+            self._run_validation(raise_exception)
         return self.errors == {}
 
     def _iter_settings_attributes(self):
@@ -271,20 +272,26 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
             if isinstance(attr, Setting):
                 yield name, attr
 
-    def _validate(self, raise_exception=False):
+    def _run_validation(self, raise_exception=False):
         self.validating = True
-        errors = defaultdict(list)
+        errors = {}
 
         # validate each setting individually
         for name, setting in self._iter_settings_attributes():
             setting_errors = self._validate_setting(name, setting, raise_exception)
             if setting_errors:
-                errors[name] += setting_errors
+                errors[name] = setting_errors
 
         if errors == {}:
-            errors_together = self._validate_together(raise_exception)
+            try:
+                self.validate()
+            except SettingsValidationError as e:
+                if raise_exception:
+                    raise e
+                else:
+                    errors[INVALID_SETTINGS] = [str(e)]
 
-        self.errors = dict(errors)
+        self.errors = errors
         self.validating = False
         self._validated = True
 
@@ -317,20 +324,16 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
 
         return errors
 
-    def _validate_together(
-        self, raise_exception: bool = False
-    ) -> Dict[str, 'SettingsErrors']:
+    def validate(self):
         """Validate settings altogether.
 
         This is a stub method. It is called after individual
         settings' validation is completed without any errors only.
         Override the method in your child Settings classes.
 
-        The return value is a dict of { setting_name: SettingsErrors }.
-        Use concrete_settings.COMMON_ERRORS key as setting name to
-        indicate common class-wide errors.
+        SettingsValidationError should be raised in case of validation errors.
         """
-        return {}
+        pass
 
     def update(self, *sources: List[TAnySource]):
         for s in sources:
