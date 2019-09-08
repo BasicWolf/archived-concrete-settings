@@ -6,7 +6,5 @@ class AppSettings(Settings):
     DEBUG: bool = True
 
 app_settings = AppSettings()
-app_settings
 app_settings.is_valid(raise_exception=True)
-
 print(app_settings.DEBUG)

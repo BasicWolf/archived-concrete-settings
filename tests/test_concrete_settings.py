@@ -21,10 +21,6 @@ def unsupported_python_version_info():
     return VersionInfo(3, 5, 0, 'final', 0)
 
 
-def test_smoke():
-    assert True
-
-
 def test_cls_init_empty_settings():
     Settings()
 
@@ -150,6 +146,7 @@ class TestPropertySetting:
                 return f'{self.A} {self.B}'
 
         s = S()
+        assert s.is_valid()
         assert s.AB == '10 hello world'
 
 
@@ -254,15 +251,15 @@ def test_settings_mandatory_validators(is_positive, is_less_that_10):
 #
 
 
-def test_nested_settings_smoke():
-    class S0(Settings):
-        T = 10
+def test_nested_settings_valid():
+    class S2(Settings):
+        VAL2 = 20
 
-    class S(Settings):
-        NESTED_S0 = S0()
+    class S1(Settings):
+        NESTED_S2 = S2()
 
-    s = S()
-    s.is_valid()
+    s1 = S1()
+    assert s1.is_valid()
 
 
 def test_nested_setting_values():
@@ -277,6 +274,7 @@ def test_nested_setting_values():
         NESTED_S2 = S2()
 
     s1 = S1()
+    assert s1.is_valid()
     assert s1.NESTED_S2.VAL2 == 20
     assert s1.NESTED_S2.NESTED_S3.VAL3 == 30
 
@@ -334,11 +332,30 @@ def test_validate_called():
 def test_error_preserved_when_validate_raises_settings_validation_error():
     class S(Settings):
         def validate(self):
-            raise SettingsValidationError('there was an error')
+            raise SettingsValidationError('there was an error XXXX')
 
     s = S()
     assert not s.is_valid()
-    assert s.errors == {INVALID_SETTINGS: ['there was an error']}
+    assert s.errors == {INVALID_SETTINGS: ['there was an error XXXX']}
+
+
+def test_error_raised_when_validate_raises_settings_validation_error():
+    class S(Settings):
+        def validate(self):
+            raise SettingsValidationError('there was an error XXXX')
+
+    s = S()
+    with pytest.raises(SettingsValidationError, match='there was an error XXXX'):
+        s.is_valid(raise_exception=True)
+
+
+def test_settings_errors_readonly():
+    class S(Settings):
+        T: int = 10
+
+    with pytest.raises(AttributeError):
+        S().errors = {}
+
 
 #
 # Updating
@@ -379,6 +396,7 @@ def test_update_top_level_setting_from_source(mocker):
     src_mock.read = mocker.MagicMock(side_effect=lambda *ignore: 10)
 
     s.update(src_mock)
+    assert s.is_valid()
     assert s.T == 10
 
 
@@ -412,4 +430,5 @@ def test_update_nested_setting_from_source(mocker):
     src_mock.read = mocker.MagicMock(return_value=20)
 
     s1.update(src_mock)
+    assert s1.is_valid()
     assert s1.NESTED_S.T == 20

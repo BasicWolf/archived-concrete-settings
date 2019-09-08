@@ -33,7 +33,7 @@ allowing to initialize, read and validate it at any point of time.
 Sounds unbelievable? Let's discover together by looking at some examples:
 
 
-.. code-block:: python
+.. code-block:: pycon
 
   from concrete_settings import Settings
 
@@ -43,10 +43,10 @@ Sounds unbelievable? Let's discover together by looking at some examples:
       DEBUG: bool = True
 
   app_settings = AppSettings()
-
   app_settings.is_valid(raise_exception=True)
 
   print(app_settings.DEBUG)
+  >>> True
 
 
 This example demonstrates the basic concepts of Concrete Settings.

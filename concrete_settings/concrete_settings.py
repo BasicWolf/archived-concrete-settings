@@ -46,6 +46,10 @@ class Setting:
         self.name = name
 
     def __get__(self, owner: 'Settings', owner_type=None):
+        assert isinstance(
+            owner, (type(None), Settings)
+        ), "owner should be None or an instance of Settings"
+
         # == class-level access ==
         if not owner:
             return self
@@ -88,6 +92,10 @@ class PropertySetting(Setting):
         return self
 
     def __get__(self, owner: 'Settings', owner_type=None):
+        assert isinstance(
+            owner, (type(None), Settings)
+        ), "owner should be None or an instance of Settings"
+
         # == class-level access ==
         if not owner:
             return self
@@ -199,10 +207,11 @@ class ConcreteSettingsMeta(type):
 class Settings(Setting, metaclass=ConcreteSettingsMeta):
     default_validators: Tuple = (ValueTypeValidator(),)
     mandatory_validators: Tuple = ()
-    errors: SettingsErrors = {}
 
     validating: bool
-    _validated: bool
+    validated: bool
+
+    _errors: SettingsErrors = {}
 
     def __init__(self, **kwargs):
         assert (
@@ -211,7 +220,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
         super().__init__(self, **kwargs)
 
         self.validating = False
-        self._validated = False
+        self.validated = False
         self._verify_structure()
 
     def _verify_structure(self):
@@ -262,9 +271,9 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
 
     def is_valid(self, raise_exception=False) -> bool:
         """Validate settings and return a boolean indicate whether settings are valid"""
-        if not self._validated:
-            self._run_validation(raise_exception)
-        return self.errors == {}
+        if not self.validated:
+            self._errors = self._run_validation(raise_exception)
+        return self._errors == {}
 
     def _iter_settings_attributes(self):
         for name in dir(self.__class__):
@@ -272,7 +281,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
             if isinstance(attr, Setting):
                 yield name, attr
 
-    def _run_validation(self, raise_exception=False):
+    def _run_validation(self, raise_exception=False) -> SettingsErrors:
         self.validating = True
         errors = {}
 
@@ -291,9 +300,9 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
                 else:
                     errors[INVALID_SETTINGS] = [str(e)]
 
-        self.errors = errors
         self.validating = False
-        self._validated = True
+        self.validated = True
+        return errors
 
     def _validate_setting(
         self, name: str, setting: Setting, raise_exception=False
@@ -314,13 +323,16 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
 
         # nested Settings
         if isinstance(value, Settings):
+            nested_settings = value
             try:
-                value.is_valid(raise_exception=raise_exception)
+                nested_settings.is_valid(raise_exception=raise_exception)
             except SettingsValidationError as e:
                 assert raise_exception
                 e.prepend_source(name)
                 raise e
-            errors.append(value.errors)
+
+            if nested_settings.errors:
+                errors.append(nested_settings.errors)
 
         return errors
 
@@ -348,3 +360,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
                 settings._update(setting, source, (*parents, name))
             else:
                 setattr(settings, name, source.read(setting, parents))
+
+    @property
+    def errors(self):
+        return self._errors
