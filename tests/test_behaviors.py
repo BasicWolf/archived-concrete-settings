@@ -2,7 +2,7 @@ import pytest
 
 from concrete_settings import Settings, Setting, Undefined, setting
 from concrete_settings.behaviors import SettingBehavior, deprecated, required, override
-from concrete_settings.exceptions import SettingsValidationError, SettingsStructureError
+from concrete_settings.exceptions import ValidationError, StructureError
 
 
 @pytest.fixture
@@ -156,7 +156,7 @@ def test_deprecated_error_when_validating():
     class S(Settings):
         D = 10 @ deprecated(error_on_validation=True)
 
-    with pytest.raises(SettingsValidationError):
+    with pytest.raises(ValidationError):
         S().is_valid(raise_exception=True)
 
 
@@ -207,7 +207,7 @@ def test_required():
         D = Undefined @ required
 
     with pytest.raises(
-        SettingsValidationError, match="Setting `D` is required to have a value."
+        ValidationError, match="Setting `D` is required to have a value."
     ):
         S().is_valid(raise_exception=True)
 
@@ -241,7 +241,7 @@ def test_structure_error_without_override():
     class S1(S):
         T: str = 'abc'
 
-    with pytest.raises(SettingsStructureError) as e:
+    with pytest.raises(StructureError) as e:
         S1()
     e.match('types differ')
 
@@ -270,5 +270,5 @@ def test_structure_error_without_override_on_property_setting():
         def T(self) -> str:
             return 'abc'
 
-    with pytest.raises(SettingsStructureError):
+    with pytest.raises(StructureError):
         S1()

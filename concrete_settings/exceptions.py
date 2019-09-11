@@ -2,11 +2,11 @@ class ConcreteSettingsError(Exception):
     """Base class for all concrete_settings exceptions."""
 
 
-class SettingsStructureError(ConcreteSettingsError):
+class StructureError(ConcreteSettingsError):
     """Raised when an inconsistency in settings inheritance hierarchy is detected."""
 
 
-class SettingsValidationError(ConcreteSettingsError):
+class ValidationError(ConcreteSettingsError):
     """Raised by a setting validator when a setting value is invalid"""
 
     def __init__(self, description: str = ''):

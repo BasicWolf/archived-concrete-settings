@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
 
 from . import docreader
 from .behaviors import Behaviors, override
-from .exceptions import SettingsStructureError, SettingsValidationError
+from .exceptions import StructureError, ValidationError
 from .validators import ValueTypeValidator
 from .sources import get_source, TAnySource, Source
 from .types import Undefined, GuessSettingType
@@ -234,7 +234,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
                 differences = self._settings_diff(s0, s1)
                 if differences:
                     diff = '; '.join(differences)
-                    raise SettingsStructureError(
+                    raise StructureError(
                         f'in classes {c0} and {c1} setting {name} has'
                         f' the following difference(s): {diff}'
                     )
@@ -294,7 +294,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
         if errors == {}:
             try:
                 self.validate()
-            except SettingsValidationError as e:
+            except ValidationError as e:
                 if raise_exception:
                     raise e
                 else:
@@ -316,7 +316,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
         for validator in validators:
             try:
                 validator(value, name=name, owner=self, setting=setting)
-            except SettingsValidationError as e:
+            except ValidationError as e:
                 if raise_exception:
                     raise e
                 errors.append(str(e))
@@ -326,7 +326,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
             nested_settings = value
             try:
                 nested_settings.is_valid(raise_exception=raise_exception)
-            except SettingsValidationError as e:
+            except ValidationError as e:
                 assert raise_exception
                 e.prepend_source(name)
                 raise e
