@@ -1,8 +1,8 @@
 import pytest
 
-from concrete_settings import Settings, Setting, Undefined, setting
+from concrete_settings import Settings, Setting, Undefined, setting as property_setting
 from concrete_settings.behaviors import SettingBehavior, deprecated, required, override
-from concrete_settings.exceptions import ValidationError, StructureError
+from concrete_settings.exceptions import SettingsValidationError, StructureError
 
 
 @pytest.fixture
@@ -20,11 +20,11 @@ def div():
 @pytest.fixture
 def plus():
     class Plus(SettingBehavior):
-        def __init__(self, summand):
-            self.summand = summand
+        def __init__(self, addend):
+            self.addend = addend
 
         def get_setting_value(self, setting, owner, get_value):
-            return get_value() + self.summand
+            return get_value() + self.addend
 
     return Plus
 
@@ -101,7 +101,7 @@ def test_setting_behavior_call_order(div, plus):
 def test_setting_behavior_with_property_setting(div):
     class S(Settings):
         @div(5)
-        @setting
+        @property_setting
         def D(self):
             return 30
 
@@ -112,7 +112,7 @@ def test_setting_behavior_with_property_setting_order(div, plus):
     class S(Settings):
         @div(2)
         @plus(5)
-        @setting
+        @property_setting
         def D(self):
             return 15
 
@@ -121,7 +121,7 @@ def test_setting_behavior_with_property_setting_order(div, plus):
     class S(Settings):
         @div(5)
         @plus(2)
-        @setting
+        @property_setting
         def D(self):
             return 18
 
@@ -156,7 +156,7 @@ def test_deprecated_error_when_validating():
     class S(Settings):
         D = 10 @ deprecated(error_on_validation=True)
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(SettingsValidationError):
         S().is_valid(raise_exception=True)
 
 
@@ -189,7 +189,7 @@ def test_deprecated_not_warns():
 def test_deprecated_on_property_setting():
     class S(Settings):
         @deprecated
-        @setting
+        @property_setting
         def D(self):
             return 30
 
@@ -207,7 +207,7 @@ def test_required():
         D = Undefined @ required
 
     with pytest.raises(
-        ValidationError, match="Setting `D` is required to have a value."
+        SettingsValidationError, match="Setting `D` is required to have a value."
     ):
         S().is_valid(raise_exception=True)
 
@@ -252,7 +252,7 @@ def test_override_on_property_setting():
 
     class S1(S):
         @override
-        @setting
+        @property_setting
         def T(self) -> str:
             return 'abc'
 
@@ -266,7 +266,7 @@ def test_structure_error_without_override_on_property_setting():
         T: int = 10
 
     class S1(S):
-        @setting
+        @property_setting
         def T(self) -> str:
             return 'abc'
 

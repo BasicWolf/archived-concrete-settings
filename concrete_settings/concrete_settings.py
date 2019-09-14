@@ -5,13 +5,10 @@ from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
 
 from . import docreader
 from .behaviors import Behaviors, override
-from .exceptions import StructureError, ValidationError
+from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
 from .validators import ValueTypeValidator
 from .sources import get_source, TAnySource, Source
 from .types import Undefined, GuessSettingType
-
-
-SettingsErrors = Union[List[Union[str, 'SettingsErrors']], Dict[str, 'SettingsErrors']]
 
 INVALID_SETTINGS = '__invalid__settings__'
 
@@ -113,13 +110,13 @@ class PropertySetting(Setting):
 
 
 class ConcreteSettingsMeta(type):
-    def __new__(mcls, name, bases, class_dict):
-        new_dict = mcls.class_dict_to_settings(class_dict)
-        mcls.add_settings_help(name, new_dict)
-        return super().__new__(mcls, name, bases, new_dict)
+    def __new__(mcs, name, bases, class_dict):
+        new_dict = mcs.class_dict_to_settings(class_dict)
+        mcs.add_settings_help(name, new_dict)
+        return super().__new__(mcs, name, bases, new_dict)
 
     @classmethod
-    def class_dict_to_settings(mcls: type, class_dict: dict):
+    def class_dict_to_settings(mcs: 'ConcreteSettingsMeta', class_dict: dict):
         new_dict = {}
         annotations = class_dict.get("__annotations__", {})
 
@@ -129,10 +126,10 @@ class ConcreteSettingsMeta(type):
             # Make a Setting out of ALL_UPPERCASE_ATTRIBUTE
             if (
                 not isinstance(field, Setting)
-                and mcls.is_setting_name(attr)
-                and mcls.is_safe_setting_type(field)
+                and mcs.is_setting_name(attr)
+                and mcs.is_safe_setting_type(field)
             ):
-                new_field = mcls.make_setting_from_attr(attr, field, annotations)
+                new_field = mcs.make_setting_from_attr(attr, field, annotations)
 
             # Should we try to guess a type_hint for a Setting?
             if (
@@ -211,7 +208,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
     validating: bool
     validated: bool
 
-    _errors: SettingsErrors = {}
+    _errors: ValidationErrorDetail = {}
 
     def __init__(self, **kwargs):
         assert (
@@ -281,7 +278,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
             if isinstance(attr, Setting):
                 yield name, attr
 
-    def _run_validation(self, raise_exception=False) -> SettingsErrors:
+    def _run_validation(self, raise_exception=False) -> ValidationErrorDetail:
         self.validating = True
         errors = {}
 
@@ -294,7 +291,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
         if errors == {}:
             try:
                 self.validate()
-            except ValidationError as e:
+            except SettingsValidationError as e:
                 if raise_exception:
                     raise e
                 else:
@@ -306,7 +303,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
 
     def _validate_setting(
         self, name: str, setting: Setting, raise_exception=False
-    ) -> SettingsErrors:
+    ) -> ValidationErrorDetail:
         value: Setting = getattr(self, name)
 
         errors = []
@@ -316,7 +313,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
         for validator in validators:
             try:
                 validator(value, name=name, owner=self, setting=setting)
-            except ValidationError as e:
+            except SettingsValidationError as e:
                 if raise_exception:
                     raise e
                 errors.append(str(e))
@@ -326,7 +323,7 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
             nested_settings = value
             try:
                 nested_settings.is_valid(raise_exception=raise_exception)
-            except ValidationError as e:
+            except SettingsValidationError as e:
                 assert raise_exception
                 e.prepend_source(name)
                 raise e
@@ -354,7 +351,8 @@ class Settings(Setting, metaclass=ConcreteSettingsMeta):
 
     @staticmethod
     def _update(settings: 'Settings', source: Source, parents: Tuple[str] = ()):
-        '''Recursively update settings object from dictionary'''
+        """Recursively update settings object from dictionary"""
+
         for name, setting in settings._iter_settings_attributes():
             if isinstance(setting, Settings):
                 settings._update(setting, source, (*parents, name))

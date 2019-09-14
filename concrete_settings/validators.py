@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from typeguard import check_type
 
-from .exceptions import ValidationError
+from .exceptions import SettingsValidationError
 from .types import Undefined
 
 if TYPE_CHECKING:
@@ -39,7 +39,7 @@ class DeprecatedValidator(Validator):
         msg = self.msg.format(name=name, owner=type(owner))
 
         if self.raise_exception:
-            raise ValidationError(msg)
+            raise SettingsValidationError(msg)
         else:
             warnings.warn(msg, DeprecationWarning)
 
@@ -51,7 +51,7 @@ class RequiredValidator(Validator):
     def __call__(self, value, *, name, owner, **ignore):
         if value == Undefined:
             msg = self.message.format(name=name, owner=type(owner))
-            raise ValidationError(msg)
+            raise SettingsValidationError(msg)
 
 
 class ValueTypeValidator(Validator):
@@ -66,7 +66,7 @@ class ValueTypeValidator(Validator):
         try:
             check_type(name, value, type_hint)
         except TypeError as e:
-            raise ValidationError(
+            raise SettingsValidationError(
                 f'Expected value of type `{type_hint}` '
                 f'got value of type `{type(value)}`'
             ) from e
