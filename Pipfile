@@ -26,6 +26,7 @@ typeguard = "*"
 pyfakefs = "*"
 pyyaml = "*"
 concrete-settings = {path = "."}
+sphinxcontrib-plantuml = "*"
 
 [requires]
 python = "3.7"

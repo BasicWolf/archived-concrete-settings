@@ -20,6 +20,10 @@ setuptools.setup(
     ],
     extras_require={
         'Reading settings from YAML files': 'pyyaml>=5.1.2',
+
+        'dev': [
+            'sphinxcontrib-plantuml>=0.17.1',
+        ]
     },
     classifiers=[
         "Programming Language :: Python :: 3",

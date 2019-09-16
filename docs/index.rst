@@ -6,56 +6,48 @@
 Welcome to Concrete Settings
 ============================
 
-**WARNING!** Concrete Settings is currently in development!
-There is no stable, not even pre-alpha version currently available.
+**WARNING!** Concrete Settings is currently under development!
+There is no stable, not even an alpha version available at the moment.
 
 Does your application has tens or hundreds of settings
 scattered around files and environmental variables?
-Does dependency management becomes unberable?
+Is dependency management unberable?
 Are you having problems at startup, since it's hard
-to follow where the values are coming from and there is no verifaction?
+to follow where the configuration values are coming
+from and there is no unified way to verify them?
 
 **Concrete Settings** was created to solve all these issues and more!
 
-Concrete Settings is a Python library which facilitates configuration management in large projects.
+Concrete Settings is a Python library which facilitates configuration management
+in applications. Sounds unbelievable? Let's discover together by looking at some
+examples!
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
-
-With Concrete Settings a developer can declare the settings in different classes
-and then combine them by composition, inheritance or both!
-Each setting carries the information and functionality
-allowing to initialize, read and validate it at any point of time.
-
-Sounds unbelievable? Let's discover together by looking at some examples:
+.. contents:: Table of Contents
 
 
-.. code-block:: pycon
+Hello world
+...........
 
-  from concrete_settings import Settings
+.. code-block:: python
 
-  class AppSettings(Settings):
+   from concrete_settings import Settings
 
-      #: Turns debug mode on/off
-      DEBUG: bool = True
+   class AppSettings(Settings):
 
-  app_settings = AppSettings()
-  app_settings.is_valid(raise_exception=True)
+       #: Turns debug mode on/off
+       DEBUG: bool = True
 
-  print(app_settings.DEBUG)
-  >>> True
+   app_settings = AppSettings()
+   app_settings.is_valid(raise_exception=True)
+
+   print(app_settings.DEBUG)
+   >>> True
 
 
 This example demonstrates the basic concepts of Concrete Settings.
 We define a settings class with a setting called ``DEBUG``.
 Its type is ``bool`` and the default value is ``True``.
 The docstring of the setting is defined in a ``#:`` comment block.
-
-The settings are
-
 
 The equivalent verbose form is:
 
@@ -72,9 +64,11 @@ The equivalent verbose form is:
           doc="Turns debug mode on/off"
       )
 
+Sounds intriguing? We have to go deeper!
 
-Composition
------------
+
+Basic workflow
+..............
 
 
 
