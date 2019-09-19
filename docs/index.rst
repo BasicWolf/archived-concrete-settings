@@ -52,10 +52,10 @@ ConcreteSettings provides a one-way configuration management:
 
    @startuml
    :Developer: as Dev
-   :User: as User
-   (.yaml) as (yaml-source)
-   (.json) as (json-source)
-   (.py) as (py-source)
+   :Application User: as User
+   (.yaml) as (yaml_source)
+   (.json) as (json_source)
+   (.py) as (py_source)
    (Environmental Variables) as (envvar)
 
    note top of User
@@ -69,21 +69,27 @@ ConcreteSettings provides a one-way configuration management:
        via ConcreteSettings
    end note
 
-   User ==> (yaml-source)
-   User ==> (json-source)
+   User ==> (yaml_source)
+   User ==> (json_source)
    User ==> (envvar)
-   User ==> (py-source)
+   User ==> (py_source)
    User ==> (...)
 
    Dev ==> (Settings)
-   (yaml-source) --> (Settings)
-   (json-source) --> (Settings)
+   (yaml_source) --> (Settings)
+   (json_source) --> (Settings)
    (envvar) --> (Settings)
    (...) --> (Settings)
 
-   note "Verify settings structure" as N10
-   (Settings) .. N10
-   N10 .. (Verify)
+
+   note "Verify definition structure" as note_verify
+   note "Read from sources" as note_read_settings
+   note "Validate values" as note_validate
+
+   (Settings) .. note_verify
+   note_verify .. note_read_settings
+   note_read_settings .. note_validate
+   note_validate ..> (Application)
 
 
    @enduml
