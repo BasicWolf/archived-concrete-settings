@@ -19,32 +19,33 @@ class Undefined(metaclass=UndefinedMeta):
 
 class GuessSettingType:
     """A special value for Setting.type_hint, which indicates
-       that a Setting type should be guessed from the default value.
+    that a Setting type should be guessed from the default value.
 
     For an `Undefined` or an unknown type, the guessed type hint is `typing.Any`.
     """
 
-    @staticmethod
-    def guess_type_hint(val):
+    #: Recognized Setting value types
+    KNOWN_TYPES = [
+        bool,  # bool MUST come before int, as e.g. isinstance(True, int) == True
+        int,
+        float,
+        complex,
+        list,
+        tuple,
+        range,
+        bytes,
+        str,
+        frozenset,
+        set,
+        dict,
+    ]
+
+    @classmethod
+    def guess_type_hint(cls, val):
         if val is Undefined:
             return Any
 
-        known_types = [
-            bool,  # bool MUST come before int, as e.g. isinstance(True, int) == True
-            int,
-            float,
-            complex,
-            list,
-            tuple,
-            range,
-            bytes,
-            str,
-            frozenset,
-            set,
-            dict,
-        ]
-
-        for t in known_types:
+        for t in cls.KNOWN_TYPES:
             if isinstance(val, t):
                 return t
         return Any

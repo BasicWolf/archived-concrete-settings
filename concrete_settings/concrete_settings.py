@@ -109,7 +109,7 @@ class PropertySetting(Setting):
 # ================================== #
 
 
-class ConcreteSettingsMeta(type):
+class SettingsMeta(type):
     def __new__(mcs, name, bases, class_dict):
         new_dict = mcs.class_dict_to_settings(class_dict)
         mcs.add_settings_help(name, new_dict)
@@ -151,7 +151,7 @@ class ConcreteSettingsMeta(type):
     @staticmethod
     def is_setting_name(name: str) -> bool:
         """Return True if name is written in the upper case"""
-        return name.upper() == name and not name.startswith("_")
+        return not name.startswith('_') and name.upper() == name
 
     @staticmethod
     def is_safe_setting_type(field: Any) -> bool:
@@ -201,7 +201,7 @@ class ConcreteSettingsMeta(type):
                 pass
 
 
-class Settings(Setting, metaclass=ConcreteSettingsMeta):
+class Settings(Setting, metaclass=SettingsMeta):
     default_validators: Tuple = (ValueTypeValidator(),)
     mandatory_validators: Tuple = ()
 
