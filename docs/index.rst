@@ -92,6 +92,7 @@ Then you are very welcome to ConcreteSettings documentation!
 
 
 .. contents:: Table of Contents
+   :depth: 3
 
 
 Defining Settings
@@ -201,6 +202,9 @@ a **list of validators** and **documentation**:
 Automated Setting creation
 ..........................
 
+Name
+''''
+
 Every attribute with **name** written in upper case
 is considered a potential Setting.
 The exceptions are attributes starting with underscore:
@@ -215,12 +219,16 @@ The exceptions are attributes starting with underscore:
 
        DEBUG = True   # considered a setting
 
+Default value
+'''''''''''''
+
 The *default value* is value of the attribute.
 
 If an attribute is not type-annotated, a *type hint* is computed
 by calling ``type()`` on the default value. The recognized types
 are declared in
 :attr:`GuessSettingType.KNOWN_TYPES <concrete_settings.types.GuessSettingType.KNOWN_TYPES>` field.
+If the type is not recognized, the type hint is set to :data:`typing.Any`.
 
 .. code-block::
 

@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 sphinx = "*"
 pyyaml = "*"
-concrete-settings = {path = "."}
 
 [dev-packages]
 pudb = "*"
