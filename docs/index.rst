@@ -46,7 +46,7 @@ for both developer and an end-user:
 
    note top of User
        **User** sets configuration
-       from files, environmental variables
+       in files, environmental variables
        and other **sources**.
    end note
 
@@ -81,7 +81,7 @@ for both developer and an end-user:
 
    @enduml
 
-This flow perfectly fits for
+This flow is a perfect fit for
 
 * A web application backend. Think of Django or Flask application
   and all the settings required to start it up.
@@ -103,8 +103,9 @@ by subclassing the :class:`Settings <concrete_settings.Settings>`
 class.
 The setting attributes are descriptors of type
 :class:`Setting <concrete_settings.Setting>`.
-However a developer does not need to declare each setting explicitly.
-For example, the following two definitons are identical:
+The catch is that a developer does not need
+to declare each setting explicitly.
+For example, the following two definitions are identical:
 
 .. code-block::
 
@@ -132,10 +133,14 @@ This behaviour does not truly comply with the Zen of Python:
 
   *Explicit is better than implicit*.
 
-However the first definition
-is clearly simpler and easier to comprehend than the second one.
-In fact, Concrete Settings is even able to guess the settings
-types automatically:
+But wouldn't you agree that the first definition
+is easier to comprehend than the second one?
+The first definition looks like a boring class attribute
+with a sphinx-style documentation above it.
+At the same time, all the required details are extracted and processed,
+and a substitute ``Setting`` attribute is created.
+In fact, Concrete Settings is even able to guess a setting
+type automatically:
 
 .. code-block::
 
@@ -148,15 +153,15 @@ types automatically:
    # <class 'bool'>
 
 The magic behind the scenes is happening in the metaclass
-:class:`SettingsMeta <concrete_settings.concrete_settings.SettingsMeta>` .
+:class:`SettingsMeta <concrete_settings.concrete_settings.SettingsMeta>`.
 In a nutshell, if a field looks like a setting, but is not explicitly
 defined (e.g. ``DEBUG = True``), a corresponding instance of
 :class:`Setting <concrete_settings.Setting>` is created instead.
 
-We will later discuss the setting creation rules in-depth.
+We will `later <automated_settings_>`_ discuss the setting creation rules in-depth.
 For now please accept that Concrete Settings way of declaring
 setting is by omitting the ``Setting(...)`` call at all.
-Ideally a setting should be provided a type and documentation
+Ideally a setting should be declared with a type annotation and documentation
 as follows:
 
 .. code-block::
@@ -168,11 +173,8 @@ as follows:
        #: the program.
        MAX_CONNECTIONS: int = 10
 
-
-Setting attributes
-..................
-
-Each setting consists of a **name**, **default value**, a **type hint**,
+To summarize: each setting consists of a
+**name**, **default value**, a **type hint**,
 a **list of validators** and **documentation**:
 
 .. uml::
@@ -199,11 +201,31 @@ a **list of validators** and **documentation**:
 * **Documentation** is a multi-line doc string intended for the end user.
 
 
+Validators
+..........
+
+Setting validators are callables, 
+
+Type hint
+.........
+
+
+
+Nested settings
+...............
+
+What makes it very fascinating and maybe a bit confusing is
+that :class:`Settings <concrete_settings.Settings>` is a
+subclass of :class:`Setting <concrete_settings.Setting>`!
+
+In practice, this allows you to 
+
+.. _automated_settings:
+
 Automated Setting creation
 ..........................
 
-Name
-''''
+**Name**
 
 Every attribute with **name** written in upper case
 is considered a potential Setting.
@@ -219,10 +241,14 @@ The exceptions are attributes starting with underscore:
 
        DEBUG = True   # considered a setting
 
-Default value
-'''''''''''''
+**Default value**
 
-The *default value* is value of the attribute.
+The *default value* is the initial value of the attribute:
+
+.. code-block::
+
+   class AppSettings(Settings):
+       DEBUG = True  # the default value is `True`
 
 If an attribute is not type-annotated, a *type hint* is computed
 by calling ``type()`` on the default value. The recognized types
@@ -257,6 +283,8 @@ configuration of an application
 Could you name the favourite setting of all the developers around the globe?
 I think it is the ``DEBUG`` flag. Let's define a settings class for an
 application:
+
+..  code-block::
 
    print(app_settings.DEBUG)
    >>> True
