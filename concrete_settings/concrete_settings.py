@@ -104,6 +104,8 @@ class PropertySetting(Setting):
             self, owner, functools.partial(self.fget, owner)
         )
 
+    def __set__(self, owner: 'Settings', val):
+        raise AttributeError("Can't set attribute: property setting cannot be set")
 
 # ==== ConcreteSettings classes ==== #
 # ================================== #

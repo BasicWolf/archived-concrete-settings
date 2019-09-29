@@ -149,6 +149,30 @@ class TestPropertySetting:
         assert s.is_valid()
         assert s.AB == '10 hello world'
 
+    def test_property_setting_cannot_be_set(self):
+        class S(Settings):
+            @setting
+            def V(self):
+                return 10
+
+        with pytest.raises(AttributeError, match="Can't set attribute: property setting cannot be set"):
+            S().V = 10
+
+
+    def test_setting_is_validated():
+
+    # validate_called = False
+
+    # class S(Settings):
+    #     def validate(self):
+    #         nonlocal validate_called
+    #         validate_called = True
+    #         return {}
+
+    # assert S().is_valid()
+    # assert validate_called
+
+        assert False
 
 def test_callable_types_are_not_settings(v_int, v_str):
     class S(Settings):
@@ -244,7 +268,6 @@ def test_settings_mandatory_validators(is_positive, is_less_that_10):
     assert 'T1' in s.errors
     assert s.errors['T0'] == ['Value should be positive']
     assert s.errors['T1'] == ['Value should be less that 10']
-
 
 #
 # Nested settings

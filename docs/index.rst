@@ -94,9 +94,13 @@ Then you are very welcome to ConcreteSettings documentation!
 .. contents:: Table of Contents
    :depth: 3
 
+The Basics
+----------
+
+In this chapter we cover the essential basics of Concrete Settings.
 
 Defining Settings
------------------
+.................
 
 As you have probably guessed, defining settings starts
 by subclassing the :class:`Settings <concrete_settings.Settings>`
@@ -150,7 +154,7 @@ type automatically:
        DEBUG = True
 
    print(AppSettings.DEBUG.type_hint)
-   # <class 'bool'>
+   # >>> <class 'bool'>
 
 The magic behind the scenes is happening in the metaclass
 :class:`SettingsMeta <concrete_settings.concrete_settings.SettingsMeta>`.
@@ -160,7 +164,7 @@ defined (e.g. ``DEBUG = True``), a corresponding instance of
 
 We will `later <automated_settings_>`_ discuss the setting creation rules in-depth.
 For now please accept that Concrete Settings way of declaring
-setting is by omitting the ``Setting(...)`` call at all.
+basic settings is by omitting the ``Setting(...)`` call at all.
 Ideally a setting should be declared with a type annotation and documentation
 as follows:
 
@@ -173,7 +177,30 @@ as follows:
        #: the program.
        MAX_CONNECTIONS: int = 10
 
-To summarize: each setting consists of a
+You can also declare a setting as a method, similar to
+a Python read-only :class:`property`:
+
+.. code-block::
+
+   from concrete_settings import Settings, setting
+
+   class DBSettings(Settings):
+       USER: str = 'alex'
+       PASSWORD: str  = 'secret'
+       SERVER: str = 'localhost'
+       PORT: int = 5432
+
+       @setting
+       def URL(self) -> str:
+           """Database connection URL"""
+           return f'postgresql://{self.USER}:{self.PASSWORD}@{self.SERVER}:{self.PORT}'
+
+   print(DBSettings().URL)
+   # >>> postgresql://alex:secret@localhost:5432
+
+
+Before we go further, let's take a look at the contents of a Setting object.
+Each implicitly or explicitly defined setting consists of a
 **name**, **default value**, a **type hint**,
 a **list of validators** and **documentation**:
 
@@ -195,16 +222,27 @@ a **list of validators** and **documentation**:
   :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
   can use the *type hint* to check whether the setting value corresponds
   to the given type.
-* **Validators** is a list of
-  :class:`Validator <concrete_settings.validators.Validator>` objects
-  which are used to validate the final value of the setting.
+* **Validators** is a list of callables which validate the value of the setting.
 * **Documentation** is a multi-line doc string intended for the end user.
 
 
-Validators
-..........
+Reading settings
+................
 
-Setting validators are callables, 
+After a Settings object has initialized successfully it can be filled
+with values from different :ref:`api_sources`, such as :class:`YAML
+<concrete_settings.sources.YamlSource>` and :class:`JSON
+<concrete_settings.sources.JsonSource>` files or
+:class:`enironmental variables <concrete_settings.sources.EnvVarSource>`.
+
+
+
+Validating settings
+...................
+
+
+  :class:`Validator <concrete_settings.validators.Validator>` objects
+
 
 Type hint
 .........
@@ -218,7 +256,7 @@ What makes it very fascinating and maybe a bit confusing is
 that :class:`Settings <concrete_settings.Settings>` is a
 subclass of :class:`Setting <concrete_settings.Setting>`!
 
-In practice, this allows you to 
+In practice, this allows you to
 
 .. _automated_settings:
 

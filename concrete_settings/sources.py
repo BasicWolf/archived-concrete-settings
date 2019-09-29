@@ -107,8 +107,7 @@ class EnvVarSource(StringSourceMixin, Source):
 
     def read(self, setting, parents: Tuple[str] = ()) -> Any:
         parents_upper = map(str.upper, parents)
-        raise Exception('testme: *parents_upper')
-        key = '_'.join(*parents_upper, setting.name)
+        key = '_'.join((*parents_upper, setting.name))
         val = os.environ[key]
         return self.convert_value(val, setting.type_hint)
 

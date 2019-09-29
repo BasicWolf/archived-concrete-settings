@@ -97,6 +97,11 @@ def test_env_source_float_hint(monkeypatch):
     esrc = get_source(EnvVarSource())
     assert esrc.read(S('a', float)) == 10.25
 
+def test_env_source_with_parents(monkeypatch):
+    monkeypatch.setenv('DB_USER', 'alex')
+    esrc = get_source(EnvVarSource())
+    assert esrc.read(S('USER', str), ('DB', )) == 'alex'
+    assert esrc.read(S('USER', str), ('db', )) == 'alex'
 
 #
 # JSON filesource

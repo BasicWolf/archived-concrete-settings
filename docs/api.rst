@@ -7,10 +7,17 @@ API
 
 This part of the documentation covers all the interfaces of Concrete Settings.
 
-
-.. autoclass:: concrete_settings.Settings
+Settings
+--------
 
 .. autoclass:: concrete_settings.Setting
+   :members:
+
+.. autoclass:: concrete_settings.Settings
+   :members:
+
+.. autoclass:: concrete_settings.PropertySetting
+   :members:
 
 .. autoclass:: concrete_settings.concrete_settings.SettingsMeta
 
@@ -33,5 +40,21 @@ Validators
 
 .. autoclass:: concrete_settings.validators.Validator
    :members: __call__
-             
+
 .. autoclass:: concrete_settings.validators.ValueTypeValidator
+
+
+.. _api_sources:
+
+Sources
+-------
+
+.. module:: concrete_settings.sources
+
+.. autoclass:: concrete_settings.sources.Source
+
+.. autoclass:: concrete_settings.sources.YamlSource
+
+.. autoclass:: concrete_settings.sources.JsonSource
+
+.. autoclass:: concrete_settings.sources.EnvVarSource
