@@ -155,24 +155,25 @@ class TestPropertySetting:
             def V(self):
                 return 10
 
-        with pytest.raises(AttributeError, match="Can't set attribute: property setting cannot be set"):
+        with pytest.raises(
+                AttributeError,
+                match="Can't set attribute: property setting cannot be set"
+        ):
             S().V = 10
 
+    def test_setting_is_validated(self):
+        validate_called = False
 
-    def test_setting_is_validated():
+        def validator(value, **_):
+            nonlocal validate_called
+            validate_called = True
 
-    # validate_called = False
+        class S(Settings):
+            T = Setting(10, validators=(validator, ))
 
-    # class S(Settings):
-    #     def validate(self):
-    #         nonlocal validate_called
-    #         validate_called = True
-    #         return {}
+        assert S().is_valid()
+        assert validate_called
 
-    # assert S().is_valid()
-    # assert validate_called
-
-        assert False
 
 def test_callable_types_are_not_settings(v_int, v_str):
     class S(Settings):

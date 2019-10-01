@@ -1,7 +1,7 @@
 import os
 import json
 from enum import Enum
-from typing import Type, Union, Any, Dict, Tuple, Callable, List
+from typing import Type, Union, Any, Dict, Tuple, List
 
 from .exceptions import ConcreteSettingsError
 

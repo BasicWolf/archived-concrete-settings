@@ -118,7 +118,7 @@ class SettingsMeta(type):
         return super().__new__(mcs, name, bases, new_dict)
 
     @classmethod
-    def class_dict_to_settings(mcs: 'ConcreteSettingsMeta', class_dict: dict):
+    def class_dict_to_settings(mcs: 'SettingsMeta', class_dict: dict):
         new_dict = {}
         annotations = class_dict.get("__annotations__", {})
 
