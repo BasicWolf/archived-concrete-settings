@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 function run_tests {
     current_branch=`git branch | grep '*' | sed 's/* //'`
@@ -18,3 +18,5 @@ function run_tests {
     fi
 
 }
+
+run_tests
