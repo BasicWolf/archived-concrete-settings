@@ -1,5 +1,3 @@
-import os
-import json
 from enum import Enum
 from typing import Type, Union, Any, Dict, Tuple, List
 
@@ -93,25 +91,6 @@ class DictSource(Source):
         return val
 
 
-@register_source
-class EnvVarSource(StringSourceMixin, Source):
-    def __init__(self):
-        self.data = os.environ
-
-    @staticmethod
-    def get_source(src: TAnySource) -> Union['EnvVarSource', CannotHandleType]:
-        if isinstance(src, EnvVarSource):
-            return src
-        else:
-            return CannotHandle
-
-    def read(self, setting, parents: Tuple[str] = ()) -> Any:
-        parents_upper = map(str.upper, parents)
-        key = '_'.join((*parents_upper, setting.name))
-        val = os.environ[key]
-        return self.convert_value(val, setting.type_hint)
-
-
 class FileSource(Source):
     extensions: List[str] = []
 
@@ -130,75 +109,3 @@ class FileSource(Source):
                     return cls(src)
 
         return CannotHandle
-
-
-@register_source
-class JsonSource(FileSource):
-    extensions = ['.json']
-
-    def __init__(self, path):
-        super().__init__(path)
-        self._data = None
-
-    def read(self, setting, parents: Tuple[str] = ()) -> Any:
-        if self._data is None:
-            self._data = self._read_file(self.path)
-
-        d = self._data
-        for key in parents:
-            d = d[key]
-
-        val = d[setting.name]
-        return val
-
-    @staticmethod
-    def _read_file(path):
-        try:
-            with open(path) as f:
-                raw_data = f.read()
-                return json.loads(raw_data)
-        except FileNotFoundError as e:
-            raise ConcreteSettingsError(f"Source file {path} was not found") from e
-        except json.decoder.JSONDecodeError as e:
-            raise ConcreteSettingsError(f"Error parsing JSON from {path}: {e}") from e
-
-
-@register_source
-class YamlSource(FileSource):
-    extensions = ['.yml', '.yaml']
-
-    def __init__(self, path):
-        try:
-            import yaml  # noqa: F401 # imported but unused
-        except ImportError as e:
-            raise ConcreteSettingsError(
-                f'YAML source is not available for `{path}` '
-                'due to error importing `yaml` package.\n'
-                'Perhaps you have forgotten to install PyYAML?'
-            ) from e
-        super().__init__(path)
-        self._data = None
-
-    def read(self, setting, parents: Tuple[str] = ()) -> Any:
-        if self._data is None:
-            self._data = self._read_file(self.path)
-
-        d = self._data
-        for key in parents:
-            d = d[key]
-
-        val = d[setting.name]
-        return val
-
-    @staticmethod
-    def _read_file(path):
-        import yaml
-
-        try:
-            with open(path) as f:
-                raw_data = f.read()
-                return yaml.safe_load(raw_data)
-        except FileNotFoundError as e:
-            raise ConcreteSettingsError(f"Source file {path} was not found") from e
-        except yaml.YAMLError as e:
-            raise ConcreteSettingsError(f"Error parsing YAML from {path}: {e}") from e

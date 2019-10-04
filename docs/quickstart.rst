@@ -135,16 +135,46 @@ Reading settings from files and environment
 
 After a Settings object has initialized successfully it can be updated
 with values from different :ref:`api_sources`, such as :class:`YAML
-<concrete_settings.sources.YamlSource>` and :class:`JSON
-<concrete_settings.sources.JsonSource>` files or
-:class:`enironmental variables <concrete_settings.sources.EnvVarSource>`.
+<concrete_settings.sources.YamlSource>`, :class:`JSON
+<concrete_settings.sources.JsonSource>` files,
+:class:`enironmental variables <concrete_settings.sources.EnvVarSource>`
+or a plain Python ``dict``.
 
 And if none of the above fits your needs, check out [TODO]
 :mod:`sources API <concrete_settings.sources>` for creating
 a required settings source.
 
-To update a settings object, call :meth:`<concrete_settings.Settings.update>`
-as follows:
+To update a settings object, call :meth:`<concrete_settings.Settings.update>`.
+For example, to update the settings from a JSON file:
+
+
+.. code-block:: json
+
+   {
+       "ADMIN_EMAIL": "alex@my-super-app.io"
+       "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "::1"]
+   }
+
+.. code-block::
+
+   from concrete_settings import Settings
+   from typing import List
+
+   class AppSettings(Settings):
+       ADMIN_EMAIL: str = 'admin@example.com'
+       ALLOWED_HOSTS: List = [
+           'localhost',
+           '127.0.0.1',
+       ]
+
+   app_settings = AppSettings()
+   app_settings.update('/path/to/settings.json')
+
+   print(app_settings.ADMIN_EMAIL)
+   # >>> alex@my-super-app.io
+
+
+
 
 Validation
 ----------
