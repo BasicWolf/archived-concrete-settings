@@ -1,14 +1,18 @@
 import functools
+import logging
 import types
 from collections import defaultdict
 from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
 
-from . import docreader
 from .behaviors import Behaviors, override
+from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
-from .validators import ValueTypeValidator
 from .sources import get_source, TAnySource, Source
+from .sources.strategies import default as default_update_strategy
 from .types import Undefined, GuessSettingType
+from .validators import ValueTypeValidator
+
+logger = logging.getLogger(__name__)
 
 INVALID_SETTINGS = '__invalid__settings__'
 
@@ -107,6 +111,7 @@ class PropertySetting(Setting):
     def __set__(self, owner: 'Settings', val):
         raise AttributeError("Can't set attribute: property setting cannot be set")
 
+
 # ==== ConcreteSettings classes ==== #
 # ================================== #
 
@@ -186,9 +191,7 @@ class SettingsMeta(type):
         # and parse it via Sphinx parser
         cls_module_name = class_dict['__module__']
 
-        comments = docreader.extract_doc_comments_from_class_or_module(
-            cls_module_name, cls_name
-        )
+        comments = extract_doc_comments_from_class_or_module(cls_module_name, cls_name)
 
         for name, setting in settings.items():
             if setting.__doc__:
@@ -346,20 +349,39 @@ class Settings(Setting, metaclass=SettingsMeta):
         """
         pass
 
-    def update(self, *sources: List[TAnySource]):
-        for s in sources:
-            source = get_source(s)
-            self._update(self, source)
+    def update(self, source: TAnySource, strategies: dict = None):
+        strategies = strategies or {}
+
+        source_obj = get_source(source)
+        self._update(self, source_obj, parents=(), strategies=strategies)
 
     @staticmethod
-    def _update(settings: 'Settings', source: Source, parents: Tuple[str] = ()):
+    def _update(
+        settings: 'Settings', source: Source, parents: Tuple[str] = (), strategies=None
+    ):
         """Recursively update settings object from dictionary"""
+        strategies = strategies or {}
 
         for name, setting in settings._iter_settings_attributes():
             if isinstance(setting, Settings):
-                settings._update(setting, source, (*parents, name))
+                settings._update(setting, source, (*parents, name), strategies)
             else:
-                setattr(settings, name, source.read(setting, parents))
+                full_setting_name = f'{".".join(parents) and "."}{name}'
+
+                if full_setting_name in strategies:
+                    update_strategy = strategies[full_setting_name]
+                    logger.debug(
+                        'Updating setting %s with strategy %s',
+                        full_setting_name,
+                        update_strategy.__qualname__,
+                    )
+                else:
+                    update_strategy = default_update_strategy
+
+                current_val = getattr(settings, name)
+                update_to_val = source.read(setting, parents)
+                new_val = update_strategy(current_val, update_to_val)
+                setattr(settings, name, new_val)
 
     @property
     def errors(self):

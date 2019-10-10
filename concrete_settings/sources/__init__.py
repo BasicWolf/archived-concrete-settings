@@ -1,7 +1,9 @@
 from enum import Enum
-from typing import Type, Union, Any, Dict, Tuple, List
+from typing import Any, Dict, List, Tuple, Type, Union
 
-from .exceptions import ConcreteSettingsError
+from ..exceptions import ConcreteSettingsError
+from . import strategies  # noqa: F401 # imported but unused
+
 
 _registered_sources = set()
 
