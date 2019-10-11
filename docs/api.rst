@@ -53,8 +53,17 @@ Sources
 
 .. autoclass:: concrete_settings.sources.Source
 
-.. autoclass:: concrete_settings.sources.YamlSource
+Update strategies
+.................
 
-.. autoclass:: concrete_settings.sources.JsonSource
+.. module:: concrete_settings.sources.strategies
 
-.. autoclass:: concrete_settings.sources.EnvVarSource
+
+Built-in Sources
+................
+
+.. autoclass:: concrete_settings.contrib.sources.YamlSource
+
+.. autoclass:: concrete_settings.contrib.sources.JsonSource
+
+.. autoclass:: concrete_settings.contrib.sources.EnvVarSource

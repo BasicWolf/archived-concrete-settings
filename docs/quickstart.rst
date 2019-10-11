@@ -174,6 +174,41 @@ For example, to update the settings from a JSON file:
    # >>> alex@my-super-app.io
 
 
+Update strategies
+.................
+
+In most of the cases, a developer wants to overwrite a setting value
+when updating it from a source. But there are exceptions.
+Think of a list setting, which contains administrators emails, e.g.:
+
+.. code-block::
+
+   import Settings
+
+   class AppSettings(Settings):
+       ADMIN_EMAILS: List[str] = [
+           'admin@example.com'
+       ]
+
+What if you want to **append** the emails defined in sources, instead
+of overwriting them? Concrete Settings provides a concept of
+*update strategies* for this case:
+
+.. code-block:: json
+
+   {
+       "ADMIN_EMAILS": ["alex@my-super-app.io"]
+   }
+
+.. code-block::
+
+   from concrete_settings.sources import strategies
+
+   ...
+
+   app_settings = AppSettings()
+   app_settings.update('/path/to/settings.json', strategies={'ADMIN_EMAILS': strategies.append})
+
 
 
 Validation

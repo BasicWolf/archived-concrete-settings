@@ -178,3 +178,27 @@ def test_update_strategy_append():
     assert s.TPL == (1, 2, 3, 4)
     assert s.STR == '1234'
     assert s.INT == 46
+
+
+def test_update_strategy_prepend():
+    class S(Settings):
+        LST: list = [1, 2]
+        TPL: tuple = (1, 2)
+        STR: str = '12'
+        INT: int = 12
+
+    s = S()
+    s.update(
+        {'LST': [3, 4], 'TPL': (3, 4), 'STR': '34', 'INT': 34},
+        strategies={
+            'LST': strategies.prepend,
+            'TPL': strategies.prepend,
+            'STR': strategies.prepend,
+            'INT': strategies.prepend,
+        },
+    )
+
+    assert s.LST == [3, 4, 1, 2]
+    assert s.TPL == (3, 4, 1, 2)
+    assert s.STR == '3412'
+    assert s.INT == 46

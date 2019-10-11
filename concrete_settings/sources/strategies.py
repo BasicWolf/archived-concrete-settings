@@ -1,3 +1,10 @@
+"""Built-in Settings update strategies.
+
+This module contains the basic and default update strategies used
+when calling `concrete_settings.Settings.update`
+"""
+
+
 def overwrite(old_val, new_val):
     return new_val
 
