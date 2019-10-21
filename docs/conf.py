@@ -44,6 +44,7 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinxcontrib.plantuml',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.doctest',
 ]
 
 plantuml = '/usr/bin/plantuml'

@@ -26,9 +26,11 @@ flake8:
 	flake8 --config=.flake8rc concrete_settings tests
 
 
-docs:
+docs: doctest
 	$(MAKE) html -C docs
 
+doctest:
+	$(MAKE) doctest -C docs
 
 clean:
 	python setup.py clean

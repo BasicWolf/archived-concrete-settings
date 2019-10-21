@@ -32,7 +32,7 @@ While the end-user could set the values in a YAML file:
 
 Concrete Settings aims to provide a conveniet way to
 define and use application startup settings
-for both developer and an end-user:
+for developers and an end-users:
 
 .. uml::
 

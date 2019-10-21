@@ -1,7 +1,10 @@
-The Basics
+Quickstart
 ==========
 
 In this chapter we cover the essentials of Concrete Settings.
+
+.. contents::
+   :local:
 
 Defining settings
 -----------------
@@ -47,18 +50,6 @@ The first definition looks like a boring class attribute
 with a sphinx-style documentation above it.
 At the same time, all the required details are extracted and processed,
 and a substitute ``Setting`` attribute is created.
-In fact, Concrete Settings is even able to guess a setting
-type automatically:
-
-.. code-block::
-
-   from concrete_settings import Settings
-
-   class AppSettings(Settings):
-       DEBUG = True
-
-   print(AppSettings.DEBUG.type_hint)
-   # >>> <class 'bool'>
 
 The magic behind the scenes is happening in the metaclass
 :class:`SettingsMeta <concrete_settings.concrete_settings.SettingsMeta>`.
@@ -84,7 +75,7 @@ as follows:
 You can also declare a setting as a method, similar to
 a Python read-only :class:`property`:
 
-.. code-block::
+.. testcode:: quickstart-define-property
 
    from concrete_settings import Settings, setting
 
@@ -100,7 +91,12 @@ a Python read-only :class:`property`:
            return f'postgresql://{self.USER}:{self.PASSWORD}@{self.SERVER}:{self.PORT}'
 
    print(DBSettings().URL)
-   # >>> postgresql://alex:secret@localhost:5432
+
+Output:
+
+.. testoutput:: quickstart-define-property
+
+   postgresql://alex:secret@localhost:5432
 
 
 Before we go further, let's take a look at the contents of a Setting object.
@@ -130,6 +126,47 @@ a **list of validators** and **documentation**:
 * **Documentation** is a multi-line doc string intended for the end user.
 
 
+Nested Settings
+---------------
+
+Nesting is a great way to logically group and isolate settings.
+For example, let's group database, cache and logging in
+application settings as follows:
+
+.. testcode:: quickstart-nested
+
+   from concrete_settings import Settings
+
+   class DBSettings(Settings):
+       USER = 'alex'
+       PASSWORD  = 'secret'
+       SERVER = 'localhost@5432'
+
+   class CacheSettings(Settings):
+       ENGINE = 'DatabaseCache'
+       TIMEOUT = 300
+
+   class LoggingSettings(Settings):
+       LEVEL = 'INFO'
+       FORMAT = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
+
+
+   class AppSettings(Settings):
+       DB = DBSettings()
+       CACHE = CacheSettings()
+       LOG = LoggingSettings()
+
+   app_settings = AppSettings()
+   print(app_settings.LOG.LEVEL)
+
+Output:
+
+.. testoutput:: quickstart-nested
+
+   INFO
+
+The catch is
+
 Reading settings from files and environment
 -------------------------------------------
 
@@ -151,13 +188,24 @@ For example, to update the settings from a JSON file:
 .. code-block:: json
 
    {
-       "ADMIN_EMAIL": "alex@my-super-app.io"
+       "ADMIN_EMAIL": "alex@my-super-app.io",
        "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "::1"]
    }
 
-.. code-block::
+.. testsetup:: quickstart-json-source
+
+   with open('/tmp/cs-quickstart-settings.json', 'w') as f:
+       f.write('''
+           {
+              "ADMIN_EMAIL": "alex@my-super-app.io",
+              "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "::1"]
+           }
+       ''')
+
+.. testcode:: quickstart-json-source
 
    from concrete_settings import Settings
+   from concrete_settings.contrib.sources import JsonSource
    from typing import List
 
    class AppSettings(Settings):
@@ -168,10 +216,20 @@ For example, to update the settings from a JSON file:
        ]
 
    app_settings = AppSettings()
-   app_settings.update('/path/to/settings.json')
+   app_settings.update('/tmp/cs-quickstart-settings.json')
 
    print(app_settings.ADMIN_EMAIL)
-   # >>> alex@my-super-app.io
+
+Output:
+
+.. testoutput:: quickstart-json-source
+
+   alex@my-super-app.io
+
+.. testcleanup:: quickstart-json-source
+
+   import os
+   os.remove('/tmp/cs-quickstart-settings.json')
 
 
 Update strategies
@@ -179,20 +237,23 @@ Update strategies
 
 In most of the cases, a developer wants to overwrite a setting value
 when updating it from a source. But there are exceptions.
-Think of a list setting, which contains administrators emails, e.g.:
+Think of a list setting, which contains administrators' emails, e.g.:
 
-.. code-block::
+.. testcode:: quickstart-update-strategies
 
-   import Settings
+   from typing import List
+   from concrete_settings import Settings
 
    class AppSettings(Settings):
        ADMIN_EMAILS: List[str] = [
            'admin@example.com'
        ]
 
+
 What if you want to **append** the emails defined in sources, instead
 of overwriting them? Concrete Settings provides a concept of
-*update strategies* for this case:
+:mod:`update strategies <concrete_settings.sources.strategies>`
+for such cases:
 
 .. code-block:: json
 
@@ -200,14 +261,37 @@ of overwriting them? Concrete Settings provides a concept of
        "ADMIN_EMAILS": ["alex@my-super-app.io"]
    }
 
-.. code-block::
+.. testsetup:: quickstart-update-strategies
+
+   with open('/tmp/cs-quickstart-settings.json', 'w') as f:
+       f.write('''
+           {
+               "ADMIN_EMAILS": ["alex@my-super-app.io"]
+           }
+       ''')
+
+.. testcode:: quickstart-update-strategies
 
    from concrete_settings.sources import strategies
 
    ...
 
    app_settings = AppSettings()
-   app_settings.update('/path/to/settings.json', strategies={'ADMIN_EMAILS': strategies.append})
+   app_settings.update('/tmp/cs-quickstart-settings.json', strategies={
+       'ADMIN_EMAILS': strategies.append
+   })
+   print(app_settings.ADMIN_EMAILS)
+
+.. testcleanup:: quickstart-update-strategies
+
+   import os
+   os.remove('/tmp/cs-quickstart-settings.json')
+
+Output:
+
+.. testoutput:: quickstart-update-strategies
+
+   ['admin@example.com', 'alex@my-super-app.io']
 
 
 
