@@ -1,7 +1,7 @@
 import pytest
 
 from concrete_settings import Settings, Setting, Undefined, setting as property_setting
-from concrete_settings.behaviors import SettingBehavior, deprecated, required, override
+from concrete_settings.behavior import SettingBehavior, deprecated, required, override
 from concrete_settings.exceptions import SettingsValidationError, StructureError
 
 
@@ -141,11 +141,11 @@ def test_deprecated_warns_when_validating():
 
 def test_deprecated_warning_message():
     class S(Settings):
-        D = 10 @ deprecated()
+        D = 10 @ deprecated
 
     with pytest.warns(
         DeprecationWarning,
-        match=(r"Setting `D` in class `<class 'tests.test_behaviors."
+        match=(r"Setting `D` in class `<class 'tests.test_behavior."
                r"test_deprecated_warning_message.<locals>.S'>` is deprecated."),
     ) as w:
         S().is_valid()

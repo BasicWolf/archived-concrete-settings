@@ -4,7 +4,7 @@ import types
 from collections import defaultdict
 from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
 
-from .behaviors import Behaviors, override
+from .behavior import Behaviors, override
 from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
 from .sources import get_source, TAnySource, Source
@@ -218,8 +218,12 @@ class Settings(Setting, metaclass=SettingsMeta):
     def __init__(self, **kwargs):
         assert (
             'value' not in kwargs
-        ), 'value argument should not be passed to Settings.__init__()'
-        super().__init__(self, **kwargs)
+        ), '"value" argument should not be passed to Settings.__init__()'
+        assert (
+            'type_hint' not in kwargs
+        ), '"type_hint" argument should not be passed to Settings.__init__()'
+
+        super().__init__(value=self, type_hint=self.__class__, **kwargs)
 
         self.validating = False
         self.validated = False
@@ -350,6 +354,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         pass
 
     def update(self, source: TAnySource, strategies: dict = None):
+        """Update the object from given source and strategies."""
         strategies = strategies or {}
 
         source_obj = get_source(source)

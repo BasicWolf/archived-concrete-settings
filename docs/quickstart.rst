@@ -117,8 +117,8 @@ a **list of validators** and **documentation**:
    @enduml
 
 * **Default value** is a setting's initial value.
-* **Type hint** is a setting type. It is called a hint, since there is no
-  behavior bound to it per se. However a **validator** like the built-in
+* **Type hint** is a setting type. It is called a hint, since it carries no
+  meaning on its own. However a **validator** like the built-in
   :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
   can use the *type hint* to check whether the setting value corresponds
   to the given type.
@@ -130,7 +130,7 @@ Nested Settings
 ---------------
 
 Nesting is a great way to logically group and isolate settings.
-For example, let's group database, cache and logging in
+Let's try grouping *database*, *cache* and *logging* in
 application settings as follows:
 
 .. testcode:: quickstart-nested
@@ -165,23 +165,34 @@ Output:
 
    INFO
 
-The catch is
+At first glance, there is nothing special about this code.
+What makes it special and somewhat confusing is
+that :class:`Settings <concrete_settings.Settings>` is a
+subclass of :class:`Setting <concrete_settings.Setting>`!
+Hence, each nested Settings behaves and can be treated
+as a Setting descriptor - e.g. have validators, documentation
+or `bound behavior <quickstart_behavior>`_.
+
+Additionally, `validating <quickstart_validation>`_ top-level settings
+automatically cascades to all nested settings.
+
 
 Reading settings from files and environment
 -------------------------------------------
 
 After a Settings object has initialized successfully it can be updated
-with values from different :ref:`api_sources`, such as :class:`YAML
-<concrete_settings.sources.YamlSource>`, :class:`JSON
-<concrete_settings.sources.JsonSource>` files,
-:class:`enironmental variables <concrete_settings.sources.EnvVarSource>`
-or a plain Python ``dict``.
+with values from different :ref:`api_sources`, such as
+:class:`YAML <concrete_settings.contrib.sources.YamlSource>` or
+:class:`JSON <concrete_settings.contrib.sources.JsonSource>`
+files,
+:class:`enironmental variables <concrete_settings.contrib.sources.EnvVarSource>`
+or a plain Python dict.
 
-And if none of the above fits your needs, check out [TODO]
+And if none of the above fits your needs, check out
 :mod:`sources API <concrete_settings.sources>` for creating
 a required settings source.
 
-To update a settings object, call :meth:`<concrete_settings.Settings.update>`.
+To update a settings object, call :meth:`update() <concrete_settings.Settings.update>`.
 For example, to update the settings from a JSON file:
 
 
@@ -295,6 +306,8 @@ Output:
 
 
 
+.. _quickstart_validation:
+
 Validation
 ----------
 
@@ -304,10 +317,10 @@ Validation
 Type hint
 ---------
 
+.. _quickstart_behavior:
 
-
-Nested settings
----------------
+Bound behavior
+--------------
 
 What makes it very fascinating and maybe a bit confusing is
 that :class:`Settings <concrete_settings.Settings>` is a
@@ -316,6 +329,7 @@ subclass of :class:`Setting <concrete_settings.Setting>`!
 In practice, this allows you to
 
 .. _automated_settings:
+
 
 Automated Setting creation
 ..........................

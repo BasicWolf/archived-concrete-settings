@@ -273,6 +273,22 @@ def test_settings_mandatory_validators(is_positive, is_less_that_10):
 #
 
 
+def test_settings_cannot_init_with_value():
+    class S(Settings):
+        pass
+
+    with pytest.raises(AssertionError):
+        S(value=10)
+
+
+def test_settings_cannot_init_with_type_hint():
+    class S(Settings):
+        pass
+
+    with pytest.raises(AssertionError):
+        S(type_hint=int)
+
+
 def test_nested_settings_valid():
     class S2(Settings):
         VAL2 = 20
