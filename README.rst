@@ -1,8 +1,14 @@
+Concrete Settings
+#################
+
 .. image:: https://travis-ci.org/BasicWolf/concrete-settings.svg?branch=master
     :target: https://travis-ci.org/BasicWolf/concrete-settings
 
+.. image:: docs/_static/img/codestyle_black.svg
+    :target: https://github.com/ambv/black
+
 Welcome
-#######
+=======
 
 **concrete-settings** is a small library which helps handling settings in large projects.
 
