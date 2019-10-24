@@ -1,12 +1,18 @@
 sudo: false
 
-language: jvm
+language: python
 
-dist: xenial
+dist: bionic
 
 python:
   - '3.6'
   - '3.7'
+
+addons:
+  apt:
+    update: true
+    packages:
+      - plantuml
 
 install:
   - pip install -r requirements.test.txt
@@ -27,5 +33,3 @@ deploy:
   on:
     branch: master
     python: '3.7'
-
-
