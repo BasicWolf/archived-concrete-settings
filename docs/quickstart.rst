@@ -326,24 +326,3 @@ file be it YAML, JSON, Environmental variables or
 just plain Python module.:
 
 Sounds intriguing? We have to go deeper!
-
-
-Internal workflow
-.................
-
-
-
-The equivalent verbose form is:
-
-.. code-block:: python
-
-  from concrete_settings import Settings, Setting
-  from concrete_settings.validators import ValueTypeValidator
-
-  class AppSettings(Settings):
-      DEBUG = Setting(
-          True,
-          type_hint=bool,
-          validators=(ValueTypeValidator(), ),
-          doc="Turns debug mode on/off"
-      )

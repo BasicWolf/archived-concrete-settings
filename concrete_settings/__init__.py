@@ -11,6 +11,7 @@ from .concrete_settings import (  # noqa: F401 # imported but unused
 
 from .sources import register_source  # noqa: F401 # imported but unused
 
+
 setting = PropertySetting
 
 name = "concrete_settings"
@@ -19,3 +20,10 @@ PY_36 = (3, 6)
 
 if PY_VERSION < PY_36:
     raise ImportError("Python 3.6 or higher is required by concrete_settings")
+
+
+def _load_contrib():
+    from .contrib.sources import YamlSource, JsonSource, EnvVarSource  # noqa: F401
+
+
+_load_contrib()
