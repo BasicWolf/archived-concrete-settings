@@ -5,7 +5,7 @@ function run_tests {
 
     if [ "$current_branch" = "master" ]; then
         echo "You are about to commit on master. I will run your tests first..."
-        make test
+        make test && make docs
         if [ $? -eq 0 ]; then
             # tests passed, proceed to prepare commit message
             exit 0
