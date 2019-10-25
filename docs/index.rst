@@ -95,7 +95,7 @@ Then you are very welcome to ConcreteSettings documentation!
    :maxdepth: 2
 
    quickstart
-
+   advanced
 
 API Reference
 =============

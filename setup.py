@@ -23,6 +23,7 @@ setuptools.setup(
 
         'dev': [
             'sphinxcontrib-plantuml>=0.17.1',
+            'sphinx-rtd-theme'
         ]
     },
     classifiers=[

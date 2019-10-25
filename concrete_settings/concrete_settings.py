@@ -390,4 +390,5 @@ class Settings(Setting, metaclass=SettingsMeta):
 
     @property
     def errors(self):
+        """Validation errors"""
         return self._errors

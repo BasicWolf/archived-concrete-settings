@@ -126,59 +126,8 @@ a **list of validators** and **documentation**:
 * **Documentation** is a multi-line doc string intended for the end user.
 
 
-Nested Settings
----------------
-
-Nesting is a great way to logically group and isolate settings.
-Let's try grouping *database*, *cache* and *logging* in
-application settings as follows:
-
-.. testcode:: quickstart-nested
-
-   from concrete_settings import Settings
-
-   class DBSettings(Settings):
-       USER = 'alex'
-       PASSWORD  = 'secret'
-       SERVER = 'localhost@5432'
-
-   class CacheSettings(Settings):
-       ENGINE = 'DatabaseCache'
-       TIMEOUT = 300
-
-   class LoggingSettings(Settings):
-       LEVEL = 'INFO'
-       FORMAT = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
-
-
-   class AppSettings(Settings):
-       DB = DBSettings()
-       CACHE = CacheSettings()
-       LOG = LoggingSettings()
-
-   app_settings = AppSettings()
-   print(app_settings.LOG.LEVEL)
-
-Output:
-
-.. testoutput:: quickstart-nested
-
-   INFO
-
-At first glance, there is nothing special about this code.
-What makes it special and somewhat confusing is
-that :class:`Settings <concrete_settings.Settings>` is a
-subclass of :class:`Setting <concrete_settings.Setting>`!
-Hence, each nested Settings behaves and can be treated
-as a Setting descriptor - e.g. have validators, documentation
-or `bound behavior <quickstart_behavior>`_.
-
-Additionally, `validating <quickstart_validation>`_ top-level settings
-automatically cascades to all nested settings.
-
-
-Reading settings from files and environment
--------------------------------------------
+Reading settings
+----------------
 
 After a Settings object has initialized successfully it can be updated
 with values from different :ref:`api_sources`, such as
@@ -192,7 +141,7 @@ And if none of the above fits your needs, check out
 :mod:`sources API <concrete_settings.sources>` for creating
 a required settings source.
 
-To update a settings object, call :meth:`update() <concrete_settings.Settings.update>`.
+Updating is done by calling :meth:`Settings.update(source) <concrete_settings.Settings.update>`.
 For example, to update the settings from a JSON file:
 
 
@@ -243,75 +192,48 @@ Output:
    os.remove('/tmp/cs-quickstart-settings.json')
 
 
-Update strategies
-.................
-
-In most of the cases, a developer wants to overwrite a setting value
-when updating it from a source. But there are exceptions.
-Think of a list setting, which contains administrators' emails, e.g.:
-
-.. testcode:: quickstart-update-strategies
-
-   from typing import List
-   from concrete_settings import Settings
-
-   class AppSettings(Settings):
-       ADMIN_EMAILS: List[str] = [
-           'admin@example.com'
-       ]
-
-
-What if you want to **append** the emails defined in sources, instead
-of overwriting them? Concrete Settings provides a concept of
-:mod:`update strategies <concrete_settings.sources.strategies>`
-for such cases:
-
-.. code-block:: json
-
-   {
-       "ADMIN_EMAILS": ["alex@my-super-app.io"]
-   }
-
-.. testsetup:: quickstart-update-strategies
-
-   with open('/tmp/cs-quickstart-settings.json', 'w') as f:
-       f.write('''
-           {
-               "ADMIN_EMAILS": ["alex@my-super-app.io"]
-           }
-       ''')
-
-.. testcode:: quickstart-update-strategies
-
-   from concrete_settings.sources import strategies
-
-   ...
-
-   app_settings = AppSettings()
-   app_settings.update('/tmp/cs-quickstart-settings.json', strategies={
-       'ADMIN_EMAILS': strategies.append
-   })
-   print(app_settings.ADMIN_EMAILS)
-
-.. testcleanup:: quickstart-update-strategies
-
-   import os
-   os.remove('/tmp/cs-quickstart-settings.json')
-
-Output:
-
-.. testoutput:: quickstart-update-strategies
-
-   ['admin@example.com', 'alex@my-super-app.io']
-
-
-
 .. _quickstart_validation:
 
 Validation
 ----------
 
-  :class:`Validator <concrete_settings.validators.Validator>` objects
+A Settings object validates its setting-fields and itself when
+:meth:`Settings.is_valid() <concrete_settings.Settings.is_valid()>` is called for the first time. The validation consists of two stages.
+
+1. Each :class:`validator <concrete_settings.validators.Validator>` of every setting-field's ``.validators`` list is called to validate the setting-field's value.
+
+2. :meth:`Settings.validate() <concrete_settings.Settings.validate>`, which is indtended to validate the Settings object as a whole is called after all setting-fields have been validated.
+
+All validation errors are collected and stored in :meth:`Settings.errors <concrete_settings.Settings.errors>`
+
+.. testcode:: quickstart-validation
+
+   from concrete_settings import Settings, Setting
+   from concrete_settings.exceptions import SettingsValidationError
+
+   def not_too_fast(speed, **kwargs):
+       if speed > 100:
+           raise SettingsValidationError(f'{speed} is too fast!')
+
+   def not_too_slow(speed, **kwargs):
+       if speed < 10:
+           raise SettingsValidationError(f'{speed} is too slow!')
+
+   class AppSettings(Settings):
+       SPEED: int = Setting(50, validators=(not_too_fast, not_too_slow))
+
+   app_settings = AppSettings()
+   app_settings.SPEED = 5
+
+   print(app_settings.is_valid())
+   print(app_settings.errors)
+
+Output:
+
+.. testoutput:: quickstart-validation
+
+   False
+   {'SPEED': ['5 is too slow!']}
 
 
 Type hint
@@ -321,12 +243,6 @@ Type hint
 
 Bound behavior
 --------------
-
-What makes it very fascinating and maybe a bit confusing is
-that :class:`Settings <concrete_settings.Settings>` is a
-subclass of :class:`Setting <concrete_settings.Setting>`!
-
-In practice, this allows you to
 
 .. _automated_settings:
 

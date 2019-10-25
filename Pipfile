@@ -26,6 +26,7 @@ pyfakefs = "*"
 pyyaml = "*"
 concrete-settings = {path = ".",editable = true}
 sphinxcontrib-plantuml = "*"
+sphinx-rtd-theme = "*"
 
 [requires]
 python = "3.7"
