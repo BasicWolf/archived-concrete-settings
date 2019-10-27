@@ -37,14 +37,14 @@ For example, the following two definitions are identical:
            True,
            type_hint=bool,
            validators=(ValueTypeValidator(), ),
-           doc="Turns debug mode on/off"
+           doc="Turns debug mode on/off",
        )
 
-This behaviour does not truly comply with the Zen of Python:
+Though this does not truly comply with the Zen of Python
 
   *Explicit is better than implicit*.
 
-But wouldn't you agree that the first definition
+wouldn't you agree that the first definition
 is easier to comprehend than the second one?
 The first definition looks like a boring class attribute
 with a sphinx-style documentation above it.
@@ -63,7 +63,9 @@ basic settings is by omitting the ``Setting(...)`` call at all.
 Ideally a setting should be declared with a type annotation and documentation
 as follows:
 
-.. code-block::
+.. testcode:: quickstart-define-setting
+
+   from concrete_settings import Settings
 
    class AppSettings(Settings):
 
@@ -102,7 +104,8 @@ Output:
 Before we go further, let's take a look at the contents of a Setting object.
 Each implicitly or explicitly defined setting consists of a
 **name**, **default value**, a **type hint**,
-a **list of validators** and **documentation**:
+lists of **validators** and **behaviors**
+and **documentation**:
 
 .. uml::
    :align: center
@@ -111,6 +114,7 @@ a **list of validators** and **documentation**:
    (Default value) --> (Setting)
    (Type hint) --> (Setting)
    (Validators) --> (Setting)
+   (Behaviors) --> (Setting)
    (Documentation) --> (Setting)
 
    note left of (Setting) : NAME
@@ -122,7 +126,9 @@ a **list of validators** and **documentation**:
   :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
   can use the *type hint* to check whether the setting value corresponds
   to the given type.
-* **Validators** is a list of callables which validate the value of the setting.
+* **Validators** is a collection of callables which validate the value of the setting.
+* **Behaviors** is a collection of :class:`SettingBehavior <concrete_settings.behaviors.SettingsBehavior>` objects which modify the behavior of the setting during
+  its *initialization* and *get* and *set* invocations.
 * **Documentation** is a multi-line doc string intended for the end user.
 
 
@@ -197,12 +203,20 @@ Output:
 Validation
 ----------
 
+When Settings values have been finaly loaded, it is time
+to validate each and all settings' values altogether.
+
 A Settings object validates its setting-fields and itself when
-:meth:`Settings.is_valid() <concrete_settings.Settings.is_valid()>` is called for the first time. The validation consists of two stages.
+:meth:`Settings.is_valid() <concrete_settings.Settings.is_valid()>`
+is called for the first time.
+Validation consists of two stages:
 
-1. Each :class:`validator <concrete_settings.validators.Validator>` of every setting-field's ``.validators`` list is called to validate the setting-field's value.
+1. Each :class:`validator <concrete_settings.validators.Validator>`
+   of every setting-field's ``.validators`` list is called
+   to validate the setting-field's value.
 
-2. :meth:`Settings.validate() <concrete_settings.Settings.validate>`, which is indtended to validate the Settings object as a whole is called after all setting-fields have been validated.
+2. :meth:`Settings.validate() <concrete_settings.Settings.validate>` is called.
+   It is indtended to validate the Settings object as a whole.
 
 All validation errors are collected and stored in :meth:`Settings.errors <concrete_settings.Settings.errors>`
 
@@ -239,10 +253,41 @@ Output:
 Type hint
 ---------
 
+As explained above, type hint carries no
+meaning on its own. It is intended to be used
+by validators, like the built-in
+:class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
+to validate a setting's value.
+
+The :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
+is a :ref:`default validator <advanced_validators>` for settings which have no validators defined explicitly:
+
+
+.. testcode:: quickstart-type-hint
+
+   from concrete_settings import Settings
+
+   class AppSettings(Settings):
+       SPEED: int = 'abc'
+
+   app_settings = AppSettings()
+   print(app_settings.is_valid())
+   print(app_settings.errors)
+
+.. testoutput:: quickstart-type-hint
+
+   False
+   {'SPEED': ["Expected value of type `<class 'int'>` got value of type `<class 'str'>`"]}
+
+
 .. _quickstart_behavior:
 
 Bound behavior
 --------------
+
+In Concrete Settings a *behavior* is a way to change how a setting field behaves
+during the stages described above (i.e.
+
 
 .. _automated_settings:
 

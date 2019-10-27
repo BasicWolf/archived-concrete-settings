@@ -44,6 +44,14 @@ Validators
 .. autoclass:: concrete_settings.validators.ValueTypeValidator
 
 
+
+Behaviors
+---------
+
+.. module:: concrete_settings.behaviors
+
+.. autoclass:: concrete_settings.behaviors.SettingBehavior
+
 .. _api_sources:
 
 Sources
@@ -57,6 +65,7 @@ Update strategies
 .................
 
 .. module:: concrete_settings.sources.strategies
+
 
 
 Built-in Sources
