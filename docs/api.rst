@@ -12,6 +12,7 @@ Settings
 
 .. autoclass:: concrete_settings.Setting
    :members:
+   :special-members: __get__,__set__
 
 .. autoclass:: concrete_settings.Settings
    :members:
@@ -33,6 +34,7 @@ Types
 
    .. autoattribute:: KNOWN_TYPES
 
+
 Validators
 ----------
 
@@ -44,6 +46,11 @@ Validators
 .. autoclass:: concrete_settings.validators.ValueTypeValidator
 
 
+DeprecatedValidator
+...................
+
+.. autoclass:: concrete_settings.contrib.validators.DeprecatedValidator
+
 
 Behaviors
 ---------
@@ -51,6 +58,14 @@ Behaviors
 .. module:: concrete_settings.behaviors
 
 .. autoclass:: concrete_settings.behaviors.SettingBehavior
+
+
+
+deprecated
+..........
+
+.. autoclass:: concrete_settings.contrib.behaviors.deprecated
+
 
 .. _api_sources:
 

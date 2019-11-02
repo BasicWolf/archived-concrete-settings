@@ -4,7 +4,7 @@ import types
 from collections import defaultdict
 from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
 
-from .behavior import Behaviors, override
+from .behaviors import Behaviors, override
 from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
 from .sources import get_source, TAnySource, Source
@@ -37,7 +37,7 @@ class Setting:
         self.value = value
         self.type_hint = type_hint
         self.validators = tuple(validators)
-        self.behaviors = Behaviors(behaviors or [])
+        self.behaviors = Behaviors(behaviors or ())
 
         self.__doc__ = doc
 
@@ -47,6 +47,7 @@ class Setting:
         self.name = name
 
     def __get__(self, owner: 'Settings', owner_type=None):
+        """TODO"""
         assert isinstance(
             owner, (type(None), Settings)
         ), "owner should be None or an instance of Settings"
@@ -60,6 +61,7 @@ class Setting:
         return self.behaviors.get_setting_value(self, owner, get_value)
 
     def __set__(self, owner: 'Settings', val):
+        """TODO"""
         assert isinstance(owner, Settings), "owner should be an instance of Settings"
 
         set_value = functools.partial(self.__descriptor__set__, owner)

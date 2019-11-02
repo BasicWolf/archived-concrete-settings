@@ -27,6 +27,8 @@ class SettingBehaviorMeta(type):
 
 
 class SettingBehavior(metaclass=SettingBehaviorMeta):
+    """The base class for Setting field behaviors."""
+
     def __call__(self, setting: TSetting):
         return self.inject(setting)
 
@@ -39,22 +41,35 @@ class SettingBehavior(metaclass=SettingBehaviorMeta):
         return self.inject(setting)
 
     def inject(self, setting: TSetting) -> TSetting:
+        """Inject self to setting behaviors.
+
+        :setting: Setting to which the behavior is injected.
+        :return: Passed setting object.
+        """
         setting.behaviors.inject(self)
         return setting
 
     def get_setting_value(self, setting, owner, get_value):
+        """Called when setting.__get__() is invoked."""
         return get_value()
 
     def set_setting_value(self, setting, owner, val, set_value):
+        """Called when setting.__set__() is invoked."""
         set_value(val)
 
 
-class Behaviors(list):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class Behaviors:
+    def __init__(self, iterable=()):
+        self._container = list(iterable)
+
+    def __len__(self):
+        return len(self._container)
+
+    def __getitem__(self, index):
+        return self._container[index]
 
     def inject(self, behavior):
-        self.insert(0, behavior)
+        self._container.insert(0, behavior)
 
     def get_setting_value(self, setting, owner, get_value):
         """Chain and invoke get_setting_value() of each behavior."""

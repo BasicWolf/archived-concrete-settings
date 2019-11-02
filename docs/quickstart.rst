@@ -127,8 +127,9 @@ and **documentation**:
   can use the *type hint* to check whether the setting value corresponds
   to the given type.
 * **Validators** is a collection of callables which validate the value of the setting.
-* **Behaviors** is a collection of :class:`SettingBehavior <concrete_settings.behaviors.SettingsBehavior>` objects which modify the behavior of the setting during
-  its *initialization* and *get* and *set* invocations.
+* **Behaviors** is a collection of :class:`SettingBehavior <concrete_settings.behaviors.SettingBehavior>`
+  objects which modify the behavior of the setting during its *get* and *set* invocations and
+  its owner *initialization*.
 * **Documentation** is a multi-line doc string intended for the end user.
 
 
@@ -253,11 +254,11 @@ Output:
 Type hint
 ---------
 
-As explained above, type hint carries no
-meaning on its own. It is intended to be used
-by validators, like the built-in
+Type hint is a setting type.
+It is intended to be used by validators, like the built-in
 :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
 to validate a setting's value.
+Otherwise it carries no meaning and is just a valid Python value.
 
 The :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
 is a :ref:`default validator <advanced_validators>` for settings which have no validators defined explicitly:
@@ -282,11 +283,47 @@ is a :ref:`default validator <advanced_validators>` for settings which have no v
 
 .. _quickstart_behavior:
 
-Bound behavior
---------------
+Setting Behavior
+----------------
 
-In Concrete Settings a *behavior* is a way to change how a setting field behaves
-during the stages described above (i.e.
+Imagine that you want to notify the users that a setting is now deprecated.
+You would like to raise a warning when settings are initialized and
+every time the setting is being read.
+
+A straightforward way to do this is by sublassing the
+:class:`Setting <concrete_settings.Setting>` class and overriding
+:meth:`Setting.__get__() <concrete_settings.Setting.__get__>`.
+
+Another way would be using the supplied Settings Behavior mechanism.
+For example, the built-in :class:`deprecated <concrete_settings.contrib.behaviors.deprecated>`
+validator adds the :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>` to the setting looks like this:
+
+.. testcode:: quickstart-behavior:
+
+   from concrete_settings import Settings
+   from concrete_settings.contrib.behaviors import deprecated
+
+   class AppSettings(Settings):
+       MAX_SPEED: int = 30 @deprecated
+
+   app_settings = AppSettings()
+
+If Python warnings are enabled (e.g. ``python -Wdefault``), you would
+get the warning in stderr:
+
+
+.. code-block:: none
+
+   DeprecationWarning: Setting `MAX_SPEED` in class `<class '__main__.AppSettings'>` is deprecated.
+
+
+A *behavior* is a way to change how a setting field behaves
+during Settings object initialization and setting descriptor's
+:meth:`get <concrete_settings.Setting.__get__>`
+and
+:meth:`set <concrete_settings.Setting.__set__>`
+invocations.
+
 
 
 .. _automated_settings:

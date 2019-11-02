@@ -11,19 +11,16 @@ from concrete_settings import Settings, Setting, setting, INVALID_SETTINGS
 from concrete_settings.exceptions import SettingsValidationError
 
 
-@pytest.fixture
-def unsupported_python_version_info():
-    VersionInfo = namedtuple(
-        'version_info', ['major', 'minor', 'micro', 'releaselevel', 'serial']
-    )
-    return VersionInfo(3, 5, 0, 'final', 0)
-
-
 def test_cls_init_empty_settings():
     Settings()
 
 
-def test_import_in_unsupported_python_fails(mocker, unsupported_python_version_info):
+def test_import_in_unsupported_python_fails(mocker):
+    VersionInfo = namedtuple(
+        'version_info', ['major', 'minor', 'micro', 'releaselevel', 'serial']
+    )
+    unsupported_python_version_info = VersionInfo(3, 5, 0, 'final', 0)
+
     mocker.patch.object(sys, 'version_info', unsupported_python_version_info)
     with pytest.raises(
         ImportError, match="Python 3.6 or higher is required by concrete_settings"
@@ -41,7 +38,7 @@ def test_setting_ctor(v_int):
     assert s.__doc__ == "docstring"
     assert s.validators is validators
     assert s.type_hint is int
-    assert s.behaviors == []
+    assert len(s.behaviors) == 0
 
 
 def test_settings_converted_from_attributes(v_int):
@@ -154,8 +151,7 @@ class TestPropertySetting:
                 return 10
 
         with pytest.raises(
-                AttributeError,
-                match="Can't set attribute: property setting cannot be set"
+            AttributeError, match="Can't set attribute: property setting cannot be set"
         ):
             S().V = 10
 
@@ -167,7 +163,7 @@ class TestPropertySetting:
             validate_called = True
 
         class S(Settings):
-            T = Setting(10, validators=(validator, ))
+            T = Setting(10, validators=(validator,))
 
         assert S().is_valid()
         assert validate_called
@@ -267,6 +263,7 @@ def test_settings_mandatory_validators(is_positive, is_less_that_10):
     assert 'T1' in s.errors
     assert s.errors['T0'] == ['Value should be positive']
     assert s.errors['T1'] == ['Value should be less that 10']
+
 
 #
 # Nested settings

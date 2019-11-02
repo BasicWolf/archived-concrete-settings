@@ -1,5 +1,4 @@
 import abc
-import warnings
 from typing import TYPE_CHECKING
 
 from typeguard import check_type
@@ -17,7 +16,7 @@ class Validator(metaclass=abc.ABCMeta):
     A validator accepts a value as a mandatory argument, and keyword-only arguments
     referring to settings, setting and setting's name."""
 
-    @abc.abstractmethod
+    @abc.abstбractmethod
     def __call__(
         self,
         value,
@@ -28,20 +27,6 @@ class Validator(metaclass=abc.ABCMeta):
     ):
         """Validate a value. Raise `SettingsValidationError` if value is wrong."""
         pass
-
-
-class DeprecatedValidator(Validator):
-    def __init__(self, msg, raise_exception):
-        self.msg = msg
-        self.raise_exception = raise_exception
-
-    def __call__(self, value, *, name, owner, **ignore):
-        msg = self.msg.format(name=name, owner=type(owner))
-
-        if self.raise_exception:
-            raise SettingsValidationError(msg)
-        else:
-            warnings.warn(msg, DeprecationWarning)
 
 
 class RequiredValidator(Validator):

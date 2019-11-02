@@ -1,10 +1,13 @@
 import warnings
 
 from concrete_settings.behaviors import SettingBehavior
-from concrete_settings.validators import DeprecatedValidator
+from concrete_settings.contrib.validators import DeprecatedValidator
 
 
 class deprecated(SettingBehavior):
+    """Adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`  # noqa: E501 # line too long
+       to the setting."""
+
     def __init__(
         self,
         deprecation_message: str = 'Setting `{name}` in class `{owner}` is deprecated.',

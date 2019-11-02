@@ -1,14 +1,8 @@
 import pytest
 
-from concrete_settings import Settings, Setting, Undefined, setting as property_setting
-from concrete_settings.behavior import (
-    Behaviors,
-    SettingBehavior,
-    deprecated,
-    required,
-    override,
-)
-from concrete_settings.exceptions import SettingsValidationError, StructureError
+from concrete_settings import Settings, Setting, setting as property_setting
+from concrete_settings.behaviors import Behaviors, SettingBehavior, override
+from concrete_settings.exceptions import StructureError
 
 
 @pytest.fixture
@@ -38,15 +32,15 @@ def plus():
 @pytest.fixture
 def setting_behavior_mock():
     class SettingBehaviorMock(SettingBehavior):
-        get_was_called = False
-        set_was_called = False
+        get_setting_value_was_called = False
+        set_setting_value_was_called = False
 
         def get_setting_value(self, setting, owner, get_value):
-            self.get_was_called = True
+            self.get_setting_value_was_called = True
             return get_value()
 
         def set_setting_value(self, setting, owner, val, set_value):
-            self.set_was_called = True
+            self.set_setting_value_was_called = True
             set_value(val)
 
     return SettingBehaviorMock
@@ -62,7 +56,7 @@ def test_setting_behavior_get(setting_behavior_mock):
         D = Setting(10) @ bhv_mock
 
     assert S().D == 10
-    assert bhv_mock.get_was_called
+    assert bhv_mock.get_setting_value_was_called
 
 
 def test_setting_behavior_set(setting_behavior_mock):
@@ -74,7 +68,7 @@ def test_setting_behavior_set(setting_behavior_mock):
     s = S()
     s.D = 20
     assert s.D == 20
-    assert bhv_mock.set_was_called
+    assert bhv_mock.set_setting_value_was_called
 
 
 def test_universal_constructor_matmul_on_right_side(div):
@@ -142,104 +136,67 @@ def test_setting_behavior_with_property_setting_order(div, plus):
 # Behaviors
 
 
-def test_behaviors_inject_getitem(setting_behavior_mock):
+def test_behaviors_injecting_item_increases_length(setting_behavior_mock):
     bhv_mock = setting_behavior_mock()
-    behaviors = Behaviors((bhv_mock,))
+    behaviors = Behaviors()
+    behaviors.inject(bhv_mock)
+
+    assert len(behaviors) == 1
 
 
-# == Deprecated == #
+def test_behaviors_injected_item_can_be_get_by_index(setting_behavior_mock):
+    bhv_mock = setting_behavior_mock()
+    behaviors = Behaviors()
+    behaviors.inject(bhv_mock)
+
+    assert behaviors[0] == bhv_mock
 
 
-def test_deprecated_warns_when_validating():
-    class S(Settings):
-        D = 10 @ deprecated
+def test_behavior_get_setting_value_call_chain(setting_behavior_mock):
+    class MySettings(Settings):
+        SOME_SETTING = 10
 
-    with pytest.warns(DeprecationWarning):
-        S().is_valid()
+    settings = MySettings()
 
+    get_value_called = False
 
-def test_deprecated_warning_message():
-    class S(Settings):
-        D = 10 @ deprecated
+    def get_value():
+        nonlocal get_value_called
+        get_value_called = True
+        return settings.SOME_SETTING
 
-    with pytest.warns(
-        DeprecationWarning,
-        match=(
-            r"Setting `D` in class `<class 'tests.test_behavior."
-            r"test_deprecated_warning_message.<locals>.S'>` is deprecated."
-        ),
-    ) as w:
-        S().is_valid()
-        assert len(w) == 1
+    bhv_mock = setting_behavior_mock()
+    behaviors = Behaviors()
+    behaviors.inject(bhv_mock)
 
+    assert 10 == behaviors.get_setting_value(
+        MySettings.SOME_SETTING, settings, get_value
+    )
 
-def test_deprecated_error_when_validating():
-    class S(Settings):
-        D = 10 @ deprecated(error_on_validation=True)
-
-    with pytest.raises(SettingsValidationError):
-        S().is_valid(raise_exception=True)
+    assert get_value_called
+    assert bhv_mock.get_setting_value_was_called
 
 
-def test_deprecated_warns_on_get():
-    class S(Settings):
-        D = 10 @ deprecated(warn_on_get=True)
+def test_behavior_set_setting_value_call_chain(setting_behavior_mock):
+    class MySettings(Settings):
+        SOME_SETTING = 10
 
-    with pytest.warns(DeprecationWarning):
-        S().D
+    settings = MySettings()
 
+    set_value_called_with_val = None
 
-def test_deprecated_warns_on_set():
-    class S(Settings):
-        D = 10 @ deprecated(warn_on_set=True)
+    def set_value(val):
+        nonlocal set_value_called_with_val
+        set_value_called_with_val = val
 
-    with pytest.warns(DeprecationWarning):
-        S().D = 20
+    bhv_mock = setting_behavior_mock()
+    behaviors = Behaviors()
+    behaviors.inject(bhv_mock)
 
+    behaviors.set_setting_value(MySettings.SOME_SETTING, settings, 20, set_value)
 
-def test_deprecated_not_warns():
-    class S(Settings):
-        D = 10 @ deprecated(warn_on_validation=False)
-
-    with pytest.warns(None):
-        S().is_valid()
-        S().D
-        S().D = 20
-
-
-def test_deprecated_on_property_setting():
-    class S(Settings):
-        @deprecated
-        @property_setting
-        def D(self):
-            return 30
-
-    with pytest.warns(DeprecationWarning):
-        assert S().is_valid()
-
-
-# == required == #
-
-
-def test_required():
-    class S(Settings):
-        default_validators = ()
-
-        D = Undefined @ required
-
-    with pytest.raises(
-        SettingsValidationError, match="Setting `D` is required to have a value."
-    ):
-        S().is_valid(raise_exception=True)
-
-
-def test_required_setting_has_value_does_not_raise_exception():
-    class S(Settings):
-        default_validators = ()
-
-        D = 10 @ required
-
-    assert S().is_valid()
+    assert set_value_called_with_val == 20
+    assert bhv_mock.set_setting_value_was_called
 
 
 # == override == #
