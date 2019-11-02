@@ -16,7 +16,7 @@ class Validator(metaclass=abc.ABCMeta):
     A validator accepts a value as a mandatory argument, and keyword-only arguments
     referring to settings, setting and setting's name."""
 
-    @abc.abstбractmethod
+    @abc.abstractmethod
     def __call__(
         self,
         value,
