@@ -1,7 +1,7 @@
 import sys
 
-
-from .concrete_settings import (  # noqa: F401 # imported but unused
+from . import core   # noqa: F401 # imported but unused
+from .core import (  # noqa: F401 # imported but unused
     Settings,
     Setting,
     PropertySetting,

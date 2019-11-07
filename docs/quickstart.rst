@@ -52,7 +52,7 @@ At the same time, all the required details are extracted and processed,
 and a substitute ``Setting`` attribute is created.
 
 The magic behind the scenes is happening in the metaclass
-:class:`SettingsMeta <concrete_settings.concrete_settings.SettingsMeta>`.
+:class:`SettingsMeta <concrete_settings.core.SettingsMeta>`.
 In a nutshell, if a field looks like a setting, but is not explicitly
 defined (e.g. ``DEBUG = True``), a corresponding instance of
 :class:`Setting <concrete_settings.Setting>` is created instead.
