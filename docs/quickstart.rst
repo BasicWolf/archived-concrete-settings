@@ -295,8 +295,12 @@ A straightforward way to do this is by sublassing the
 :meth:`Setting.__get__() <concrete_settings.Setting.__get__>`.
 
 Another way would be using the supplied Settings Behavior mechanism.
-For example, the built-in :class:`deprecated <concrete_settings.contrib.behaviors.deprecated>`
-validator adds the :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>` to the setting looks like this:
+Behaviors can be passed to a Setting explicitly.
+But the preferred way is to use the syntactic sugar - by "decorating" settings.
+For example, let's take a look at the built-in :class:`deprecated <concrete_settings.contrib.behaviors.deprecated>`
+validator. It simply adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`
+to the setting. The rationale of using the behavior instead of a validator is dramatically improved readability.
+Have a look:
 
 .. testcode:: quickstart-behavior:
 
@@ -323,7 +327,6 @@ during Settings object initialization and setting descriptor's
 and
 :meth:`set <concrete_settings.Setting.__set__>`
 invocations.
-
 
 
 .. _automated_settings:
