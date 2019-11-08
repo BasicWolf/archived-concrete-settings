@@ -449,7 +449,10 @@ Let's combine Database, Log and Cache settings:
    app_settings = AppSettings()
    print(app_settings.LOG_LEVEL)
 
+.. testoutput:: quickstart-combined
+   :hide:
 
+   INFO
 
 .. _automated_settings:
 
