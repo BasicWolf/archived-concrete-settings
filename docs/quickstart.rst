@@ -302,15 +302,23 @@ validator. It simply adds :class:`DeprecatedValidator <concrete_settings.contrib
 to the setting. The rationale of using the behavior instead of a validator is dramatically improved readability.
 Have a look:
 
-.. testcode:: quickstart-behavior:
+.. testcode:: quickstart-behavior
 
-   from concrete_settings import Settings
+   from concrete_settings import Settings, Setting
    from concrete_settings.contrib.behaviors import deprecated
 
    class AppSettings(Settings):
        MAX_SPEED: int = 30 @deprecated
 
    app_settings = AppSettings()
+   app_settings.is_valid()
+
+The explicit equivalent definition is:
+
+.. testcode:: quickstart-behavior
+
+   class AppSettings(Settings):
+       MAX_SPEED: int = Setting(30, behaviors=(deprecated, ))
 
 If Python warnings are enabled (e.g. ``python -Wdefault``), you would
 get the warning in stderr:
@@ -320,13 +328,127 @@ get the warning in stderr:
 
    DeprecationWarning: Setting `MAX_SPEED` in class `<class '__main__.AppSettings'>` is deprecated.
 
-
-A *behavior* is a way to change how a setting field behaves
-during Settings object initialization and setting descriptor's
+In a nutshell, a *behavior* is a way to change how a setting field behaves
+during its initialization, validation and setting's
 :meth:`get <concrete_settings.Setting.__get__>`
 and
 :meth:`set <concrete_settings.Setting.__set__>`
-invocations.
+descriptors invocations.
+A behavior can be passed in `Setting constructor <concrete_settings.Setting>`
+or by using ``@`` operator: ``value @ behavior0 @ behavior1 @ ...``
+
+
+
+Nested Settings
+---------------
+
+Nesting is a nice and simple way to logically group and isolate settings.
+Let's try grouping *database*, *cache* and *logging* in
+application settings as follows:
+
+.. testcode:: quickstart-nested
+
+   from concrete_settings import Settings
+
+   class DBSettings(Settings):
+       USER = 'alex'
+       PASSWORD  = 'secret'
+       SERVER = 'localhost@5432'
+
+   class CacheSettings(Settings):
+       ENGINE = 'DatabaseCache'
+       TIMEOUT = 300
+
+   class LoggingSettings(Settings):
+       LEVEL = 'INFO'
+       FORMAT = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
+
+
+   class AppSettings(Settings):
+       DB = DBSettings()
+       CACHE = CacheSettings()
+       LOG = LoggingSettings()
+
+   app_settings = AppSettings()
+   print(app_settings.LOG.LEVEL)
+
+Output:
+
+.. testoutput:: quickstart-nested
+
+   INFO
+
+At first glance, there is nothing special about this code.
+What makes it special and somewhat confusing is
+that class :class:`Settings <concrete_settings.Settings>` is a
+subclass of class :class:`Setting <concrete_settings.Setting>`!
+Hence, nested Settings behave and can be treated
+as Setting descriptors - e.g. have validators, documentation
+or :ref:`bound behavior <quickstart_behavior>`.
+
+Additionally, :ref:`validating <quickstart_validation>` top-level settings
+automatically cascades to all nested settings and the following
+would end up in a validation error:
+
+
+.. testcode:: quickstart-nested2
+
+   from concrete_settings import Settings
+
+   class DBSettings(Settings):
+       USER: str = 123
+       ...
+
+   class AppSettings(Settings):
+       DB = DBSettings()
+       ...
+
+   app_settings = AppSettings()
+   app_settings.is_valid(raise_exception=True)
+
+.. testoutput:: quickstart-nested2
+
+   Traceback (most recent call last):
+       ...
+   concrete_settings.exceptions.SettingsValidationError: DB: Expected value of type `<class 'str'>` got value of type `<class 'int'>`
+
+
+Combining settings
+------------------
+
+Another way of putting settings together is by using Python's
+multiple-base-classes inheritance mechanism.
+It can be useful, when you have to mimic a legacy settings
+module interface, but want to keep settings logic separated.
+
+Let's combine Database, Log and Cache settings:
+
+.. testcode:: quickstart-combined
+
+   from concrete_settings import Settings, prefix
+
+   @prefix('DB')
+   class DBSettings(Settings):
+       USER = 'alex'
+       PASSWORD  = 'secret'
+       SERVER = 'localhost@5432'
+
+   @prefix('CACHE')
+   class CacheSettings(Settings):
+       ENGINE = 'DatabaseCache'
+       TIMEOUT = 300
+
+   @prefix('LOG')
+   class LoggingSettings(Settings):
+       LEVEL = 'INFO'
+       FORMAT = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
+
+
+   class AppSettings(DBSettings, CacheSettings, LoggingSettings):
+       pass
+   app_settings = AppSettings()
+   print(app_settings.LOG_LEVEL)
+
 
 
 .. _automated_settings:
@@ -374,8 +496,7 @@ If the type is not recognized, the type hint is set to :data:`typing.Any`.
 
        MAX_SPEED: int = 300   # default value `300`, type `int`
 
-Combining settings
-..................
+
 
 .. uml::
 

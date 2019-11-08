@@ -7,58 +7,6 @@ In this chapter we discover Concrete Settings in-depth
    :local:
 
 
-Nested Settings
----------------
-
-Nesting is a great way to logically group and isolate settings.
-Let's try grouping *database*, *cache* and *logging* in
-application settings as follows:
-
-.. testcode:: quickstart-nested
-
-   from concrete_settings import Settings
-
-   class DBSettings(Settings):
-       USER = 'alex'
-       PASSWORD  = 'secret'
-       SERVER = 'localhost@5432'
-
-   class CacheSettings(Settings):
-       ENGINE = 'DatabaseCache'
-       TIMEOUT = 300
-
-   class LoggingSettings(Settings):
-       LEVEL = 'INFO'
-       FORMAT = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
-
-
-   class AppSettings(Settings):
-       DB = DBSettings()
-       CACHE = CacheSettings()
-       LOG = LoggingSettings()
-
-   app_settings = AppSettings()
-   print(app_settings.LOG.LEVEL)
-
-Output:
-
-.. testoutput:: quickstart-nested
-
-   INFO
-
-At first glance, there is nothing special about this code.
-What makes it special and somewhat confusing is
-that class :class:`Settings <concrete_settings.Settings>` is a
-subclass of class :class:`Setting <concrete_settings.Setting>`!
-Hence, nested Settings behave and can be treated
-as Setting descriptors - e.g. have validators, documentation
-or :ref:`bound behavior <quickstart_behavior>`.
-
-Additionally, :ref:`validating <quickstart_validation>` top-level settings
-automatically cascades to all nested settings.
-
-
-
 Update strategies
 -----------------
 
