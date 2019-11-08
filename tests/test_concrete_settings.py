@@ -7,7 +7,7 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import Settings, Setting, setting, INVALID_SETTINGS
+from concrete_settings import Settings, Setting, setting, INVALID_SETTINGS, prefix
 from concrete_settings.exceptions import SettingsValidationError
 
 
@@ -390,3 +390,81 @@ def test_settings_errors_readonly():
 
     with pytest.raises(AttributeError):
         S().errors = {}
+
+
+# prefix
+
+def test_prefix_empty_field_not_allowed():
+    with pytest.raises(ValueError, match='prefix cannot be empty'):
+        @prefix('')
+        class MySettings(Settings):
+            pass
+
+
+@pytest.mark.parametrize(
+    'invalid_prefix',
+    ['1', '.', '-']
+)
+def test_prefix_bad_identifier_not_allowed(invalid_prefix):
+    with pytest.raises(
+        ValueError,
+        match='prefix should be a valid Python identifier'
+    ):
+        @prefix(invalid_prefix)
+        class MySettings(Settings):
+            pass
+
+
+def test_prefix_adds_underscore_suffix():
+    @prefix('MY')
+    class MySettings(Settings):
+        SPEED = 10
+        NAME = 'alex'
+
+    assert hasattr(MySettings, 'MY_SPEED')
+    assert hasattr(MySettings, 'MY_NAME')
+
+
+def test_prefix_does_not_add_underscore_suffix_if_present():
+    @prefix('MY_')
+    class MySettings(Settings):
+        SPEED = 10
+
+    assert hasattr(MySettings, 'MY_SPEED')
+
+
+def test_prefix_removes_prefixed_attribute_name():
+    @prefix('MY')
+    class MySettings(Settings):
+        SPEED = 10
+
+    assert not hasattr(MySettings, 'SPEED')
+
+
+def test_prefix_sets_setting_name():
+    @prefix('MY')
+    class MySettings(Settings):
+        SPEED = 10
+
+    assert MySettings.MY_SPEED.name == 'MY_SPEED'
+
+
+def test_prefix_cannot_decorate_not_settings_class():
+    with pytest.raises(
+        AssertionError,
+        match='Intended to decorate Settings sub-classes only'
+    ):
+        @prefix('MY')
+        class NotSettings:
+            pass
+
+
+def test_prefix_cannot_decorate_settings_with_existing_matching_field():
+    with pytest.raises(
+        ValueError,
+        match='''MySettings'> class already has setting field named "GEAR"'''
+    ):
+        @prefix('MY')
+        class MySettings(Settings):
+            GEAR = 10
+            MY_GEAR = 1

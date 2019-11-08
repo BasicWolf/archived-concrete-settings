@@ -1,5 +1,6 @@
 import functools
 import logging
+import re
 import types
 from collections import defaultdict
 from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
@@ -283,9 +284,10 @@ class Settings(Setting, metaclass=SettingsMeta):
             self._errors = self._run_validation(raise_exception)
         return self._errors == {}
 
-    def _iter_settings_attributes(self):
-        for name in dir(self.__class__):
-            attr = getattr(self.__class__, name)
+    @classmethod
+    def _iter_settings_attributes(cls):
+        for name in dir(cls):
+            attr = getattr(cls, name)
             if isinstance(attr, Setting):
                 yield name, attr
 
@@ -394,3 +396,37 @@ class Settings(Setting, metaclass=SettingsMeta):
     def errors(self):
         """Validation errors"""
         return self._errors
+
+
+identifier_re = re.compile(r"^[^\d\W]\w*\Z", re.UNICODE)
+
+
+class prefix:
+    """TODO"""
+    def __init__(self, prefix: str):
+        if not prefix:
+            raise ValueError('prefix cannot be empty')
+
+        if not identifier_re.match(prefix):
+            raise ValueError('prefix should be a valid Python identifier')
+
+        if not prefix.endswith('_'):
+            prefix = f'{prefix}_'
+
+        self.prefix = prefix
+
+    def __call__(self, settings):
+        assert issubclass(settings, Settings), \
+            'Intended to decorate Settings sub-classes only'
+
+        for name, attr in settings._iter_settings_attributes():
+            new_name = f'{self.prefix}{name}'
+            if hasattr(settings, new_name):
+                raise ValueError(
+                    f'{settings} class already has setting field named "{name}"'
+                )
+
+            delattr(settings, name)
+            setattr(settings, new_name, attr)
+            attr.name = new_name
+        return settings
