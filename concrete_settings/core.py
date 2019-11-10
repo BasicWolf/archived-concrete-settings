@@ -402,7 +402,9 @@ identifier_re = re.compile(r"^[^\d\W]\w*\Z", re.UNICODE)
 
 
 class prefix:
-    """TODO"""
+    """A decorator for Settings classes which
+       appends the defined prefix to each Setting field."""
+
     def __init__(self, prefix: str):
         if not prefix:
             raise ValueError('prefix cannot be empty')

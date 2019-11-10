@@ -20,8 +20,9 @@ Settings
 .. autoclass:: concrete_settings.PropertySetting
    :members:
 
-.. autoclass:: concrete_settings.core.SettingsMeta
+.. autoclass:: concrete_settings.prefix
 
+.. autoclass:: concrete_settings.core.SettingsMeta
 
 Types
 -----
