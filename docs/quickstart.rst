@@ -13,15 +13,15 @@ Defining settings
 Defining settings starts
 by subclassing the :class:`Settings <concrete_settings.Settings>`
 class.
-Each setting is defined by an attributes of type
-:class:`Setting <concrete_settings.Setting>`.
-The catch is that a developer does not have
+A setting is defined by
+:class:`Setting <concrete_settings.Setting>` descriptor.
+The catch is that one does not have
 to declare each setting explicitly.
 
 Let's take a look is a small example, where we declare ``AppSettings``
 class with a single boolean-type setting named ``DEBUG``:
 
-.. code-block::
+.. testcode::
 
    from concrete_settings import Settings, Setting
    from concrete_settings.validators import ValueTypeValidator
@@ -36,7 +36,7 @@ class with a single boolean-type setting named ``DEBUG``:
 
 And here is the short version which produces the same class as the one above:
 
-.. code-block::
+.. testcode::
 
    from concrete_settings import Settings
 
@@ -60,12 +60,12 @@ The magic behind the scenes is happening in the metaclass
 :class:`SettingsMeta <concrete_settings.core.SettingsMeta>`.
 In a nutshell, if a field looks like a setting, but is not explicitly
 defined as an instance of class :class:`Setting <concrete_settings.Setting>`,
-a corresponding ``Setting`` object
-is created instead.
+a corresponding object is created instead.
 
-We will :ref:`later <automated_settings>` discuss the setting creation rules in-depth.
-For now please accept that Concrete Settings preferred way of declaring
-basic settings is by omitting the ``Setting(...)`` call at all.
+:ref:`Later in the documentation <automated_setting>` the setting creation
+rules are explored in-depth.
+For now please accept that Concrete Settings' preferred way of declaring
+*basic* settings is by omitting the ``Setting(...)`` call at all.
 Ideally a setting should be declared with a type annotation and documentation
 as follows:
 
@@ -107,10 +107,10 @@ Output:
    postgresql://alex:secret@localhost:5432
 
 
-Before we go further, let's take a look at the contents of a Setting object.
+Before going further, let's take a look at the contents of a Setting object.
 Each implicitly or explicitly defined setting consists of a
 **name**, **default value**, a **type hint**,
-lists of **validators** and **behaviors**
+lists of **validators**, list of **behaviors**
 and **documentation**:
 
 .. uml::
@@ -134,15 +134,14 @@ and **documentation**:
   to the given type.
 * **Validators** is a collection of callables which validate the value of the setting.
 * **Behaviors** is a collection of :class:`SettingBehavior <concrete_settings.behaviors.SettingBehavior>`
-  objects which modify the behavior of the setting during its *get* and *set* invocations and
-  its owner *initialization*.
+  objects which modify a setting's behavior during different stages of its life cycle.
 * **Documentation** is a multi-line doc string intended for the end user.
 
 
 Reading settings
 ----------------
 
-After a Settings object has initialized successfully it can be updated
+After a Settings object has been initialized successfully it can be updated
 with values from different :ref:`api_sources`, such as
 :class:`YAML <concrete_settings.contrib.sources.YamlSource>` or
 :class:`JSON <concrete_settings.contrib.sources.JsonSource>`
@@ -150,7 +149,7 @@ files,
 :class:`enironmental variables <concrete_settings.contrib.sources.EnvVarSource>`
 or a plain Python dict.
 
-And if none of the above fits your needs, check out
+If none of the above fits your needs, check out
 :mod:`sources API <concrete_settings.sources>` for creating
 a required settings source.
 
@@ -264,7 +263,7 @@ Type hint is a setting type.
 It is intended to be used by validators, like the built-in
 :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
 to validate a setting's value.
-Otherwise it carries no meaning and is just a valid Python value.
+Otherwise it carries no meaning and is just a valid Python object.
 
 The :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
 is the :ref:`default validator <advanced_validators>` for settings which have no validators defined explicitly:
@@ -304,7 +303,7 @@ Another way would be using the supplied Settings Behavior mechanism.
 Behaviors can be passed to a Setting explicitly.
 But the preferred way is to use the syntactic sugar - by "decorating" settings.
 For example, let's take a look at the built-in :class:`deprecated <concrete_settings.contrib.behaviors.deprecated>`
-validator. It simply adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`
+behavior. It simply adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`
 to the setting. The rationale of using the behavior instead of a validator is improved readability.
 Just have a look:
 
@@ -450,7 +449,7 @@ Let's combine Database, Log and Cache settings:
    class AppSettings(
        DBSettings,
        CacheSettings,
-       prefix('LOG')(LoggingSettings)
+       LoggingSettings @prefix('LOG')  # prefer this
    ):
        pass
 
@@ -464,8 +463,24 @@ Let's combine Database, Log and Cache settings:
    INFO
    alex
 
-We can also use the :class:`prefix <concrete_settings.prefix>` decorator to add
+The :class:`prefix <concrete_settings.prefix>` decorator is used to add
 relevant prefixes to the combined settings.
+
+Note that Python rules of multiple inheritance are applied.
+For example :meth:`validate() <concrete_settings.Settings.validate>`
+must be explicitly called for each of the base classes:
+
+.. testcode:: quickstart-combined
+
+   class AppSettings(
+       DBSettings,
+       CacheSettings,
+       prefix('LOG')(LoggingSettings)
+   ):
+       def validate():
+           DBSettings.validate(self)
+           CacheSettings.validate(self)
+           LoggingSettings.validate(self)
 
 
 Start me up

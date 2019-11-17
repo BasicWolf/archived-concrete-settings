@@ -394,22 +394,19 @@ def test_settings_errors_readonly():
 
 # prefix
 
+
 def test_prefix_empty_field_not_allowed():
     with pytest.raises(ValueError, match='prefix cannot be empty'):
+
         @prefix('')
         class MySettings(Settings):
             pass
 
 
-@pytest.mark.parametrize(
-    'invalid_prefix',
-    ['1', '.', '-']
-)
+@pytest.mark.parametrize('invalid_prefix', ['1', '.', '-'])
 def test_prefix_bad_identifier_not_allowed(invalid_prefix):
-    with pytest.raises(
-        ValueError,
-        match='prefix should be a valid Python identifier'
-    ):
+    with pytest.raises(ValueError, match='prefix should be a valid Python identifier'):
+
         @prefix(invalid_prefix)
         class MySettings(Settings):
             pass
@@ -449,11 +446,22 @@ def test_prefix_sets_setting_name():
     assert MySettings.MY_SPEED.name == 'MY_SPEED'
 
 
+def test_combined_settings_prefix_matmul():
+    class LoggingSettings(Settings):
+        LEVEL = 'INFO'
+
+    class AppSettings(LoggingSettings @ prefix('LOG')):  # prefer this
+        pass
+
+    app_settings = AppSettings()
+    assert app_settings.LOG_LEVEL == 'INFO'
+
+
 def test_prefix_cannot_decorate_not_settings_class():
     with pytest.raises(
-        AssertionError,
-        match='Intended to decorate Settings sub-classes only'
+        AssertionError, match='Intended to decorate Settings sub-classes only'
     ):
+
         @prefix('MY')
         class NotSettings:
             pass
@@ -462,8 +470,9 @@ def test_prefix_cannot_decorate_not_settings_class():
 def test_prefix_cannot_decorate_settings_with_existing_matching_field():
     with pytest.raises(
         ValueError,
-        match='''MySettings'> class already has setting field named "GEAR"'''
+        match='''MySettings'> class already has setting field named "GEAR"''',
     ):
+
         @prefix('MY')
         class MySettings(Settings):
             GEAR = 10

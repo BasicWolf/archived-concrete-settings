@@ -432,3 +432,6 @@ class prefix:
             setattr(settings, new_name, attr)
             attr.name = new_name
         return settings
+
+    def __rmatmul__(self, settings: Settings):
+        return self(settings)
