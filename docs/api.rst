@@ -29,9 +29,9 @@ Types
 
 .. module:: concrete_settings.types
 
-.. autoclass:: concrete_settings.types.Undefined
+.. autoclass:: Undefined
 
-.. autoclass:: concrete_settings.types.GuessSettingType
+.. autoclass:: GuessSettingType
 
    .. autoattribute:: KNOWN_TYPES
 
@@ -41,10 +41,21 @@ Validators
 
 .. module:: concrete_settings.validators
 
-.. autoclass:: concrete_settings.validators.Validator
+.. autoclass:: Validator
    :members: __call__
 
-.. autoclass:: concrete_settings.validators.ValueTypeValidator
+.. autoclass:: concrete_settings.exceptions.SettingsValidationError
+
+ValueTypeValidator
+..................
+
+.. autoclass:: ValueTypeValidator
+
+
+RequiredValidator
+.................
+
+.. autoclass:: RequiredValidator
 
 
 DeprecatedValidator

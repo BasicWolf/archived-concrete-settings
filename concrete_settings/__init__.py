@@ -1,17 +1,16 @@
 import sys
 
-from . import core   # noqa: F401 # imported but unused
+from . import core  # noqa: F401 # imported but unused
 from .core import (  # noqa: F401 # imported but unused
     prefix,
     Settings,
     Setting,
     PropertySetting,
-    Undefined,
     INVALID_SETTINGS,
 )
 
+from .types import Undefined  # noqa: F401 # imported but unused
 from .sources import register_source  # noqa: F401 # imported but unused
-
 
 setting = PropertySetting
 

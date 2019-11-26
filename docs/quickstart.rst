@@ -6,7 +6,6 @@ In this chapter we cover the essentials of Concrete Settings.
 .. contents::
    :local:
 
-
 Defining settings
 -----------------
 
@@ -266,8 +265,8 @@ to validate a setting's value.
 Otherwise it carries no meaning and is just a valid Python object.
 
 The :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
-is the :ref:`default validator <advanced_validators>` for settings which have no validators defined explicitly:
-
+is the :ref:`default validator <advanced_validators>`
+for settings which have no validators defined explicitly:
 
 .. testcode:: quickstart-type-hint
 
@@ -438,10 +437,12 @@ Let's combine Database, Log and Cache settings:
        PASSWORD  = 'secret'
        SERVER = 'localhost@5432'
 
+   @prefix('CACHE')
    class CacheSettings(Settings):
-       CACHE_ENGINE = 'DatabaseCache'
-       CACHE_TIMEOUT = 300
+       ENGINE = 'DatabaseCache'
+       TIMEOUT = 300
 
+   @prefix('LOG')
    class LoggingSettings(Settings):
        LEVEL = 'INFO'
        FORMAT = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
@@ -449,7 +450,7 @@ Let's combine Database, Log and Cache settings:
    class AppSettings(
        DBSettings,
        CacheSettings,
-       LoggingSettings @prefix('LOG')  # prefer this
+       LoggingSettings
    ):
        pass
 
@@ -464,7 +465,7 @@ Let's combine Database, Log and Cache settings:
    alex
 
 The :class:`prefix <concrete_settings.prefix>` decorator is used to add
-relevant prefixes to the combined settings.
+a common prefix to all  prefixes to the combined settings.
 
 Note that Python rules of multiple inheritance are applied.
 For example :meth:`validate() <concrete_settings.Settings.validate>`

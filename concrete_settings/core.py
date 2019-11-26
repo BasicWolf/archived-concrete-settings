@@ -412,14 +412,12 @@ class prefix:
         if not identifier_re.match(prefix):
             raise ValueError('prefix should be a valid Python identifier')
 
-        if not prefix.endswith('_'):
-            prefix = f'{prefix}_'
-
-        self.prefix = prefix
+        self.prefix = f'{prefix}_'
 
     def __call__(self, settings):
-        assert issubclass(settings, Settings), \
-            'Intended to decorate Settings sub-classes only'
+        assert issubclass(
+            settings, Settings
+        ), 'Intended to decorate Settings sub-classes only'
 
         for name, attr in settings._iter_settings_attributes():
             new_name = f'{self.prefix}{name}'
@@ -432,6 +430,3 @@ class prefix:
             setattr(settings, new_name, attr)
             attr.name = new_name
         return settings
-
-    def __rmatmul__(self, settings: Settings):
-        return self(settings)

@@ -203,7 +203,7 @@ def test_callable_types_are_not_settings(v_int, v_str):
 
 def test_validate_smoke():
     class S(Settings):
-        pass
+        ...
 
     s = S()
     s.is_valid()
@@ -272,7 +272,7 @@ def test_settings_mandatory_validators(is_positive, is_less_that_10):
 
 def test_settings_cannot_init_with_value():
     class S(Settings):
-        pass
+        ...
 
     with pytest.raises(AssertionError):
         S(value=10)
@@ -280,7 +280,7 @@ def test_settings_cannot_init_with_value():
 
 def test_settings_cannot_init_with_type_hint():
     class S(Settings):
-        pass
+        ...
 
     with pytest.raises(AssertionError):
         S(type_hint=int)
@@ -400,7 +400,7 @@ def test_prefix_empty_field_not_allowed():
 
         @prefix('')
         class MySettings(Settings):
-            pass
+            ...
 
 
 @pytest.mark.parametrize('invalid_prefix', ['1', '.', '-'])
@@ -409,7 +409,7 @@ def test_prefix_bad_identifier_not_allowed(invalid_prefix):
 
         @prefix(invalid_prefix)
         class MySettings(Settings):
-            pass
+            ...
 
 
 def test_prefix_adds_underscore_suffix():
@@ -420,14 +420,6 @@ def test_prefix_adds_underscore_suffix():
 
     assert hasattr(MySettings, 'MY_SPEED')
     assert hasattr(MySettings, 'MY_NAME')
-
-
-def test_prefix_does_not_add_underscore_suffix_if_present():
-    @prefix('MY_')
-    class MySettings(Settings):
-        SPEED = 10
-
-    assert hasattr(MySettings, 'MY_SPEED')
 
 
 def test_prefix_removes_prefixed_attribute_name():
@@ -446,17 +438,6 @@ def test_prefix_sets_setting_name():
     assert MySettings.MY_SPEED.name == 'MY_SPEED'
 
 
-def test_combined_settings_prefix_matmul():
-    class LoggingSettings(Settings):
-        LEVEL = 'INFO'
-
-    class AppSettings(LoggingSettings @ prefix('LOG')):  # prefer this
-        pass
-
-    app_settings = AppSettings()
-    assert app_settings.LOG_LEVEL == 'INFO'
-
-
 def test_prefix_cannot_decorate_not_settings_class():
     with pytest.raises(
         AssertionError, match='Intended to decorate Settings sub-classes only'
@@ -464,7 +445,7 @@ def test_prefix_cannot_decorate_not_settings_class():
 
         @prefix('MY')
         class NotSettings:
-            pass
+            ...
 
 
 def test_prefix_cannot_decorate_settings_with_existing_matching_field():
