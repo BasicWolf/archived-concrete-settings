@@ -7,7 +7,14 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import Settings, Setting, setting, INVALID_SETTINGS, prefix
+from concrete_settings import (
+    INVALID_SETTINGS,
+    Settings,
+    Setting,
+    Undefined,
+    prefix,
+    setting,
+)
 from concrete_settings.exceptions import SettingsValidationError
 
 
@@ -233,6 +240,18 @@ def test_value_type_validator_with_inheritance():
         T = 'abc'
 
     assert S1().is_valid()
+
+
+def test_value_type_validator_allows_undefined_for_any_type():
+    class AppSettings(Settings):
+        HOST: str = Undefined
+
+    assert AppSettings().is_valid()
+
+
+#
+# Validators
+#
 
 
 def test_settings_default_validators(is_positive):

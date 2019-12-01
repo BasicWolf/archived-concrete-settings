@@ -57,7 +57,8 @@ and :ref:`documentation <automated_setting_documentation>`
 
 .. _automated_setting_name:
 
-**Name**
+Name
+....
 
 Every attribute with **name** written in upper case
 is considered a potential Setting.
@@ -72,7 +73,8 @@ The exceptions are attributes starting with underscore:
 
 .. _automated_setting_default_value:
 
-**Default value**
+Default value
+.............
 
 The *default value* is the value assigned to the attribute:
 
@@ -101,7 +103,8 @@ would fail validation if the setting's value is ``Undefined``.
 
 .. _automated_setting_type_hint:
 
-**Type hint**
+Type hint
+.........
 
 A type hint is defined by a standard Python type annotation:
 
@@ -138,12 +141,61 @@ value does not correspond to the type hint.
 
 .. _automated_setting_validators:
 
-**Validators**
+Validators
+..........
 
 Validators is a collection of callables which validate the value of the setting.
-The interface of the callable is defined in :meth:`Validator.__call__ <concrete_settings.validators.Validator.__call__>`.
+The interface of the callable is defined in :meth:`Validator.__call__() <concrete_settings.validators.Validator.__call__>`.
+If validation fails, a validator raises
+:class:`SettingsValidationError <concrete_settings.exceptions.SettingsValidationError>`
+with failure details.
 
-If validation fails, a validator should raise :class:`SettingsValidationError <concrete_settings.exceptions.SettingsValidationError>` with failure details.
+The mandatory validators, which are applied to every Setting in Settings
+are defined
+in :attr:`Settings.mandatory_validators <concrete_settings.Settings.mandatory_validators>` tuple.
+The default validators are applied to a Setting
+that has no validators of its own.
+They are defined in
+:attr:`Settings.default_validators <concrete_settings.Settings.default_validators>`.
+:class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>` is
+the only validator in the base ``Settings.default_validators``.
+
+.. testsetup::
+
+   from concrete_settings.validators import ValueTypeValidator
+
+   assert len(Settings.default_validators) == 1, 'Default validators is expected to have a single validator'
+   assert isinstance(Settings.default_validators[0], ValueTypeValidator)
+
+Note, that both lists are inherited by standard Python class inheritance rules.
+For example, to extend ``default_validators`` in a derived class, use
+concatenation. In the following example
+:class:`RequiredValidator <concrete_settings.validators.RequiredValidator>`
+is added to ``default_validators`` to prevent any
+:class:`Undefined <concrete_settings.types.Undefined>` values appearing
+in the validated settings:
+
+.. testcode:: advanced-default-validators-undefined
+
+   from concrete_settings import Settings, Undefined
+   from concrete_settings.validators import RequiredValidator
+
+   class AppSettingsOfStrings(Settings):
+       default_validators = Settings.default_validators + (RequiredValidator(), )
+
+       ADMIN_NAME: str = Undefined
+
+   app_settings = AppSettingsOfStrings()
+   print(app_settings.is_valid())
+   print(app_settings.errors)
+
+Output:
+
+.. testoutput:: advanced-default-validators-undefined
+
+   False
+   {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value.']}
+
 
 .. _automated_setting_behaviors:
 

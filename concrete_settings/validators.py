@@ -30,7 +30,7 @@ class Validator(metaclass=abc.ABCMeta):
 
 
 class RequiredValidator(Validator):
-    def __init__(self, message):
+    def __init__(self, message: str = 'Setting `{name}` is required to have a value.'):
         self.message = message
 
     def __call__(self, value, *, name, owner, **ignore):
@@ -46,6 +46,9 @@ class ValueTypeValidator(Validator):
         self.type_hint = type_hint
 
     def __call__(self, value, *, name, setting, **ignore):
+        if value is Undefined:
+            return
+
         type_hint = setting.type_hint if self.type_hint is None else self.type_hint
 
         try:
