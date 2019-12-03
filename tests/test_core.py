@@ -38,7 +38,7 @@ def test_import_in_unsupported_python_fails(mocker):
 def test_setting_ctor(v_int):
     validators = (lambda x: x,)
     s = Setting(
-        v_int, type_hint=int, validators=validators, doc="docstring", behaviors=[]
+        v_int, type_hint=int, validators=validators, doc="docstring", behaviors=()
     )
 
     assert s.value == v_int

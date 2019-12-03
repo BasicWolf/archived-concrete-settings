@@ -83,7 +83,13 @@ deprecated
 .. autoclass:: concrete_settings.contrib.behaviors.deprecated
 
 
+required
+........
+
+.. autoclass:: concrete_settings.contrib.behaviors.required
+
 .. _api_sources:
+
 
 Sources
 -------

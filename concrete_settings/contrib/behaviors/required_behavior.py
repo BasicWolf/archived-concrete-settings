@@ -3,7 +3,7 @@ from concrete_settings.validators import RequiredValidator
 
 
 class required(SettingBehavior):
-    def __init__(self, message='Setting `{name}` is required to have a value.'):
+    def __init__(self, message: str = None):
         self.message = message
 
     def inject(self, setting):

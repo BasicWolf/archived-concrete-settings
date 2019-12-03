@@ -7,6 +7,8 @@ dist: bionic
 python:
   - '3.6'
   - '3.7'
+  - '3.8'
+  - 'pypy'
 
 addons:
   apt:
@@ -20,8 +22,7 @@ install:
 script:
   - make lint
   - make test
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.7' ]]; then make docs; fi
-
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.8' ]]; then make docs; fi
 
 
 deploy:
@@ -32,4 +33,4 @@ deploy:
   github_token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
   on:
     branch: master
-    python: '3.7'
+    python: '3.8'

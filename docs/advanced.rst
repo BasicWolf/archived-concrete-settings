@@ -1,7 +1,7 @@
 Advanced topics
 ===============
 
-In this chapter we explore the Concrete Settings in-depth.
+In this chapter we explore the ConcreteSettings in-depth.
 
 .. contents::
    :local:
@@ -33,7 +33,7 @@ In this section we discuss this process, i.e. how
 :class:`Setting <concrete_settings.Setting>`
 descriptor instance.
 
-Concrete Settings has to find
+ConcreteSettings has to find
 a setting attribute :ref:`name <automated_setting_name>`,
 :ref:`default value <automated_setting_default_value>`
 and :ref:`type hint <automated_setting_type_hint>`,
@@ -60,6 +60,8 @@ and :ref:`documentation <automated_setting_documentation>`
 Name
 ....
 
+**TODO**: @setting
+
 Every attribute with **name** written in upper case
 is considered a potential Setting.
 The exceptions are attributes starting with underscore:
@@ -71,10 +73,13 @@ The exceptions are attributes starting with underscore:
        _DEBUG = True  # not a setting
        DEBUG = True   ### considered a setting
 
+
 .. _automated_setting_default_value:
 
 Default value
 .............
+
+**TODO**: @setting
 
 The *default value* is the value assigned to the attribute:
 
@@ -105,6 +110,8 @@ would fail validation if the setting's value is ``Undefined``.
 
 Type hint
 .........
+
+**TODO**: @setting
 
 A type hint is defined by a standard Python type annotation:
 
@@ -144,17 +151,20 @@ value does not correspond to the type hint.
 Validators
 ..........
 
+**TODO**: @setting
+
 Validators is a collection of callables which validate the value of the setting.
 The interface of the callable is defined in :meth:`Validator.__call__() <concrete_settings.validators.Validator.__call__>`.
 If validation fails, a validator raises
 :class:`SettingsValidationError <concrete_settings.exceptions.SettingsValidationError>`
 with failure details.
+Individual Setting validators are supplied in ``validators`` argument of an explicit Setting declaration.
+Also some :ref:`behaviors <automated_setting_behaviors>` add certain validators to a setting.
 
-The mandatory validators, which are applied to every Setting in Settings
-are defined
+The *mandatory validators* are applied to every Setting in Settings.
+They are defined
 in :attr:`Settings.mandatory_validators <concrete_settings.Settings.mandatory_validators>` tuple.
-The default validators are applied to a Setting
-that has no validators of its own.
+The *default validators* are applied to a Setting that has no validators of its own.
 They are defined in
 :attr:`Settings.default_validators <concrete_settings.Settings.default_validators>`.
 :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>` is
@@ -180,12 +190,12 @@ in the validated settings:
    from concrete_settings import Settings, Undefined
    from concrete_settings.validators import RequiredValidator
 
-   class AppSettingsOfStrings(Settings):
+   class AppSettings(Settings):
        default_validators = Settings.default_validators + (RequiredValidator(), )
 
        ADMIN_NAME: str = Undefined
 
-   app_settings = AppSettingsOfStrings()
+   app_settings = AppSettings()
    print(app_settings.is_valid())
    print(app_settings.errors)
 
@@ -194,16 +204,77 @@ Output:
 .. testoutput:: advanced-default-validators-undefined
 
    False
-   {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value.']}
+   {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value. Current value is `Undefined`']}
 
 
 .. _automated_setting_behaviors:
 
-**Behaviors**
+Behaviors
+.........
+
+*Setting Behaviors* allow executing some logic on different stages of a Setting lifecycle.
+one has to bind a
+:class:`SettingBehavior <concrete_settings.behaviors.SettingBehavior>` to it.
+
+In addition to declaring behaviors in a Setting
+:class:`constructor <concrete_settings.Setting>`,
+ConcreteSettings utilizes matrix multiplication ``@`` (:meth:`object.__rmatmul__`) to
+add a behavior to a Setting. Let's declare the ``ADMIN_NAME`` setting from the
+example above as :class:`required <concrete_settings.contrib.behaviors.required>`:
+
+.. testcode::
+
+   from concrete_settings import Settings, Undefined
+   from concrete_settings.contrib.behaviors import required
+
+   class AppSettings(Settings):
+       ADMIN_NAME: str = Undefined @required
+
+The equivalent explicit form is:
+
+.. testcode::
+
+   from concrete_settings import Setting, Settings, Undefined
+   from concrete_settings.contrib.behaviors import required
+
+   class AppSettings(Settings):
+       ADMIN_NAME: str = Setting(Undefined, behaviors=(required, ))
+
+Behaviors can also decorate the property-setting getters:
+
+.. testcode::
+
+   from concrete_settings import Settings, Undefined, setting
+   from concrete_settings.contrib.behaviors import required
+
+   class AppSettings(Settings):
+       @required
+       @setting
+       def ADMIN_NAME(self) -> str:
+           return Undefined
+
+Validating any of the previous examples as
+
+.. testcode::
+
+   app_settings = AppSettings()
+   print(app_settings.is_valid())
+   print(app_settings.errors)
+
+yields the following output:
+
+.. testoutput::
+
+   False
+   {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value. Current value is `Undefined`']}
+
 
 .. _automated_setting_documentation:
 
-**Documentation**
+Documentation
+.............
+
+**TODO**: @setting
 
 Update strategies
 -----------------
@@ -224,7 +295,7 @@ Think of a list setting, which contains administrators' emails, e.g.:
 
 
 What if you want to **append** the emails defined in sources, instead
-of overwriting them? Concrete Settings provides a concept of
+of overwriting them? ConcreteSettings provides a concept of
 :mod:`update strategies <concrete_settings.sources.strategies>`
 for such cases:
 
