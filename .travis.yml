@@ -21,7 +21,7 @@ install:
 script:
   - make lint
   - make test
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.8' ]]; then make docs; fi
+  - make docs
 
 
 deploy:

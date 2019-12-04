@@ -16,8 +16,8 @@ Automated Setting creation
 --------------------------
 
 Quickstart introduced the concept of automated setting creation.
-Recall, that a setting object is created out of an implicit
-definition, such as:
+Recall, that a setting object can (and rather should) be created
+out of a specially-formed definition, such as:
 
 .. testcode::
 
@@ -40,7 +40,6 @@ and :ref:`type hint <automated_setting_type_hint>`,
 its :ref:`validators <automated_setting_validators>`,
 :ref:`behaviors <automated_setting_behaviors>`
 and :ref:`documentation <automated_setting_documentation>`
-
 
 .. uml::
    :align: center
@@ -240,7 +239,7 @@ The equivalent explicit form is:
    class AppSettings(Settings):
        ADMIN_NAME: str = Setting(Undefined, behaviors=(required, ))
 
-Behaviors can also decorate the property-setting getters:
+Behaviors can also decorate property-settings:
 
 .. testcode::
 
@@ -253,7 +252,7 @@ Behaviors can also decorate the property-setting getters:
        def ADMIN_NAME(self) -> str:
            return Undefined
 
-Validating any of the previous examples as
+Validating any of the previous examples
 
 .. testcode::
 
@@ -274,7 +273,30 @@ yields the following output:
 Documentation
 .............
 
-**TODO**: @setting
+Last, yet one of the most important things - documentation.
+No matter how well you name a setting, its purpose, usage
+and background should be carefully documented.
+One way to keep the documentation up-to-date is to
+do it in the code.
+
+ConcreteSettings uses `Sphinx <https://www.sphinx-doc.org/en/master/>`_
+to extract settings' docstrings. A docstring is written above the
+setting definition in a ``#:`` comment block:
+
+.. code::
+
+   from concrete_settings import Setting, Settings
+
+   class AppSettings(Settings):
+
+       #: This is a multiline
+       #: docstring explaining what
+       #: ADMIN_NAME is and how to use it.
+       ADMIN_NAME: str = 'Alex'
+
+   print(AppSettings.ADMIN_NAME.__doc__)
+
+Note, that extracting a docstring **works only if is located in a readable file!**
 
 Update strategies
 -----------------
