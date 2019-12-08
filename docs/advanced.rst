@@ -10,10 +10,10 @@ In this chapter we explore the ConcreteSettings in-depth.
 
    from concrete_settings import Settings
 
-.. _automated_setting:
+.. _setting_declration:
 
-Automated Setting creation
---------------------------
+Setting declaration
+-------------------
 
 Quickstart introduced the concept of automated setting creation.
 Recall, that a setting object can (and rather should) be created
@@ -34,12 +34,12 @@ In this section we discuss this process, i.e. how
 descriptor instance.
 
 ConcreteSettings has to find
-a setting attribute :ref:`name <automated_setting_name>`,
-:ref:`default value <automated_setting_default_value>`
-and :ref:`type hint <automated_setting_type_hint>`,
-its :ref:`validators <automated_setting_validators>`,
-:ref:`behaviors <automated_setting_behaviors>`
-and :ref:`documentation <automated_setting_documentation>`
+a setting attribute :ref:`name <setting_declration_name>`,
+:ref:`default value <setting_declration_default_value>`
+and :ref:`type hint <setting_declration_type_hint>`,
+its :ref:`validators <setting_declration_validators>`,
+:ref:`behaviors <setting_declration_behaviors>`
+and :ref:`documentation <setting_declration_documentation>`
 
 .. uml::
    :align: center
@@ -54,26 +54,51 @@ and :ref:`documentation <automated_setting_documentation>`
    note left of (Setting) : NAME
    @enduml
 
-.. _automated_setting_name:
+.. _setting_declration_name:
 
 Name
 ....
-
-**TODO**: @setting
 
 Every attribute with **name** written in upper case
 is considered a potential Setting.
 The exceptions are attributes starting with underscore:
 
-.. testcode::
+.. testcode:: setting-declaration-name
+
+   from concrete_settings import Settings
 
    class AppSettings(Settings):
        debug = True   # not a setting
        _DEBUG = True  # not a setting
        DEBUG = True   ### considered a setting
 
+.. testcleanup:: setting-declaration-name
 
-.. _automated_setting_default_value:
+   from concrete_settings import Setting
+   assert not isinstance(AppSettings.debug, Setting)
+   assert not isinstance(AppSettings._DEBUG, Setting)
+   assert isinstance(AppSettings.DEBUG, Setting)
+
+Class method is **not** automatically converted
+to a property-setting even if its name is
+in upper case.
+
+** TODO **: It must be decorated with
+
+.. testcode:: setting-declaration-name-property-setting
+
+   from concrete_settings import Settings
+
+   class AppSettings(Settings):
+       def DEBUG(self):  # not a setting
+           return True
+
+.. testcleanup:: setting-declaration-name-property-setting
+
+   from concrete_settings import Setting
+   assert not isinstance(AppSettings.DEBUG, Setting)
+
+.. _setting_declration_default_value:
 
 Default value
 .............
@@ -105,7 +130,7 @@ value:
 :class:`RequiredValidator <concrete_settings.validators.RequiredValidator>`
 would fail validation if the setting's value is ``Undefined``.
 
-.. _automated_setting_type_hint:
+.. _setting_declration_type_hint:
 
 Type hint
 .........
@@ -145,7 +170,7 @@ Type annotation is intended for validators, such as
 It fails validation if the type of the setting's
 value does not correspond to the type hint.
 
-.. _automated_setting_validators:
+.. _setting_declration_validators:
 
 Validators
 ..........
@@ -158,7 +183,7 @@ If validation fails, a validator raises
 :class:`SettingsValidationError <concrete_settings.exceptions.SettingsValidationError>`
 with failure details.
 Individual Setting validators are supplied in ``validators`` argument of an explicit Setting declaration.
-Also some :ref:`behaviors <automated_setting_behaviors>` add certain validators to a setting.
+Also some :ref:`behaviors <setting_declration_behaviors>` add certain validators to a setting.
 
 The *mandatory validators* are applied to every Setting in Settings.
 They are defined
@@ -206,7 +231,7 @@ Output:
    {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value. Current value is `Undefined`']}
 
 
-.. _automated_setting_behaviors:
+.. _setting_declration_behaviors:
 
 Behaviors
 .........
@@ -268,12 +293,12 @@ yields the following output:
    {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value. Current value is `Undefined`']}
 
 
-.. _automated_setting_documentation:
+.. _setting_declration_documentation:
 
 Documentation
 .............
 
-Last, yet one of the most important things - documentation.
+Last but not the least - documentation.
 No matter how well you name a setting, its purpose, usage
 and background should be carefully documented.
 One way to keep the documentation up-to-date is to
@@ -285,7 +310,9 @@ setting definition in a ``#:`` comment block:
 
 .. code::
 
-   from concrete_settings import Setting, Settings
+   # test.py
+
+   from concrete_settings import Settings
 
    class AppSettings(Settings):
 
@@ -296,7 +323,54 @@ setting definition in a ``#:`` comment block:
 
    print(AppSettings.ADMIN_NAME.__doc__)
 
-Note, that extracting a docstring **works only if is located in a readable file!**
+Output:
+
+.. code-block:: none
+
+   This is a multiline
+   docstring explaining what
+   ADMIN_NAME is and how to use it.
+
+Note, that extracting a docstring **works only if the settings are located in a readable file!**
+Otherwise documentation has to be specified as an argument in :class:`Setting <concrete_settings.Setting>`
+constructor:
+
+.. testcode::
+
+   from concrete_settings import Settings
+
+   class AppSettings(Settings):
+
+       ADMIN_NAME: str = Setting(
+           'Alex',
+           doc='This is a multiline\n'
+               'docstring explaining what\n'
+               'ADMIN_NAME is and how to use it.'
+       )
+
+
+Property-settings are documented via standard Python function docstrings:
+
+.. testcode:: advanced-documentation-property-setting
+
+   # test.py
+
+   from concrete_settings import Settings, setting
+
+   class AppSettings(Settings):
+
+       @setting
+       def ADMIN_NAME(self) -> str:
+           '''This documents ADMIN_NAME.'''
+           return 'Alex'
+
+   print(AppSettings.ADMIN_NAME.__doc__)
+
+Output:
+
+.. testoutput:: advanced-documentation-property-setting
+
+   This documents ADMIN_NAME.
 
 Update strategies
 -----------------

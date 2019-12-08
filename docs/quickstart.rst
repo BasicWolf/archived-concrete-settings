@@ -61,7 +61,7 @@ In a nutshell, if a field looks like a setting, but is not explicitly
 defined as an instance of class :class:`Setting <concrete_settings.Setting>`,
 a corresponding object is created instead.
 
-:ref:`Later in the documentation <automated_setting>` the setting creation
+:ref:`Later in the documentation <setting_declration>` the setting creation
 rules are explored in-depth.
 For now please accept that ConcreteSettings' preferred way of declaring
 *basic* settings is by omitting the ``Setting(...)`` call at all.
