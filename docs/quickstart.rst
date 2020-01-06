@@ -343,7 +343,7 @@ or by using ``@`` operator: ``value @ behavior0 @ behavior1 @ ...``
 
 
 
-Nested Settings
+Nested settings
 ---------------
 
 Nesting is a nice and simple way to logically group and isolate settings.
@@ -476,7 +476,7 @@ must be explicitly called for each of the base classes:
    class AppSettings(
        DBSettings,
        CacheSettings,
-       prefix('LOG')(LoggingSettings)
+       LoggingSettings
    ):
        def validate():
            DBSettings.validate(self)
