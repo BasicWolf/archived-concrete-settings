@@ -82,28 +82,30 @@ The exceptions are attributes starting with underscore:
 Class method is **not** automatically converted
 to a property-setting even if its name is
 in upper case.
-
-** TODO **: It must be decorated with
+It must be decorated as :class:`setting <concrete_settings.setting>`:
 
 .. testcode:: setting-declaration-name-property-setting
 
-   from concrete_settings import Settings
+   from concrete_settings import Settings, setting
 
    class AppSettings(Settings):
-       def DEBUG(self):  # not a setting
-           return True
+       def ADMIN(self):  # not a setting
+           return 'Alex'
+
+       @setting
+       def DEBUG(self):
+           return False
 
 .. testcleanup:: setting-declaration-name-property-setting
 
    from concrete_settings import Setting
-   assert not isinstance(AppSettings.DEBUG, Setting)
+   assert not isinstance(AppSettings.ADMIN, Setting)
+   assert isinstance(AppSettings.DEBUG, Setting)
 
 .. _setting_declration_default_value:
 
 Default value
 .............
-
-**TODO**: @setting
 
 The *default value* is the value assigned to the attribute:
 
@@ -130,12 +132,34 @@ value:
 :class:`RequiredValidator <concrete_settings.validators.RequiredValidator>`
 would fail validation if the setting's value is ``Undefined``.
 
+It does not make much a sense to have a default value for
+a property-setting since the value is computed every
+time a setting is read.
+To prevent misuse, passing a ``value`` argument raises an :class:`AssertionError`
+when ``assert`` statements are available.
+
+.. testcode::
+
+   from concrete_settings import Settings, setting
+
+   class AppSettings(Settings):
+       LOG_LEVEL = 'INFO'
+
+       @setting
+       def DEBUG(self) -> bool:
+           return self.LOG_LEVEL == 'DEBUG'
+
+   app_settings = AppSettings()
+   print(app_settings.DEBUG)
+
+.. testoutput::
+
+   False
+
 .. _setting_declration_type_hint:
 
 Type hint
 .........
-
-**TODO**: @setting
 
 A type hint is defined by a standard Python type annotation:
 
@@ -163,7 +187,39 @@ in order to avoid invalid type detections**:
 
    class AppSettings(Settings):
        DEBUG: bool = True      # default value `True`, type `bool`
-       MAX_SPEED: int  = 300   # default value `300`, type `int`
+       MAX_SPEED: float  = 300   # default value `300`, type `float`
+
+Property-settings' type hint is read from the return type annotation.
+If no annotation is provided, the type hint is set to :data:`typing.Any`:
+
+.. testsetup:: type-hint-property-setting
+
+   from concrete_settings import Settings, setting
+
+.. testcode:: type-hint-property-setting
+
+   class AppSettings(Settings):
+       @setting
+       def DEBUG(self) -> bool:
+           return True
+
+       @setting
+       def MAX_SPEED(self):
+           return 300
+
+   print(AppSettings.DEBUG.type_hint)
+   print(AppSettings.MAX_SPEED.type_hint)
+
+Output:
+
+.. testoutput:: type-hint-property-setting
+
+   <class 'bool'>
+   typing.Any
+
+.. testcleanup:: type-hint-property-setting
+
+   assert AppSettings.DEBUG.type_hint is bool
 
 Type annotation is intended for validators, such as
 :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`.

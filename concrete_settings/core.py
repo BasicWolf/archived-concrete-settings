@@ -77,12 +77,28 @@ class Setting:
 
 class PropertySetting(Setting):
     def __init__(self, *args, **kwargs):
-        if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
-            super().__init__()
-            self.__call__(args[0])
+        decorating_without_arguments = (
+            len(args) == 1
+            and len(kwargs) == 0
+            and callable(args[0])
+        )
+        if decorating_without_arguments:
+            self._init_decorator_without_arguments(args[0])
         else:
-            super().__init__(*args, **kwargs)
-            self.fget = None
+            self._init_decorator_with_arguments(*args, **kwargs)
+
+    def _init_decorator_without_arguments(self, fget: Callable):
+        super().__init__()
+        self.__call__(fget)
+
+    def _init_decorator_with_arguments(self, *args, **kwargs):
+        assert len(args) == 0, 'No positional arguments should be passed to ' \
+            f'{self.__class__.__name__}.__init__()'
+        assert 'value' not in kwargs, '"value" argument should not be passed to ' \
+            f'{self.__class__.__name__}.__init__()'
+
+        super().__init__(value=Undefined, **kwargs)
+        self.fget = None
 
     def __call__(self, fget: Callable):
         self.fget = fget
