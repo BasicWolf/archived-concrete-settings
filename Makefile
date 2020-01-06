@@ -19,12 +19,14 @@ tox:
 	tox
 
 
-lint: flake8
+lint: flake8 safety
 
 
 flake8:
 	flake8 --config=.flake8rc concrete_settings tests
 
+safety:
+	safety check
 
 docs: doctest
 	$(MAKE) html -C docs
