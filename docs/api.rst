@@ -21,8 +21,10 @@ Settings
 
    .. attribute:: mandatory_validators
 
-.. autoclass:: concrete_settings.setting
+.. autoclass:: concrete_settings.core.PropertySetting
    :members:
+
+.. autoclass:: concrete_settings.setting
 
 .. autoclass:: concrete_settings.prefix
 
