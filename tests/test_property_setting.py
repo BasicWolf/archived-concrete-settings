@@ -92,7 +92,7 @@ def test_property_setting_cannot_be_set():
         S().V = 10
 
 
-def test_setting_is_validated():
+def test_property_setting_is_validated():
     validate_called = False
 
     def validator(value, **_):
@@ -100,7 +100,9 @@ def test_setting_is_validated():
         validate_called = True
 
     class S(Settings):
-        T = Setting(10, validators=(validator,))
+        @setting(validators=(validator,))
+        def DEBUG(self):
+            return True
 
     assert S().is_valid()
     assert validate_called

@@ -152,6 +152,8 @@ when ``assert`` statements are available.
    app_settings = AppSettings()
    print(app_settings.DEBUG)
 
+Output:
+
 .. testoutput::
 
    False
@@ -177,8 +179,8 @@ If the type is not recognized, the type hint is set to :data:`typing.Any`.
 .. testcode::
 
    class AppSettings(Settings):
-       DEBUG = True  # default value `True`, type `bool`
-       MAX_SPEED = 300   # default value `300`, type `int`
+       DEBUG = True     # default value `True`, type `bool`
+       MAX_SPEED = 300  # default value `300`, type `int`
 
 **It is recommended to explicitly annotate a setting with the intended type,
 in order to avoid invalid type detections**:
@@ -186,8 +188,8 @@ in order to avoid invalid type detections**:
 .. testcode::
 
    class AppSettings(Settings):
-       DEBUG: bool = True      # default value `True`, type `bool`
-       MAX_SPEED: float  = 300   # default value `300`, type `float`
+       DEBUG: bool = True       # default value `True`, type `bool`
+       MAX_SPEED: float  = 300  # default value `300`, type `float`
 
 Property-settings' type hint is read from the return type annotation.
 If no annotation is provided, the type hint is set to :data:`typing.Any`:
@@ -231,7 +233,6 @@ value does not correspond to the type hint.
 Validators
 ..........
 
-**TODO**: @setting
 
 Validators is a collection of callables which validate the value of the setting.
 The interface of the callable is defined in :meth:`Validator.__call__() <concrete_settings.validators.Validator.__call__>`.
@@ -286,15 +287,36 @@ Output:
    False
    {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value. Current value is `Undefined`']}
 
+Property-settings are validated in the same fashion:
+
+.. testcode:: advanced-default-validators-undefined
+
+   from concrete_settings import Settings, setting
+
+   class AppSettings(Settings):
+
+       @setting
+       def ADMIN_NAME(self) -> str:
+           return 10
+
+   app_settings = AppSettings()
+   print(app_settings.is_valid())
+   print(app_settings.errors)
+
+Output:
+
+.. testoutput:: advanced-default-validators-undefined
+
+   False
+   {'ADMIN_NAME': ["Expected value of type `<class 'str'>` got value of type `<class 'int'>`"]}
 
 .. _setting_declration_behaviors:
 
 Behaviors
 .........
 
-*Setting Behaviors* allow executing some logic on different stages of a Setting lifecycle.
-one has to bind a
-:class:`SettingBehavior <concrete_settings.behaviors.SettingBehavior>` to it.
+:class:`Setting Behaviors <concrete_settings.behaviors.SettingBehavior>`
+allow executing some logic on different stages of a Setting lifecycle.
 
 In addition to declaring behaviors in a Setting
 :class:`constructor <concrete_settings.Setting>`,
@@ -308,7 +330,7 @@ example above as :class:`required <concrete_settings.contrib.behaviors.required>
    from concrete_settings.contrib.behaviors import required
 
    class AppSettings(Settings):
-       ADMIN_NAME: str = Undefined @required
+       ADMIN_NAME: str = Undefined @ required
 
 The equivalent explicit form is:
 
@@ -319,6 +341,17 @@ The equivalent explicit form is:
 
    class AppSettings(Settings):
        ADMIN_NAME: str = Setting(Undefined, behaviors=(required, ))
+
+Multiple behaviors can be chained via ``@`` operator:
+
+.. testcode::
+
+   from concrete_settings import Settings, Undefined
+   from concrete_settings.contrib.behaviors import required, deprecated
+
+   class AppSettings(Settings):
+       ADMIN_NAME: str = Undefined @ required @ deprecated
+
 
 Behaviors can also decorate property-settings:
 
@@ -333,7 +366,7 @@ Behaviors can also decorate property-settings:
        def ADMIN_NAME(self) -> str:
            return Undefined
 
-Validating any of the previous examples
+Validating the example above
 
 .. testcode::
 

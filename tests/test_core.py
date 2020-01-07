@@ -143,6 +143,20 @@ def test_validate_smoke():
     s.is_valid()
 
 
+def test_setting_is_validated():
+    validate_called = False
+
+    def validator(value, **_):
+        nonlocal validate_called
+        validate_called = True
+
+    class S(Settings):
+        T = Setting(10, validators=(validator,))
+
+    assert S().is_valid()
+    assert validate_called
+
+
 #
 # ValueTypeValidator
 #
