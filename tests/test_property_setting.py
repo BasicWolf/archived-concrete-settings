@@ -4,7 +4,6 @@ import pytest
 
 from concrete_settings import (
     Settings,
-    Setting,
     setting,
 )
 
