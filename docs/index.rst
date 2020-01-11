@@ -2,7 +2,7 @@ Welcome to ConcreteSettings
 ===========================
 
 **WARNING!** ConcreteSettings is currently under development!
-There is no stable, not even an alpha version available at the moment.
+There is no stable version available at the moment.
 
 ConcreteSettings is a Python library which facilitates startup
 configuration management in applications.
@@ -28,9 +28,9 @@ While the end-user could set the values in a YAML file:
 
    # settings.yml
 
-   DEBUG: off
+   DEBUG: false
 
-Concrete Settings aims to provide a conveniet way to
+ConcreteSettings aims to provide a conveniet way to
 define and use application startup settings
 for developers and an end-users:
 
@@ -91,10 +91,19 @@ Sounds interesting?
 Then you are very welcome to ConcreteSettings documentation!
 
 
+Installation
+============
+
+TODO
+
+Documentation
+=============
+
 .. toctree::
    :maxdepth: 2
 
-   quickstart
+   basic_concepts
+   startup
    advanced
 
 API Reference

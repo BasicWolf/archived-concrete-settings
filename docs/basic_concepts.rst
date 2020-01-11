@@ -1,5 +1,5 @@
-Quickstart
-==========
+Basic concepts
+##############
 
 In this chapter we cover the essentials of ConcreteSettings.
 
@@ -17,7 +17,7 @@ A setting is defined by
 The catch is that one does not have
 to declare each setting explicitly.
 
-Let's take a look is a small example, where we declare ``AppSettings``
+Let's take a look at a small example, where we declare ``AppSettings``
 class with a single boolean-type setting named ``DEBUG``:
 
 .. testcode::
@@ -33,7 +33,7 @@ class with a single boolean-type setting named ``DEBUG``:
            doc="Turns debug mode on/off",
        )
 
-And here is the short version which produces the same class as the one above:
+And here is the short version which produces the same class as above:
 
 .. testcode::
 
@@ -165,7 +165,7 @@ For example, to update the settings from a JSON file:
 
 .. testsetup:: quickstart-json-source
 
-   with open('/tmp/cs-quickstart-settings.json', 'w') as f:
+   with open('/tmp/quickstart-settings.json', 'w') as f:
        f.write('''
            {
               "ADMIN_EMAIL": "alex@my-super-app.io",
@@ -187,7 +187,7 @@ For example, to update the settings from a JSON file:
        ]
 
    app_settings = AppSettings()
-   app_settings.update('/tmp/cs-quickstart-settings.json')
+   app_settings.update('/tmp/quickstart-settings.json')
 
    print(app_settings.ADMIN_EMAIL)
 
@@ -200,7 +200,7 @@ Output:
 .. testcleanup:: quickstart-json-source
 
    import os
-   os.remove('/tmp/cs-quickstart-settings.json')
+   os.remove('/tmp/quickstart-settings.json')
 
 
 .. _quickstart_validation:
@@ -325,7 +325,7 @@ The explicit equivalent definition is:
        MAX_SPEED: int = Setting(30, behaviors=(deprecated, ))
 
 If Python warnings are enabled (e.g. ``python -Wdefault``), you would
-get the warning in stderr:
+get a warning in stderr:
 
 
 .. code-block:: none
@@ -421,7 +421,7 @@ Combining settings
 ------------------
 
 Another way of putting settings together is by using Python's
-multiple-base-classes inheritance mechanism.
+multi-inheritance mechanism.
 It can be useful, when you have to mimic a legacy settings
 module interface, but want to keep settings logic separated.
 
@@ -478,20 +478,17 @@ must be explicitly called for each of the base classes:
        CacheSettings,
        LoggingSettings
    ):
-       def validate():
+       def validate(self):
+           super().validate()
            DBSettings.validate(self)
            CacheSettings.validate(self)
            LoggingSettings.validate(self)
-
-
-Start me up
------------
 
 
 
 What's next?
 ------------
 
-
-
-TODO
+Now that you know the basics, why not to try adding
+ConcreteSettings to your application?
+A minimal user-friendly setup is shown in :ref:`startup` section.
