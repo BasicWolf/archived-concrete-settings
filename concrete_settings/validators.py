@@ -45,8 +45,6 @@ class RequiredValidator(Validator):
 
 
 class ValueTypeValidator(Validator):
-    __slots__ = ('type_hint', 'strict')
-
     def __init__(self, type_hint=None):
         self.type_hint = type_hint
 
