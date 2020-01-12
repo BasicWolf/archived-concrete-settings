@@ -1,5 +1,5 @@
-import tempfile
 import random
+import tempfile
 
 import factory
 import pytest
@@ -25,13 +25,13 @@ def v_str():
 
 @pytest.fixture
 def mock_module(mocker):
-    import imp
     import sys
+    import types
 
     tmp_files = []
 
     def _make_module(name, code, path=None):
-        mod = imp.new_module(name)
+        mod = types.ModuleType(name)
 
         if path:
             mod.__file__ = path

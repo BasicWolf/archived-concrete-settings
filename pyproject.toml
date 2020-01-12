@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "concrete-settings"
+version = "0.1.0"
+description = "TODO"
+
+license = "MIT"
+
+authors = [
+    "Zaur Nasibov <comments@znasibov.info>"
+]
+
+readme = 'README.rst'
+
+repository = "https://github.com/basicwolf/concrete-settings"
+# homepage = "https://github.com/python-poetry/poetry"
+
+keywords = ['settings', 'configuration']
+
+[tool.poetry.dependencies]
+python = "^3.6"
+toml = "^0.9"
+sphinx = "^2.3"
+pyyaml = { version = "^5.3", optional = true }
+
+[tool.poetry.dev-dependencies]
+pudb = "*"
+factory_boy = "*"
+pytest = "*"
+pytest-mock = "*"
+pytest-pudb = "*"
+tox = "*"
+black = "^18.9b0"
+flake8 = "*"
+flake8-bugbear = "*"
+coverage = "*"
+pytest-cov = "*"
+setuptools = "^41.0"
+sphinx = "*"
+typeguard = "*"
+pyfakefs = "*"
+pyyaml = "*"
+#concrete-settings = {path = ".",editable = true}
+sphinxcontrib-plantuml = "*"
+sphinx-rtd-theme = "*"
+safety = "*"

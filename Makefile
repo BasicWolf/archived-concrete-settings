@@ -1,5 +1,3 @@
-PIPENV=PYTHONPATH=${PYTHONPATH}:${PWD} pipenv
-
 ifdef TESTS
 	PYTEST_ARGS = -k $(TESTS)
 else
@@ -13,7 +11,7 @@ all:
 	@echo "lint ....................... - run linterns"
 
 test:
-	${PIPENV} run pytest -s $(PYTEST_ARGS)
+	poetry run pytest -s $(PYTEST_ARGS)
 
 tox:
 	tox
@@ -23,10 +21,10 @@ lint: flake8 safety
 
 
 flake8:
-	flake8 --config=.flake8rc concrete_settings tests
+	poetry run flake8 --config=.flake8rc concrete_settings tests
 
 safety:
-	safety check
+	poetry run safety check
 
 docs: doctest
 	$(MAKE) html -C docs
