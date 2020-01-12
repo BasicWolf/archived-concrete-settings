@@ -39,7 +39,6 @@ sphinx = "*"
 typeguard = "*"
 pyfakefs = "*"
 pyyaml = "*"
-#concrete-settings = {path = ".",editable = true}
 sphinxcontrib-plantuml = "*"
 sphinx-rtd-theme = "*"
 safety = "*"

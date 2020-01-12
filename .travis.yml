@@ -15,14 +15,16 @@ addons:
     packages:
       - plantuml
 
+before_install:
+- pip install poetry
+
 install:
-  - pip install -r requirements.test.txt
+- poetry install
 
 script:
   - make lint
   - make test
   - make docs
-
 
 deploy:
   provider: pages
