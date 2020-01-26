@@ -49,3 +49,12 @@ class GuessSettingType:
             if isinstance(val, t):
                 return t
         return Any
+
+
+def type_hints_equal(hint1, hint2):
+    if hint1 == hint2:
+        return True
+
+    h1 = getattr(hint1, '__origin__', hint1)
+    h2 = getattr(hint2, '__origin__', hint2)
+    return h1 == h2
