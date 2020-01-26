@@ -3,14 +3,14 @@ import logging
 import re
 import types
 from collections import defaultdict
-from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple
+from typing import Any, Callable, Dict, Type, Sequence, Union, List, Tuple, Generator
 
 from .behaviors import Behaviors, override
 from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
 from .sources import get_source, TAnySource, Source
 from .sources.strategies import default as default_update_strategy
-from .types import Undefined, GuessSettingType
+from .types import Undefined, GuessSettingType, type_hints_equal
 from .validators import ValueTypeValidator
 
 logger = logging.getLogger(__name__)
@@ -78,9 +78,7 @@ class Setting:
 class PropertySetting(Setting):
     def __init__(self, *args, **kwargs):
         decorating_without_arguments = (
-            len(args) == 1
-            and len(kwargs) == 0
-            and callable(args[0])
+            len(args) == 1 and len(kwargs) == 0 and callable(args[0])
         )
         if decorating_without_arguments:
             self._init_decorator_without_arguments(args[0])
@@ -92,10 +90,14 @@ class PropertySetting(Setting):
         self.__call__(fget)
 
     def _init_decorator_with_arguments(self, *args, **kwargs):
-        assert len(args) == 0, 'No positional arguments should be passed to ' \
+        assert len(args) == 0, (
+            'No positional arguments should be passed to '
             f'{self.__class__.__name__}.__init__()'
-        assert 'value' not in kwargs, '"value" argument should not be passed to ' \
+        )
+        assert 'value' not in kwargs, (
+            '"value" argument should not be passed to '
             f'{self.__class__.__name__}.__init__()'
+        )
 
         super().__init__(value=Undefined, **kwargs)
         self.fget = None
@@ -136,13 +138,13 @@ class PropertySetting(Setting):
 
 
 class SettingsMeta(type):
-    def __new__(mcs, name, bases, class_dict):
-        new_dict = mcs.class_dict_to_settings(class_dict)
+    def __new__(mcs, name: str, bases: List[type], class_dict: Dict):
+        new_dict = mcs.class_dict_to_settings(class_dict, bases)
         mcs.add_settings_help(name, new_dict)
         return super().__new__(mcs, name, bases, new_dict)
 
     @classmethod
-    def class_dict_to_settings(mcs: 'SettingsMeta', class_dict: dict):
+    def class_dict_to_settings(mcs: 'SettingsMeta', class_dict: dict, bases: List[type]):
         new_dict = {}
         annotations = class_dict.get("__annotations__", {})
 
@@ -153,9 +155,9 @@ class SettingsMeta(type):
             if (
                 not isinstance(field, Setting)
                 and mcs.is_setting_name(attr)
-                and mcs.is_safe_setting_type(field)
+                and mcs._is_safe_setting_type(field)
             ):
-                new_field = mcs.make_setting_from_attr(attr, field, annotations)
+                new_field = mcs.make_setting_from_attr(attr, field, annotations, bases)
 
             # Should we try to guess a type_hint for a Setting?
             if (
@@ -168,25 +170,38 @@ class SettingsMeta(type):
 
         return new_dict
 
-    @staticmethod
-    def make_setting_from_attr(attr, val, annotations):
-        type_hint = annotations.get(attr, GuessSettingType)
+    @classmethod
+    def make_setting_from_attr(mcs, attr, val, annotations, bases: List[type]):
         doc = ""
+        type_hint = mcs._get_type_hint(attr, annotations, bases)
         return Setting(val, doc=doc, type_hint=type_hint)
 
-    @staticmethod
-    def is_setting_name(name: str) -> bool:
+    @classmethod
+    def _get_type_hint(mcs, attr, annotations, bases: List[type]):
+        type_hint = annotations.get(attr, GuessSettingType)
+        if type_hint is GuessSettingType:
+            # try to get the type hint from the base classes
+            for base in bases:
+                try:
+                    type_hint = getattr(base, attr).type_hint
+                    break
+                except AttributeError:
+                    pass
+        return type_hint
+
+    @classmethod
+    def is_setting_name(mcs, name: str) -> bool:
         """Return True if name is written in the upper case"""
         return not name.startswith('_') and name.upper() == name
 
-    @staticmethod
-    def is_safe_setting_type(field: Any) -> bool:
+    @classmethod
+    def _is_safe_setting_type(mcs, field: Any) -> bool:
         """Return False if field should not be converted to a Setting automatically"""
         callable_types = (property, types.FunctionType, classmethod, staticmethod)
         return not isinstance(field, callable_types)
 
-    @staticmethod
-    def add_settings_help(cls_name: str, class_dict: dict):
+    @classmethod
+    def add_settings_help(mcs, cls_name: str, class_dict: dict):
         if '__module__' not in class_dict:
             # class is not coming from a module
             return
@@ -274,7 +289,7 @@ class Settings(Setting, metaclass=SettingsMeta):
 
         assert self.__class__.__mro__[-3] is Settings
 
-        # __mro__[:-2] - skip ConcreteSettings and object bases
+        # __mro__[:-2] - skip Settings and object bases
         for cls in reversed(self.__class__.__mro__[:-3]):
             for attr, val in cls.__dict__.items():
                 if isinstance(val, Setting):
@@ -289,7 +304,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         if any(isinstance(b, override) for b in s1.behaviors):
             return NO_DIFF
 
-        if s0.type_hint != s1.type_hint:
+        if not type_hints_equal(s0.type_hint, s1.type_hint):
             differences.append(f'types differ: {s0.type_hint} != {s1.type_hint}')
 
         return differences
@@ -301,7 +316,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         return self._errors == {}
 
     @classmethod
-    def _iter_settings_attributes(cls):
+    def _settings_attributes(cls) -> Generator[Tuple[str, Setting], None, None]:
         for name in dir(cls):
             attr = getattr(cls, name)
             if isinstance(attr, Setting):
@@ -312,7 +327,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         errors = {}
 
         # validate each setting individually
-        for name, setting in self._iter_settings_attributes():
+        for name, setting in self._settings_attributes():
             setting_errors = self._validate_setting(name, setting, raise_exception)
             if setting_errors:
                 errors[name] = setting_errors
@@ -380,14 +395,17 @@ class Settings(Setting, metaclass=SettingsMeta):
         source_obj = get_source(source)
         self._update(self, source_obj, parents=(), strategies=strategies)
 
-    @staticmethod
     def _update(
-        settings: 'Settings', source: Source, parents: Tuple[str] = (), strategies=None
+        self,
+        settings: 'Settings',
+        source: Source,
+        parents: Tuple[str] = (),
+        strategies=None,
     ):
         """Recursively update settings object from dictionary"""
         strategies = strategies or {}
 
-        for name, setting in settings._iter_settings_attributes():
+        for name, setting in settings._settings_attributes():
             if isinstance(setting, Settings):
                 settings._update(setting, source, (*parents, name), strategies)
             else:
@@ -407,6 +425,21 @@ class Settings(Setting, metaclass=SettingsMeta):
                 update_to_val = source.read(setting, parents)
                 new_val = update_strategy(current_val, update_to_val)
                 setattr(settings, name, new_val)
+
+    def extract(self, destination: Union[types.ModuleType, dict], prefix: str = ''):
+        """Populate settings to Python module as local variables"""
+        if prefix != '':
+            prefix = prefix + '_'
+
+        if isinstance(destination, types.ModuleType):
+            destination = destination.__dict__
+
+        for name, attr in self._settings_attributes():
+            var_name = prefix + name
+            if isinstance(attr, Settings):  # nested settings
+                attr.extract(destination, var_name)
+            else:
+                destination[var_name] = getattr(self, name)
 
     @property
     def errors(self):
@@ -435,7 +468,7 @@ class prefix:
             settings, Settings
         ), 'Intended to decorate Settings sub-classes only'
 
-        for name, attr in settings._iter_settings_attributes():
+        for name, attr in settings._settings_attributes():
             new_name = f'{self.prefix}{name}'
             if hasattr(settings, new_name):
                 raise ValueError(

@@ -4,13 +4,18 @@ import tempfile
 import factory
 import pytest
 from factory import fuzzy
+from pyfakefs.fake_filesystem_unittest import Patcher
 
 from concrete_settings.exceptions import SettingsValidationError
-from concrete_settings.validators import Validator
+from concrete_settings.validator import Validator
 
 seed = random.randint(1, 1e9)
 print(f"Running tests with seed: {seed:0>10}")
 factory.fuzzy.reseed_random(seed)
+
+# Do not allow fakefs patcher to scan Django
+# fixes ImproperlyConfigured situations
+Patcher.SKIPNAMES.add('django')
 
 
 @pytest.fixture
@@ -24,27 +29,28 @@ def v_str():
 
 
 @pytest.fixture
-def mock_module(mocker):
+def build_module_mock(mocker):
     import sys
     import types
 
     tmp_files = []
 
-    def _make_module(name, code, path=None):
-        mod = types.ModuleType(name)
+    def _make_module(name, code='', path=None):
+        module = types.ModuleType(name)
 
         if path:
-            mod.__file__ = path
+            module.__file__ = path
         else:
             tmp_file = tempfile.NamedTemporaryFile(
                 mode='w+', prefix=f'tmp_{name}', suffix='.py'
             )
             tmp_file.write(code)
             tmp_file.flush()
-            mod.__file__ = tmp_file.name
+            module.__file__ = tmp_file.name
             tmp_files.append(tmp_file)
-        sys.modules[name] = mod
-        exec(code, mod.__dict__)
+        sys.modules[name] = module
+        exec(code, module.__dict__)
+        return module
 
     yield _make_module
 

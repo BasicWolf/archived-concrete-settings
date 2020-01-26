@@ -1,18 +1,13 @@
 import importlib
 import types
+import typing
 import sys
 from collections import namedtuple
 
 import pytest
 
 import concrete_settings
-from concrete_settings import (
-    INVALID_SETTINGS,
-    Settings,
-    Setting,
-    Undefined,
-    prefix,
-)
+from concrete_settings import INVALID_SETTINGS, Settings, Setting, Undefined, prefix
 from concrete_settings.exceptions import SettingsValidationError
 
 
@@ -133,6 +128,16 @@ def test_callable_types_are_not_settings(v_int, v_str):
     assert s.FUNC() == v_str
     assert s.CLASS_METH() == S
     assert s.STATIC_METH() == v_str
+
+
+def test_guess_setting_type_inherits_type_hint():
+    class BaseSettings(Settings):
+        DEBUG: typing.Optional[bool] = False
+
+    class DevSettings(BaseSettings):
+        DEBUG = True
+
+    assert DevSettings.DEBUG.type_hint == BaseSettings.DEBUG.type_hint
 
 
 def test_validate_smoke():
@@ -418,3 +423,28 @@ def test_prefix_cannot_decorate_settings_with_existing_matching_field():
         class MySettings(Settings):
             GEAR = 10
             MY_GEAR = 1
+
+
+def test_settings_extract_to_module(build_module_mock):
+    class MySettings(Settings):
+        DEBUG = True
+        SITE_NAME = 'mysite'
+
+    module = build_module_mock('test_settings')
+    MySettings().extract(module)
+    assert module.DEBUG
+    assert module.SITE_NAME == 'mysite'
+
+
+def test_nested_settings_extract_to_dict():
+    class DBSettings(Settings):
+        USERNAME = 'alex'
+        PASSWORD = 'secret_password'
+
+    class MySettings(Settings):
+        DB = DBSettings()
+
+    d = {}
+    MySettings().extract(d)
+    assert d['DB_USERNAME'] == 'alex'
+    assert d['DB_PASSWORD'] == 'secret_password'

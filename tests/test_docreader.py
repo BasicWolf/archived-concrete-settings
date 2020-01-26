@@ -12,8 +12,8 @@ class OneSettingCls(Settings):
     MAX_SPEED = 10"""
 
 
-def test_one_cls_setting(mock_module, one_cls_setting):
-    mock_module('cls1', one_cls_setting)
+def test_one_cls_setting(build_module_mock, one_cls_setting):
+    build_module_mock('cls1', one_cls_setting)
     assert (
         sys.modules['cls1'].OneSettingCls.MAX_SPEED.__doc__
         == 'This is doc\nFor max_speed'

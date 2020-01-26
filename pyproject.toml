@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "concrete-settings"
-version = "0.1.0"
+version = "0.0.1"
 description = "TODO"
 
 license = "MIT"
@@ -18,11 +18,12 @@ keywords = ['settings', 'configuration']
 
 [tool.poetry.dependencies]
 python = "^3.6"
-toml = "^0.9"
 sphinx = "^2.3"
+typeguard = "^2.7"
 pyyaml = { version = "^5.3", optional = true }
 
 [tool.poetry.dev-dependencies]
+django = { version = "^3.0", optional = true }
 pudb = "*"
 factory_boy = "*"
 pytest = "*"
@@ -36,9 +37,11 @@ coverage = "*"
 pytest-cov = "*"
 setuptools = "^41.0"
 sphinx = "*"
-typeguard = "*"
 pyfakefs = "*"
 pyyaml = "*"
 sphinxcontrib-plantuml = "*"
 sphinx-rtd-theme = "*"
 safety = "*"
+
+[tool.poetry.extras]
+pyyaml = ["pyyaml"]

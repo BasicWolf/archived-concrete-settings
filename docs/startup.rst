@@ -3,6 +3,9 @@
 Start me up
 ###########
 
+Scratch
+=======
+
 An extremely short guide to start using ConcreteSetting in your application.
 
 I. Define Settings
@@ -100,3 +103,11 @@ III. Remember to unit-test settings object initialization
 
     def test_smoke_the_settings():
         ApplicationSettings()
+
+
+New Django Projects
+===================
+
+from concrete_settings.contrib.conf import django30
+
+

@@ -5,8 +5,8 @@ from concrete_settings.contrib.sources import PythonSource
 from concrete_settings.sources import get_source
 
 
-TESTS_DIR = Path(__file__).parent
-PYTHON_SOURCE_PATH = str(TESTS_DIR / 'fixtures/python_settings.py')
+MY_DIR = Path(__file__).parent
+PYTHON_SOURCE_PATH = str(MY_DIR / 'python_settings_fixture.py')
 
 
 def S(name: str, type_hint=str) -> Setting:

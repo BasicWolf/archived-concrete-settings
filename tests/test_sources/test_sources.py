@@ -3,7 +3,7 @@ from concrete_settings import Setting, Settings
 from concrete_settings import sources
 from concrete_settings.sources import strategies
 
-from .utils import Match
+from ..utils import Match
 
 
 def test_get_source_fail_for_unknown_source():
