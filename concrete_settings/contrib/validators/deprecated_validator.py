@@ -1,7 +1,7 @@
 import warnings
 
 from concrete_settings.exceptions import SettingsValidationError
-from concrete_settings.validators import Validator
+from concrete_settings.validator import Validator
 
 
 class DeprecatedValidator(Validator):

@@ -42,26 +42,29 @@ Types
    .. autoattribute:: KNOWN_TYPES
 
 
+.. module:: concrete_settings.validator
+
 Validators
 ----------
-
-.. module:: concrete_settings.validators
 
 .. autoclass:: Validator
    :members: __call__
 
 .. autoclass:: concrete_settings.exceptions.SettingsValidationError
 
+
+.. module:: concrete_settings.validators
+
 ValueTypeValidator
 ..................
 
-.. autoclass:: ValueTypeValidator
+.. autoclass:: concrete_settings.validators.ValueTypeValidator
 
 
 RequiredValidator
 .................
 
-.. autoclass:: RequiredValidator
+.. autoclass:: concrete_settings.validators.RequiredValidator
 
 
 DeprecatedValidator
