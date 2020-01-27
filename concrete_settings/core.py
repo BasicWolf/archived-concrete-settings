@@ -16,6 +16,7 @@ from typing import (
     Iterable,
 )
 
+from .behaviors import Behaviors, override
 from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
 from .sources import get_source, TAnySource, Source
@@ -53,7 +54,6 @@ class Setting:
         self.__doc__ = doc
 
         self.name = ""
-        self.override = False
 
     def __set_name__(self, _, name):
         self.name = name
@@ -89,7 +89,7 @@ class Setting:
 class PropertySetting(Setting):
     def __init__(self, *args, **kwargs):
         decorating_without_arguments = (
-            len(args) == 1 and len(kwargs) == 0 and callable(args[0])
+                len(args) == 1 and len(kwargs) == 0 and callable(args[0])
         )
         if decorating_without_arguments:
             self._init_decorator_without_arguments(args[0])
@@ -144,66 +144,75 @@ class PropertySetting(Setting):
         raise AttributeError("Can't set attribute: property setting cannot be set")
 
 
-# ==== ConcreteSettings classes ==== #
-# ================================== #
-
-
 class SettingsMeta(type):
     def __new__(mcs, name: str, bases: List[type], class_dict: Dict):
         new_dict = mcs.class_dict_to_settings(class_dict, bases)
-        mcs.add_settings_help(name, new_dict)
+        mcs._add_settings_help(name, new_dict)
         return super().__new__(mcs, name, bases, new_dict)
 
     @classmethod
-    def class_dict_to_settings(
-        mcs: 'SettingsMeta', class_dict: dict, bases: List[type]
-    ):
+    def class_dict_to_settings(mcs: 'SettingsMeta', class_dict: dict, bases: List[type]):
         new_dict = {}
         annotations = class_dict.get("__annotations__", {})
 
-        for attr, field in class_dict.items():
+        for name, field in class_dict.items():
             new_field = field
 
             # Make a Setting out of ALL_UPPERCASE_ATTRIBUTE
             if (
-                not isinstance(field, Setting)
-                and mcs.is_setting_name(attr)
-                and mcs._is_safe_setting_type(field)
+                    not isinstance(field, Setting)
+                    and mcs._is_setting_name(name)
+                    and mcs._is_safe_setting_type(field)
             ):
-                new_field = mcs.make_setting_from_attr(attr, field, annotations, bases)
+                new_field = mcs._make_setting_from_attribute(
+                    name,
+                    field,
+                    annotations,
+                )
 
             # Should we try to guess a type_hint for a Setting?
             if (
-                isinstance(new_field, Setting)
-                and new_field.type_hint is GuessSettingType
+                    isinstance(new_field, Setting)
+                    and new_field.type_hint is GuessSettingType
             ):
-                new_field.type_hint = GuessSettingType.guess_type_hint(new_field.value)
+                new_field.type_hint = mcs._guess_type_hint(
+                    name,
+                    new_field,
+                    annotations,
+                    bases
+                )
 
-            new_dict[attr] = new_field
+            new_dict[name] = new_field
 
         return new_dict
 
     @classmethod
-    def make_setting_from_attr(mcs, attr, val, annotations, bases: List[type]):
+    def _make_setting_from_attribute(mcs, name, value, annotations):
         doc = ""
-        type_hint = mcs._get_type_hint(attr, annotations, bases)
-        return Setting(val, doc=doc, type_hint=type_hint)
+        type_hint = annotations.get(name, GuessSettingType)
+        return Setting(value, doc=doc, type_hint=type_hint)
 
     @classmethod
-    def _get_type_hint(mcs, attr, annotations, bases: List[type]):
-        type_hint = annotations.get(attr, GuessSettingType)
-        if type_hint is GuessSettingType:
-            # try to get the type hint from the base classes
-            for base in bases:
-                try:
-                    type_hint = getattr(base, attr).type_hint
-                    break
-                except AttributeError:
-                    pass
-        return type_hint
+    def _guess_type_hint(mcs, name, setting: Setting, annotations, bases: List[type]):
+        # we still have to check annotations,
+        # e.g. if the setting was instantiated by behavior
+        annotation_type_hint = annotations.get(name, GuessSettingType)
+        if annotation_type_hint is not GuessSettingType:
+            return annotation_type_hint
+
+        # try to get the type hint from the base classes
+        for base in bases:
+            try:
+                base_type_hint = getattr(base, name).type_hint
+                return base_type_hint
+            except AttributeError:
+                pass
+
+        guessed_setting_type = GuessSettingType.guess_type_hint(setting.value)
+        return guessed_setting_type
 
     @classmethod
-    def is_setting_name(mcs, name: str) -> bool:
+    def _is_setting_name(mcs, name: str) -> bool:
         """Return True if name is written in the upper case"""
         return not name.startswith('_') and name.upper() == name
 
@@ -214,7 +223,7 @@ class SettingsMeta(type):
         return not isinstance(field, callable_types)
 
     @classmethod
-    def add_settings_help(mcs, cls_name: str, class_dict: dict):
+    def _add_settings_help(mcs, cls_name: str, class_dict: dict):
         if '__module__' not in class_dict:
             # class is not coming from a module
             return

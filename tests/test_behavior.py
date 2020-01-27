@@ -207,15 +207,15 @@ def test_behavior_set_setting_value_call_chain(setting_behavior_mock):
 
 # == override == #
 def test_validate_override():
-    class S(Settings):
-        T: int = 10
+    class BaseSettings(Settings):
+        AGE: int = 10
 
-    class S1(S):
-        T: str = 'abc' @ override
+    class DevSettings(BaseSettings):
+        AGE: str = 'old' @ override
 
-    s1 = S1()
+    s1 = DevSettings()
     assert s1.is_valid()
-    assert s1.T == 'abc'
+    assert s1.AGE == 'old'
 
 
 def test_structure_error_without_override():
