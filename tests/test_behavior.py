@@ -1,7 +1,13 @@
 import pytest
 
-from concrete_settings import Settings, Setting, setting as property_setting
-from concrete_settings.behaviors import Behaviors, SettingBehavior, override
+from concrete_settings import (
+    Settings,
+    Setting,
+    setting as property_setting,
+    Behaviors,
+    SettingBehavior,
+    override,
+)
 from concrete_settings.exceptions import StructureError
 
 

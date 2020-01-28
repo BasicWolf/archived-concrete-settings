@@ -1,6 +1,6 @@
 import warnings
 
-from concrete_settings.behaviors import SettingBehavior
+from concrete_settings import SettingBehavior
 from concrete_settings.contrib.validators import DeprecatedValidator
 
 

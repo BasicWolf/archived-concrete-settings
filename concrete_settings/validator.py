@@ -2,7 +2,7 @@ import abc
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .concrete_settings import Setting, Settings
+    from .core import Setting, Settings
 
 
 class Validator(metaclass=abc.ABCMeta):

@@ -1,4 +1,4 @@
-from concrete_settings.behaviors import SettingBehavior
+from concrete_settings import SettingBehavior
 from concrete_settings.validators import RequiredValidator
 
 
