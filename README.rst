@@ -4,7 +4,7 @@ Concrete Settings
 .. image:: https://travis-ci.org/BasicWolf/concrete-settings.svg?branch=master
     :target: https://travis-ci.org/BasicWolf/concrete-settings
 
-.. image:: docs/_static/img/codestyle_black.svg
+.. image:: docs/src/_static/img/codestyle_black.svg
     :target: https://github.com/ambv/black
 
 Welcome

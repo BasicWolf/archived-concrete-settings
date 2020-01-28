@@ -33,7 +33,6 @@ doctest:
 	$(MAKE) doctest -C docs
 
 clean:
-	python setup.py clean
-	rm -r concrete_settings.egg_info
+	rm -r concrete_settings.egg-info pip-wheel-metadata .pytest_cache
 
 .PHONY: docs
