@@ -219,14 +219,14 @@ def test_validate_override():
 
 
 def test_structure_error_without_override():
-    class S(Settings):
-        T: int = 10
+    class BaseSettings(Settings):
+        AGE: int = 10
 
-    class S1(S):
-        T: str = 'abc'
+    class DevSettings(BaseSettings):
+        AGE: str = 'old'
 
     with pytest.raises(StructureError) as e:
-        S1()
+        DevSettings()
     e.match('types differ')
 
 

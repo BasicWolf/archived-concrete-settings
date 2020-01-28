@@ -315,7 +315,7 @@ Output:
 Behaviors
 .........
 
-:class:`Setting Behaviors <concrete_settings.behaviors.SettingBehavior>`
+:class:`Setting Behaviors <concrete_settings.SettingBehavior>`
 allow executing some logic on different stages of a Setting lifecycle.
 
 In addition to declaring behaviors in a Setting

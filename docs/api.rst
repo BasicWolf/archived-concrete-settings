@@ -78,7 +78,7 @@ Behaviors
 
 .. module:: concrete_settings.behaviors
 
-.. autoclass:: concrete_settings.behaviors.SettingBehavior
+.. autoclass:: concrete_settings.SettingBehavior
 
 
 

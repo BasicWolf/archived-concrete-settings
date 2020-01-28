@@ -1,3 +1,4 @@
+import collections
 import functools
 import logging
 import re
@@ -16,7 +17,6 @@ from typing import (
     Iterable,
 )
 
-from .behaviors import Behaviors, override
 from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
 from .sources import get_source, TAnySource, Source
@@ -50,10 +50,9 @@ class Setting:
         self.type_hint = type_hint
         self.validators = tuple(validators)
         self.behaviors = Behaviors(behaviors or ())
-
         self.__doc__ = doc
-
         self.name = ""
+        self.override = False
 
     def __set_name__(self, _, name):
         self.name = name
@@ -522,7 +521,7 @@ class SettingBehavior(metaclass=SettingBehaviorMeta):
         set_value(val)
 
 
-class Behaviors:
+class Behaviors(collections.abc.Container):
     def __init__(self, iterable=()):
         self._container = list(iterable)
 
@@ -531,6 +530,9 @@ class Behaviors:
 
     def __getitem__(self, index):
         return self._container[index]
+
+    def __contains__(self, item):
+        return item in self._container
 
     def inject(self, behavior):
         self._container.insert(0, behavior)
