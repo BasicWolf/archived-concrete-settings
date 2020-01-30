@@ -7,7 +7,7 @@ There is no stable version available at the moment.
 ConcreteSettings is a Python library which facilitates startup
 configuration management in applications.
 
-A minimal developer-facing settings class might look like this:
+Here is an example of a minimal developer-facing setup:
 
 .. code-block:: python
 
@@ -30,7 +30,8 @@ While the end-user could set the values in a YAML file:
 
    DEBUG: false
 
-ConcreteSettings aims to provide a conveniet way to
+
+Concrete Settings aims to provide a conveniet way to
 define and use application startup settings
 for developers and an end-users:
 
@@ -52,7 +53,7 @@ for developers and an end-users:
 
    note top of Dev
        **Developer** defines configuration
-       via ConcreteSettings
+       via Concrete Settings
    end note
 
    User ==> (yaml_source)
@@ -105,6 +106,7 @@ Documentation
    basic_concepts
    startup
    advanced
+   batteries
 
 API Reference
 =============
@@ -116,7 +118,6 @@ method, this part of the documentation is for you.
    :maxdepth: 2
 
    api
-
 
 
 Indices and tables

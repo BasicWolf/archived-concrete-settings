@@ -10,6 +10,10 @@ def gettext_noop(s):
 
 
 class Django30Settings(Settings):
+    """Parent class for Django 3.0 -based settings.
+
+    Source: global_settings.py definitions"""
+
     DEBUG: bool = False
 
     #: Whether the framework should propagate raw exceptions rather than catching

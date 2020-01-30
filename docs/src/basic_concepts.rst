@@ -1,7 +1,7 @@
 Basic concepts
 ##############
 
-In this chapter we cover the essentials of ConcreteSettings.
+In this chapter we cover the essentials of Concrete Settings.
 
 .. contents::
    :local:
@@ -63,7 +63,7 @@ a corresponding object is created instead.
 
 :ref:`Later in the documentation <setting_declration>` the setting creation
 rules are explored in-depth.
-For now please accept that ConcreteSettings' preferred way of declaring
+For now please accept that Concrete Settings' preferred way of declaring
 *basic* settings is by omitting the ``Setting(...)`` call at all.
 Ideally a setting should be declared with a type annotation and documentation
 as follows:
@@ -490,5 +490,5 @@ What's next?
 ------------
 
 Now that you know the basics, why not to try adding
-ConcreteSettings to your application?
+Concrete Settings to your application?
 A minimal user-friendly setup is shown in :ref:`startup` section.

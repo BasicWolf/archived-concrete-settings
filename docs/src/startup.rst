@@ -6,15 +6,14 @@ Start me up
 Scratch
 =======
 
-An extremely short guide to start using ConcreteSetting in your application.
+An extremely short guide to start using Concrete Setting in your application.
 
 I. Define Settings
 ------------------
 
-As a *developer* of an application, define the settings
-in a file *inside* your application.
+As a *developer* of an application, define the settings:
 
-For example, ``my_app/app_settings.py`` file:
+For example, ``my_app/settings_definition.py`` file:
 
 .. testcode:: start-me-up
 
@@ -38,7 +37,7 @@ For example  via a ``.yaml`` file passed as a command-line argument:
    import os
    import sys
 
-   from .app_settings import ApplicationSettings
+   from .settings_definition import ApplicationSettings
 
 
    def main():
@@ -66,7 +65,7 @@ For example  via a ``.yaml`` file passed as a command-line argument:
 
    # settings.yaml
 
-   debug: true
+   DEBUG: true
 
 
 .. testcode:: start-me-up
@@ -92,22 +91,30 @@ For example  via a ``.yaml`` file passed as a command-line argument:
 
    main()
 
-III. Remember to unit-test settings object initialization
----------------------------------------------------------
+III. Remember to test settings object definition
+------------------------------------------------
 
 .. code-block::
 
     # we love pytest!
 
-    from my_app.app_settings import ApplicationSettings
+    from my_app.settings_definition import ApplicationSettings
 
-    def test_smoke_the_settings():
+    def test_settings_definiton():
         ApplicationSettings()
 
+That's it! You are ready to start using Concrete Settings in your programs!
 
-New Django Projects
-===================
 
-from concrete_settings.contrib.conf import django30
+Django Projects
+===============
+
+Concrete Settings is shipped with batteries which help bootstrapping
+settings in a legacy or a brand new Django project.
+First, there is :class:`Django30Settings <concrete_settings.contrib.frameworks.django30.Django30Settings>`
+class which reflects Django's `global_settings` definitions.
+
+Django 3.0
+----------
 
 
