@@ -12,7 +12,7 @@ Welcome
 
 **concrete-settings** is a small library which helps handling settings in large projects.
 
-The settings specification DSP aims to be simple and easy readible.
+The settings specification DSL aims to be simple and easy readible.
 It is designed with these concepts in mind:
 
 * Specifications are declared in classes.
