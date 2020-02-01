@@ -17,11 +17,14 @@ tox:
 	tox
 
 
-lint: flake8 safety
+lint: flake8 mypy safety
 
 
 flake8:
 	poetry run flake8 --config=.flake8rc concrete_settings tests
+
+mypy:
+	poetry run mypy concrete_settings
 
 safety:
 	poetry run safety check

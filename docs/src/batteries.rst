@@ -15,4 +15,4 @@ Django
 
 .. module:: concrete_settings.contrib.frameworks.django30
 
-.. class:: Django30Settings
+.. autoclass:: Django30Settings

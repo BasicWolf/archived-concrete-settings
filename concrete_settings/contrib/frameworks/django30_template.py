@@ -4,12 +4,16 @@
 # * {{ project_name }}
 # * {{ secret_key }}
 
+# flake8: noqa
+# type: ignore
+
 import os
 
 from concrete_settings.contrib.frameworks.django30 import Django30Settings
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -80,8 +84,7 @@ class MyProjectSettings(Django30Settings):
 
     AUTH_PASSWORD_VALIDATORS = [
         {
-            'NAME': 'django.contrib.auth.password_validation'
-                    '.UserAttributeSimilarityValidator',
+            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
         },
         {
             'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',

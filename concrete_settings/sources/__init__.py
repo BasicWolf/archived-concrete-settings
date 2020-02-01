@@ -1,20 +1,12 @@
-from enum import Enum
-from typing import Any, Dict, List, Tuple, Type, Union
+from pathlib import Path
+from typing import Any, Dict, List, Tuple, Type, Optional, Union
 
 from ..exceptions import ConcreteSettingsError
 from . import strategies  # noqa: F401 # imported but unused
 
-
 _registered_sources = set()
 
-TAnySource = Union[Dict[str, Any], str, 'Source']
-
-
-class CannotHandleType(Enum):
-    token = 0
-
-
-CannotHandle = CannotHandleType.token
+AnySource = Union[Dict[str, Any], str, 'Source', Path]
 
 
 def register_source(source_cls: Type['Source']):
@@ -24,20 +16,20 @@ def register_source(source_cls: Type['Source']):
 
 
 class NoSuitableSourceFoundError(ConcreteSettingsError):
-    def __init__(self, src: TAnySource):
+    def __init__(self, src: AnySource):
         super().__init__(
-            f'No suitable source found to handle "{src}".'
+            f'No suitable source found to handle "{src}".\n'
             'Perhaps you have forgotten to register the source?'
         )
 
 
-def get_source(src: TAnySource) -> 'Source':
+def get_source(src: AnySource) -> 'Source':
     if isinstance(src, Source):
         return src
 
     for src_cls in _registered_sources:
         source = src_cls.get_source(src)
-        if source is not CannotHandle:
+        if source is not None:
             return source
 
     raise NoSuitableSourceFoundError(src)
@@ -45,10 +37,10 @@ def get_source(src: TAnySource) -> 'Source':
 
 class Source:
     @staticmethod
-    def get_source(src: TAnySource) -> Union['Source', CannotHandleType]:
-        return CannotHandle
+    def get_source(src: AnySource) -> Optional['Source']:
+        return None
 
-    def read(self, setting, parents: Tuple[str] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str, ...] = ()) -> Any:
         pass
 
 
@@ -76,15 +68,15 @@ class DictSource(Source):
         self.data: dict = s
 
     @staticmethod
-    def get_source(src: TAnySource) -> Union['DictSource', CannotHandleType]:
+    def get_source(src: AnySource) -> Optional['DictSource']:
         if isinstance(src, dict):
             return DictSource(src)
         elif isinstance(src, DictSource):
             return src
         else:
-            return CannotHandle
+            return None
 
-    def read(self, setting, parents: Tuple[str] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str, ...] = ()) -> Any:
         d = self.data
         for key in parents:
             d = d[key]
@@ -102,12 +94,16 @@ class FileSource(Source):
         self.path = path
 
     @classmethod
-    def get_source(cls, src) -> Union['FileSource', CannotHandleType]:
+    def get_source(cls, src) -> Optional['FileSource']:
         if isinstance(src, cls):
             return src
-        elif isinstance(src, str):
+
+        if isinstance(src, Path):
+            src = str(src.resolve())
+
+        if isinstance(src, str):
             for ext in cls.extensions:
                 if src.endswith(ext):
                     return cls(src)
 
-        return CannotHandle
+        return None

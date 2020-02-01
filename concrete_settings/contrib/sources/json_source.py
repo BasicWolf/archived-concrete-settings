@@ -14,7 +14,7 @@ class JsonSource(FileSource):
         super().__init__(path)
         self._data = None
 
-    def read(self, setting, parents: Tuple[str] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str, ...] = ()) -> Any:
         if self._data is None:
             self._data = self._read_file(self.path)
 

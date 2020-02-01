@@ -42,6 +42,7 @@ pyyaml = "*"
 sphinxcontrib-plantuml = "*"
 sphinx-rtd-theme = "*"
 safety = "*"
+mypy = "^0.761"
 
 [tool.poetry.extras]
 pyyaml = ["pyyaml"]

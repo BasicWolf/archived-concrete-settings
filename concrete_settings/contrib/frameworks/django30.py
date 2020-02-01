@@ -10,9 +10,7 @@ def gettext_noop(s):
 
 
 class Django30Settings(Settings):
-    """Parent class for Django 3.0 -based settings.
-
-    Source: global_settings.py definitions"""
+    """Parent class for Django 3.0 -based settings."""
 
     DEBUG: bool = False
 

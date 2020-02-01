@@ -16,7 +16,8 @@ class Undefined(metaclass=UndefinedMeta):
     that something has not been explicitly set by a user.
     """
 
-    pass
+    def __bool__(self):
+        return False
 
 
 class GuessSettingType:

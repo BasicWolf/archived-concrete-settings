@@ -9,7 +9,6 @@ from typing import (
     Callable,
     Dict,
     Type,
-    Sequence,
     Union,
     List,
     Tuple,
@@ -19,7 +18,7 @@ from typing import (
 
 from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
-from .sources import get_source, TAnySource, Source
+from .sources import get_source, AnySource, Source
 from .sources.strategies import default as default_update_strategy
 from .types import Undefined, GuessSettingType, type_hints_equal
 from .validators import ValueTypeValidator
@@ -34,23 +33,23 @@ INVALID_SETTINGS = '__invalid__settings__'
 class Setting:
     value: Any
     type_hint: Any
-    validators: List[Callable]
+    validators: Tuple[Callable, ...]
     behaviors: 'Behaviors'
 
     def __init__(
-        self,
-        value: Any = Undefined,
-        *,
-        doc: Union[str, Undefined] = Undefined,
-        validators: Union[Sequence[Callable]] = (),
-        type_hint: Any = GuessSettingType,
-        behaviors: Union['Behaviors', Iterable] = None,
+            self,
+            value: Any = Undefined,
+            *,
+            doc: Union[str, Type[Undefined]] = Undefined,
+            validators: Tuple[Callable, ...] = (),
+            type_hint: Any = GuessSettingType,
+            behaviors: Union['Behaviors', Iterable] = None,
     ):
         self.value = value
         self.type_hint = type_hint
         self.validators = tuple(validators)
         self.behaviors = Behaviors(behaviors or ())
-        self.__doc__ = doc
+        self.__doc__ = str(doc or '')
         self.name = ""
         self.override = False
 
@@ -144,13 +143,13 @@ class PropertySetting(Setting):
 
 
 class SettingsMeta(type):
-    def __new__(mcs, name: str, bases: List[type], class_dict: Dict):
+    def __new__(mcs, name, bases, class_dict):
         new_dict = mcs.class_dict_to_settings(class_dict, bases)
         mcs._add_settings_help(name, new_dict)
         return super().__new__(mcs, name, bases, new_dict)
 
     @classmethod
-    def class_dict_to_settings(mcs: 'SettingsMeta', class_dict: dict, bases: List[type]):
+    def class_dict_to_settings(mcs, class_dict: dict, bases: List[type]):
         new_dict = {}
         annotations = class_dict.get("__annotations__", {})
 
@@ -260,6 +259,13 @@ class SettingsMeta(type):
                 # no comment-style documentation exists
                 pass
 
+    @property
+    def settings_attributes(self) -> Generator[Tuple[str, Setting], None, None]:
+        for name in dir(self):
+            attr = getattr(self, name)
+            if isinstance(attr, Setting):
+                yield name, attr
+
 
 class Settings(Setting, metaclass=SettingsMeta):
     default_validators: Tuple = (ValueTypeValidator(),)
@@ -272,10 +278,10 @@ class Settings(Setting, metaclass=SettingsMeta):
 
     def __init__(self, **kwargs):
         assert (
-            'value' not in kwargs
+                'value' not in kwargs
         ), '"value" argument should not be passed to Settings.__init__()'
         assert (
-            'type_hint' not in kwargs
+                'type_hint' not in kwargs
         ), '"type_hint" argument should not be passed to Settings.__init__()'
 
         super().__init__(value=self, type_hint=self.__class__, **kwargs)
@@ -306,7 +312,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         # 1. Iterate through __mro__ classes in reverse order - so that
         #    iteration happens from the most-base class to the current one.
         # 2. Store found settigns as {name: [cls, ...]} to settings_classes
-        settings_classes = defaultdict(list)
+        settings_classes: Dict[str, List[Type['Settings']]] = defaultdict(list)
 
         assert self.__class__.__mro__[-3] is Settings
 
@@ -318,7 +324,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         return dict(settings_classes)
 
     def _settings_diff(self, s0: Setting, s1: Setting) -> List[str]:
-        NO_DIFF = []
+        NO_DIFF = []  # type: ignore
         differences = []
 
         # No checks are performed if setting is overriden
@@ -330,25 +336,22 @@ class Settings(Setting, metaclass=SettingsMeta):
 
         return differences
 
+    @property
+    def settings_attributes(self):
+        return self.__class__.settings_attributes
+
     def is_valid(self, raise_exception=False) -> bool:
         """Validate settings and return a boolean indicate whether settings are valid"""
         if not self.validated:
             self._errors = self._run_validation(raise_exception)
         return self._errors == {}
 
-    @classmethod
-    def _settings_attributes(cls) -> Generator[Tuple[str, Setting], None, None]:
-        for name in dir(cls):
-            attr = getattr(cls, name)
-            if isinstance(attr, Setting):
-                yield name, attr
-
     def _run_validation(self, raise_exception=False) -> ValidationErrorDetail:
         self.validating = True
         errors = {}
 
         # validate each setting individually
-        for name, setting in self._settings_attributes():
+        for name, setting in self.settings_attributes:
             setting_errors = self._validate_setting(name, setting, raise_exception)
             if setting_errors:
                 errors[name] = setting_errors
@@ -367,7 +370,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         return errors
 
     def _validate_setting(
-        self, name: str, setting: Setting, raise_exception=False
+            self, name: str, setting: Setting, raise_exception=False
     ) -> ValidationErrorDetail:
         value: Setting = getattr(self, name)
 
@@ -409,7 +412,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         """
         pass
 
-    def update(self, source: TAnySource, strategies: dict = None):
+    def update(self, source: AnySource, strategies: dict = None):
         """Update the object from given source and strategies."""
         strategies = strategies or {}
 
@@ -417,16 +420,16 @@ class Settings(Setting, metaclass=SettingsMeta):
         self._update(self, source_obj, parents=(), strategies=strategies)
 
     def _update(
-        self,
-        settings: 'Settings',
-        source: Source,
-        parents: Tuple[str] = (),
-        strategies=None,
+            self,
+            settings: 'Settings',
+            source: Source,
+            parents: Tuple[str, ...] = (),
+            strategies=None,
     ):
         """Recursively update settings object from dictionary"""
         strategies = strategies or {}
 
-        for name, setting in settings._settings_attributes():
+        for name, setting in settings.settings_attributes:
             if isinstance(setting, Settings):
                 settings._update(setting, source, (*parents, name), strategies)
             else:
@@ -455,7 +458,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         if isinstance(destination, types.ModuleType):
             destination = destination.__dict__
 
-        for name, attr in self._settings_attributes():
+        for name, attr in self.settings_attributes:
             var_name = prefix + name
             if isinstance(attr, Settings):  # nested settings
                 attr.extract(destination, var_name)
@@ -591,7 +594,7 @@ class prefix:
             settings, Settings
         ), 'Intended to decorate Settings sub-classes only'
 
-        for name, attr in settings._settings_attributes():
+        for name, attr in settings.settings_attributes:
             new_name = f'{self.prefix}{name}'
             if hasattr(settings, new_name):
                 raise ValueError(

@@ -7,6 +7,9 @@ Concrete Settings
 .. image:: docs/src/_static/img/codestyle_black.svg
     :target: https://github.com/ambv/black
 
+.. image:: docs/src/_static/img/mypy_checked.svg
+    :target: https://github.com/python/mypy
+
 Welcome
 =======
 

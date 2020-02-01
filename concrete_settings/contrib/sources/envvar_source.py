@@ -1,12 +1,10 @@
 import os
-from typing import Any, Tuple, Union
+from typing import Any, Tuple, Optional
 
 from concrete_settings.sources import (
-    CannotHandle,
-    CannotHandleType,
     Source,
     StringSourceMixin,
-    TAnySource,
+    AnySource,
     register_source,
 )
 
@@ -17,13 +15,13 @@ class EnvVarSource(StringSourceMixin, Source):
         self.data = os.environ
 
     @staticmethod
-    def get_source(src: TAnySource) -> Union['EnvVarSource', CannotHandleType]:
+    def get_source(src: AnySource) -> Optional['EnvVarSource']:
         if isinstance(src, EnvVarSource):
             return src
         else:
-            return CannotHandle
+            return None
 
-    def read(self, setting, parents: Tuple[str] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str, ...] = ()) -> Any:
         parents_upper = map(str.upper, parents)
         key = '_'.join((*parents_upper, setting.name))
         val = os.environ[key]

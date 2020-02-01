@@ -11,13 +11,16 @@ class StructureError(ConcreteSettingsError):
 
 SettingName = str
 
-ValidationErrorDetail = Union[
-    str, List['ValidationErrorDetail'], Dict[SettingName, 'ValidationErrorDetail']
+ValidationErrorDetail = Union[  # type: ignore
+    str,
+    List['ValidationErrorDetail'],  # type: ignore
+    Dict[SettingName, 'ValidationErrorDetail']  # type: ignore
 ]
 
 
 class SettingsValidationError(ConcreteSettingsError):
     """Raised by a setting validator when a setting value is invalid"""
+    sources: List[str]
 
     def __init__(self, detail: ValidationErrorDetail = ''):
         self.detail = detail
