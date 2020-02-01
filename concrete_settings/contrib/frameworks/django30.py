@@ -1,10 +1,14 @@
 from typing import Dict, List, Tuple, Optional
 
-from concrete_settings import Settings
-
+from concrete_settings import Settings, Undefined
 
 # This is defined here as a do-nothing function because we can't import
 # django.utils.translation -- that module depends on the settings.
+from concrete_settings.contrib.behaviors import required
+
+
+# flake8: noqa
+
 def gettext_noop(s):
     return s
 
@@ -587,8 +591,7 @@ class Django30Settings(Settings):
 
     #: Default exception reporter filter class used in case none has been
     #: specifically assigned to the HttpRequest instance.
-    DEFAULT_EXCEPTION_REPORTER_FILTER: str = \
-        'django.views.debug.SafeExceptionReporterFilter'
+    DEFAULT_EXCEPTION_REPORTER_FILTER: str = 'django.views.debug.SafeExceptionReporterFilter'
 
     ###########
     # TESTING #
@@ -655,3 +658,11 @@ class Django30Settings(Settings):
     SECURE_REFERRER_POLICY: Optional[str] = None
     SECURE_SSL_HOST: Optional[str] = None
     SECURE_SSL_REDIRECT: bool = False
+
+    ##############
+    # Undefined
+    ##############
+
+    #: A string representing the full Python import path to your root URLconf,
+    #: for example "mydjangoapps.urls".
+    ROOT_URLCONF: str = Undefined @ required

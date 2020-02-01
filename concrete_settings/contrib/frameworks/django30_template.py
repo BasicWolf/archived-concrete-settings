@@ -1,8 +1,10 @@
 # Concrete Settings Django 3.0 project settings template
 
 # Remember to fill the placeholders:
-# * {{ project_name }}
-# * {{ secret_key }}
+# * secret_key
+# * mysite.urls
+# * mysite.wsgi.application
+
 
 # flake8: noqa
 # type: ignore
@@ -21,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class MyProjectSettings(Django30Settings):
     # SECURITY WARNING: keep the secret key used in production secret!
-    SECRET_KEY = '{{ secret_key }}'
+    SECRET_KEY = 'secret_key'
 
     # SECURITY WARNING: don't run with debug turned on in production!
     DEBUG = True
@@ -49,7 +51,7 @@ class MyProjectSettings(Django30Settings):
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
     ]
 
-    ROOT_URLCONF = '{{ project_name }}.urls'
+    ROOT_URLCONF = 'mysite.urls'
 
     TEMPLATES = [
         {
@@ -67,7 +69,7 @@ class MyProjectSettings(Django30Settings):
         },
     ]
 
-    WSGI_APPLICATION = '{{ project_name }}.wsgi.application'
+    WSGI_APPLICATION = 'mysite.wsgi.application'
 
     # Database
     # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -75,7 +77,7 @@ class MyProjectSettings(Django30Settings):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            'NAME': '/path/to/db.sqlite3',  # e.g. os.path.join(BASE_DIR, 'db.sqlite3'),
         }
     }
 
@@ -86,15 +88,9 @@ class MyProjectSettings(Django30Settings):
         {
             'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
         },
-        {
-            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-        },
+        {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
+        {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+        {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
     ]
 
     # Internationalization
