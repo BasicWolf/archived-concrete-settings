@@ -61,3 +61,12 @@ def test_json_source_read_nested_object_value(fs):
     fs.create_file('/test/settings.json', contents='{"A": {"B": 10}}')
     jsrc = get_source('/test/settings.json')
     assert jsrc.read(S('B'), parents=('A',)) == 10
+
+
+def test_json_source_read_non_existing_setting_returns_setting_value(fs):
+    fs.create_file('/test/settings.json', contents='{"A": {"B": 10}}')
+    jsrc = get_source('/test/settings.json')
+
+    setting = S('NOT_EXISTS')
+    setting.value = 'some default value'
+    assert jsrc.read(setting) == 'some default value'

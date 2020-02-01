@@ -101,3 +101,12 @@ def test_yaml_source_read_nested_object_value(fs):
     )
     ysrc = get_source('/test/settings.yaml')
     assert ysrc.read(S('B'), parents=('A',)) == 10
+
+
+def test_yaml_source_read_non_existing_setting_returns_setting_value(fs):
+    fs.create_file('/test/settings.yaml', contents='')
+    ysrc = get_source('/test/settings.yaml')
+
+    setting = S('NOT_EXISTS')
+    setting.value = 'some default value'
+    assert ysrc.read(setting) == 'some default value'

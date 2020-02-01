@@ -7,7 +7,7 @@ from ..utils import Match
 
 
 def test_get_source_fail_for_unknown_source():
-    with pytest.raises(sources.NoSuitableSourceFoundError):
+    with pytest.raises(sources.NoSuitableSourceFound):
         assert sources.get_source('/test/dummy')
 
 
@@ -61,6 +61,13 @@ def test_dict_source_two_levels_nested_dicts_values():
     assert dsrc.read(S('a')) == 10
     assert dsrc.read(S('c')) == {'d': 30}
     assert dsrc.read(S('d'), parents=('c',)) == 30
+
+
+def test_dict_source_read_non_existing_setting_returns_setting_value(fs):
+    dsrc = sources.get_source({})
+    setting = S('NOT_EXISTS')
+    setting.value = 'some default value'
+    assert dsrc.read(setting) == 'some default value'
 
 
 #

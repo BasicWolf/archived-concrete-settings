@@ -22,7 +22,7 @@ class JsonSource(FileSource):
         for key in parents:
             d = d[key]
 
-        val = d[setting.name]
+        val = d.get(setting.name, setting.value)
         return val
 
     @staticmethod

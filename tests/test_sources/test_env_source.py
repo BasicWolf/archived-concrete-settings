@@ -38,3 +38,10 @@ def test_env_source_with_parents(monkeypatch):
     esrc = get_source(EnvVarSource())
     assert esrc.read(S('USER', str), ('DB',)) == 'alex'
     assert esrc.read(S('USER', str), ('db',)) == 'alex'
+
+
+def test_env_source_read_non_existing_setting_returns_setting_value():
+    esrc = get_source(EnvVarSource())
+    setting = S('NOT_EXISTS')
+    setting.value = 'some default value'
+    assert esrc.read(setting) == 'some default value'

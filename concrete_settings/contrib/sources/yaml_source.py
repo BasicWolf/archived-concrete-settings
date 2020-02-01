@@ -28,7 +28,7 @@ class YamlSource(FileSource):
         for key in parents:
             d = d[key]
 
-        val = d[setting.name]
+        val = d.get(setting.name, setting.value)
         return val
 
     @staticmethod
@@ -38,7 +38,7 @@ class YamlSource(FileSource):
         try:
             with open(path) as f:
                 raw_data = f.read()
-                return yaml.safe_load(raw_data)
+                return yaml.safe_load(raw_data) or {}
         except FileNotFoundError as e:
             raise ConcreteSettingsError(f"Source file {path} was not found") from e
         except yaml.YAMLError as e:

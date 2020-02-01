@@ -4,7 +4,6 @@ from concrete_settings import Setting
 from concrete_settings.contrib.sources import PythonSource
 from concrete_settings.sources import get_source
 
-
 MY_DIR = Path(__file__).parent
 PYTHON_SOURCE_PATH = str(MY_DIR / 'python_settings_fixture.py')
 
@@ -60,3 +59,10 @@ def test_python_source_read_object_value():
 def test_python_source_read_nested_object_value():
     src = get_source(PYTHON_SOURCE_PATH)
     assert src.read(S('PORT'), parents=('DATABASE',)) == 1234
+
+
+def test_python_source_read_non_existing_setting_returns_setting_value():
+    src = get_source(PYTHON_SOURCE_PATH)
+    setting = S('NOT_EXISTS')
+    setting.value = 'some default value'
+    assert src.read(setting) == 'some default value'

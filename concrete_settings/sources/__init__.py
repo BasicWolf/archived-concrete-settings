@@ -15,7 +15,7 @@ def register_source(source_cls: Type['Source']):
     return source_cls
 
 
-class NoSuitableSourceFoundError(ConcreteSettingsError):
+class NoSuitableSourceFound(ConcreteSettingsError):
     def __init__(self, src: AnySource):
         super().__init__(
             f'No suitable source found to handle "{src}".\n'
@@ -32,7 +32,7 @@ def get_source(src: AnySource) -> 'Source':
         if source is not None:
             return source
 
-    raise NoSuitableSourceFoundError(src)
+    raise NoSuitableSourceFound(src)
 
 
 class Source:
@@ -81,7 +81,7 @@ class DictSource(Source):
         for key in parents:
             d = d[key]
 
-        val = d[setting.name]
+        val = d.get(setting.name, setting.value)
         return val
 
 
