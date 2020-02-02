@@ -5,8 +5,14 @@ from concrete_settings.contrib.frameworks.django30 import Django30Settings
 from concrete_settings.contrib.frameworks.django30_template import MyProjectSettings
 
 
-def test_django30_is_valid():
-    assert Django30Settings().is_valid()
+def test_django30_is_valid_with_required_values_defined():
+    django_settings = Django30Settings()
+    django_settings.ROOT_URLCONF = 'mysite.url'
+    assert django_settings.is_valid()
+
+
+def test_django30_is_not_valid_with_undefined_values():
+    assert not Django30Settings().is_valid()
 
 
 def test_Django30Settings_values_correspond_to_django_global_settings(request):
