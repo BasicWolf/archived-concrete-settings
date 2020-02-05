@@ -1,6 +1,6 @@
 from concrete_settings import Setting
 from concrete_settings.contrib.sources import EnvVarSource
-from concrete_settings.sources import get_source
+from concrete_settings.sources import get_source, NotFound
 
 
 def S(name: str, type_hint=str) -> Setting:
@@ -40,8 +40,7 @@ def test_env_source_with_parents(monkeypatch):
     assert esrc.read(S('USER', str), ('db',)) == 'alex'
 
 
-def test_env_source_read_non_existing_setting_returns_setting_value():
+def test_env_source_read_non_existing_setting_returns_not_found():
     esrc = get_source(EnvVarSource())
     setting = S('NOT_EXISTS')
-    setting.value = 'some default value'
-    assert esrc.read(setting) == 'some default value'
+    assert esrc.read(setting) == NotFound

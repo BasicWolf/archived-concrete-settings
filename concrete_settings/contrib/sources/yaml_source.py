@@ -1,7 +1,7 @@
-from typing import Any, Tuple
+from typing import Any, Tuple, Union, Type
 
 from concrete_settings.exceptions import ConcreteSettingsError
-from concrete_settings.sources import FileSource, register_source
+from concrete_settings.sources import FileSource, register_source, NotFound
 
 
 @register_source
@@ -20,15 +20,16 @@ class YamlSource(FileSource):
         super().__init__(path)
         self._data = None
 
-    def read(self, setting, parents: Tuple[str, ...] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str, ...] = ()) -> Union[Type[NotFound], Any]:
         if self._data is None:
             self._data = self._read_file(self.path)
 
         d = self._data
+
         for key in parents:
             d = d[key]
 
-        val = d.get(setting.name, setting.value)
+        val = d.get(setting.name, NotFound)
         return val
 
     @staticmethod

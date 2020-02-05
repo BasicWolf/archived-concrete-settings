@@ -9,6 +9,10 @@ _registered_sources = set()
 AnySource = Union[Dict[str, Any], str, 'Source', Path]
 
 
+class NotFound:
+    pass
+
+
 def register_source(source_cls: Type['Source']):
     global _registered_sources
     _registered_sources.add(source_cls)
@@ -40,7 +44,7 @@ class Source:
     def get_source(src: AnySource) -> Optional['Source']:
         return None
 
-    def read(self, setting, parents: Tuple[str, ...] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str, ...] = ()) -> Union[Type[NotFound], Any]:
         pass
 
 
@@ -76,12 +80,12 @@ class DictSource(Source):
         else:
             return None
 
-    def read(self, setting, parents: Tuple[str, ...] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str, ...] = ()) -> Union[Type[NotFound], Any]:
         d = self.data
         for key in parents:
             d = d[key]
 
-        val = d.get(setting.name, setting.value)
+        val = d.get(setting.name, NotFound)
         return val
 
 

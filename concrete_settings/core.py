@@ -18,7 +18,7 @@ from typing import (
 
 from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
-from .sources import get_source, AnySource, Source
+from .sources import get_source, AnySource, Source, NotFound
 from .sources.strategies import default as default_update_strategy
 from .types import Undefined, GuessSettingType, type_hints_equal
 from .validators import ValueTypeValidator
@@ -445,8 +445,11 @@ class Settings(Setting, metaclass=SettingsMeta):
                 else:
                     update_strategy = default_update_strategy
 
-                current_val = getattr(settings, name)
                 update_to_val = source.read(setting, parents)
+                if update_to_val is NotFound:
+                    continue
+
+                current_val = getattr(settings, name)
                 new_val = update_strategy(current_val, update_to_val)
                 setattr(settings, name, new_val)
 

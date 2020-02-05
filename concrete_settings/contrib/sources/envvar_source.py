@@ -1,12 +1,12 @@
 import os
-from typing import Any, Tuple, Optional
+from typing import Any, Tuple, Optional, Union, Type
 
 from concrete_settings.sources import (
     Source,
     StringSourceMixin,
     AnySource,
     register_source,
-)
+    NotFound)
 
 
 @register_source
@@ -21,8 +21,12 @@ class EnvVarSource(StringSourceMixin, Source):
         else:
             return None
 
-    def read(self, setting, parents: Tuple[str, ...] = ()) -> Any:
+    def read(self, setting, parents: Tuple[str, ...] = ()) -> Union[Type[NotFound], Any]:
         parents_upper = map(str.upper, parents)
         key = '_'.join((*parents_upper, setting.name))
-        val = os.environ.get(key, setting.value)
-        return self.convert_value(val, setting.type_hint)
+        val = os.environ.get(key, NotFound)
+
+        if val is NotFound:
+            return NotFound
+        else:
+            return self.convert_value(val, setting.type_hint)  # type: ignore

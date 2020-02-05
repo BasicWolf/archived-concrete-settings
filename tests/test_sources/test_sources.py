@@ -1,7 +1,7 @@
 import pytest
 from concrete_settings import Setting, Settings
 from concrete_settings import sources
-from concrete_settings.sources import strategies
+from concrete_settings.sources import strategies, NotFound
 
 from ..utils import Match
 
@@ -63,11 +63,10 @@ def test_dict_source_two_levels_nested_dicts_values():
     assert dsrc.read(S('d'), parents=('c',)) == 30
 
 
-def test_dict_source_read_non_existing_setting_returns_setting_value(fs):
+def test_dict_source_read_non_existing_setting_returns_not_found(fs):
     dsrc = sources.get_source({})
     setting = S('NOT_EXISTS')
-    setting.value = 'some default value'
-    assert dsrc.read(setting) == 'some default value'
+    assert dsrc.read(setting) == NotFound
 
 
 #
@@ -82,6 +81,16 @@ def test_update_source_is_not_called_on_empty(mocker):
 
     s.update(src_mock)
     src_mock.read.assert_not_called()
+
+
+def test_update_source_multiple_times():
+    class AppSettings(Settings):
+        ADMIN_EMAIL = 'admin@example.com'
+
+    app_settings = AppSettings()
+    app_settings.update({'ADMIN_EMAIL': 'alex@example.com'})
+    app_settings.update({'ADMIN_EMAIL': 'black@example.com'})
+    assert app_settings.ADMIN_EMAIL == 'black@example.com'
 
 
 def test_update_top_level_setting_source_is_called(mocker):

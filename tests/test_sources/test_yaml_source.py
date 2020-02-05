@@ -3,7 +3,7 @@ import pytest
 from concrete_settings import Setting
 from concrete_settings.contrib.sources import YamlSource
 from concrete_settings.exceptions import ConcreteSettingsError
-from concrete_settings.sources import get_source
+from concrete_settings.sources import get_source, NotFound
 
 
 def S(name: str, type_hint=str) -> Setting:
@@ -103,10 +103,9 @@ def test_yaml_source_read_nested_object_value(fs):
     assert ysrc.read(S('B'), parents=('A',)) == 10
 
 
-def test_yaml_source_read_non_existing_setting_returns_setting_value(fs):
+def test_yaml_source_read_non_existing_setting_returns_not_found(fs):
     fs.create_file('/test/settings.yaml', contents='')
     ysrc = get_source('/test/settings.yaml')
 
     setting = S('NOT_EXISTS')
-    setting.value = 'some default value'
-    assert ysrc.read(setting) == 'some default value'
+    assert ysrc.read(setting) == NotFound

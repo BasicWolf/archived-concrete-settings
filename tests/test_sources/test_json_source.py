@@ -1,6 +1,6 @@
 from concrete_settings import Setting
 from concrete_settings.contrib.sources import JsonSource
-from concrete_settings.sources import get_source
+from concrete_settings.sources import get_source, NotFound
 
 
 def S(name: str, type_hint=str) -> Setting:
@@ -63,10 +63,9 @@ def test_json_source_read_nested_object_value(fs):
     assert jsrc.read(S('B'), parents=('A',)) == 10
 
 
-def test_json_source_read_non_existing_setting_returns_setting_value(fs):
+def test_json_source_read_non_existing_setting_returns_not_found(fs):
     fs.create_file('/test/settings.json', contents='{"A": {"B": 10}}')
     jsrc = get_source('/test/settings.json')
 
     setting = S('NOT_EXISTS')
-    setting.value = 'some default value'
-    assert jsrc.read(setting) == 'some default value'
+    assert jsrc.read(setting) == NotFound
