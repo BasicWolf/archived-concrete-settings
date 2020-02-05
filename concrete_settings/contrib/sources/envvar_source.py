@@ -24,9 +24,9 @@ class EnvVarSource(StringSourceMixin, Source):
     def read(self, setting, parents: Tuple[str, ...] = ()) -> Union[Type[NotFound], Any]:
         parents_upper = map(str.upper, parents)
         key = '_'.join((*parents_upper, setting.name))
-        val = os.environ.get(key, NotFound)
+        val = os.environ.get(key)
 
-        if val is NotFound:
+        if val is None:
             return NotFound
         else:
-            return self.convert_value(val, setting.type_hint)  # type: ignore
+            return self.convert_value(val, setting.type_hint)
