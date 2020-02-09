@@ -7,7 +7,7 @@ SPHINXBUILD   = poetry run sphinx-build
 SOURCEDIR     = src
 BUILDDIR      = _build
 STATICDIR     = ${SOURCEDIR}/_static
-EXAMPLESDIR   = ${STATICDIR}/examples
+EXAMPLESDIR   = ${SOURCEDIR}/examples
 DIR           := ${CURDIR}
 
 # Examples sources / data files
@@ -31,4 +31,5 @@ ${django30_template}: ${EXAMPLESDIR}
 	cp ${DIR}/../concrete_settings/contrib/frameworks/django30_template.yml ${EXAMPLESDIR}
 
 ${EXAMPLESDIR}:
+	echo ${EXAMPLESDIR}
 	mkdir -p ${EXAMPLESDIR}
