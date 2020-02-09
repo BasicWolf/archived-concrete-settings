@@ -227,6 +227,9 @@ and load the settings from ``django.yml`` and ``application.yml``:
    with open('/tmp/django.yml', 'w') as f:
        f.write('ROOT_URLCONF: mysite.urls')
 
+   with open('/tmp/application.yml', 'w') as f:
+       f.write('')
+
 
 .. testcode:: read-django-application-yml
    :hide:
