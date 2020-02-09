@@ -1,9 +1,6 @@
 Welcome to ConcreteSettings
 ===========================
 
-**WARNING!** ConcreteSettings is currently under development!
-There is no stable version available at the moment.
-
 ConcreteSettings is a Python library which facilitates startup
 configuration management in applications.
 

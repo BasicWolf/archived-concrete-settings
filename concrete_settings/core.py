@@ -453,7 +453,7 @@ class Settings(Setting, metaclass=SettingsMeta):
                 new_val = update_strategy(current_val, update_to_val)
                 setattr(settings, name, new_val)
 
-    def extract(self, destination: Union[types.ModuleType, dict], prefix: str = ''):
+    def extract_to(self, destination: Union[types.ModuleType, dict], prefix: str = ''):
         """Populate settings to Python module as local variables"""
         if prefix != '':
             prefix = prefix + '_'
@@ -464,7 +464,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         for name, attr in self.settings_attributes:
             var_name = prefix + name
             if isinstance(attr, Settings):  # nested settings
-                attr.extract(destination, var_name)
+                attr.extract_to(destination, var_name)
             else:
                 destination[var_name] = getattr(self, name)
 

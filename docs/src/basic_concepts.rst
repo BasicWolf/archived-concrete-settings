@@ -338,7 +338,7 @@ during its initialization, validation and setting's
 and
 :meth:`set <concrete_settings.Setting.__set__>`
 descriptors invocations.
-A behavior can be passed in Setting class :class:`constructor <concrete_settings.Setting>`
+A behavior can be passed to :class:`Setting.__init__() <concrete_settings.Setting>`
 or by using ``@`` operator: ``value @ behavior0 @ behavior1 @ ...``
 
 
@@ -422,10 +422,35 @@ Combining settings
 
 Another way of putting settings together is by using Python's
 multi-inheritance mechanism.
-It can be useful, when you have to mimic a legacy settings
-module interface, but want to keep settings logic separated.
+It it very useful when putting a frameworks and application
+settings together. For example, Django settings and
+application settings can be separated as follows:
 
-Let's combine Database, Log and Cache settings:
+.. testcode:: quickstart-combined-framework
+
+   from concrete_settings import Settings
+   from concrete_settings.contrib.frameworks.django30 import Django30Settings
+
+   class ApplicationSettings(Settings):
+       GREETING = 'Hello world!'
+
+   class SiteSettings(ApplicationSettings, Django30Settings):
+       pass
+
+   site_settings = SiteSettings()
+   print(site_settings.GREETING)
+   print(site_settings.EMAIL_BACKEND)
+
+Output:
+
+.. testoutput:: quickstart-combined-framework
+
+   Hello world!
+   django.core.mail.backends.smtp.EmailBackend
+
+Another use case is extracting settings to own classes
+and combining them to mimic legacy settings module interface.
+For example, let's combine Database and Log settings:
 
 .. testcode:: quickstart-combined
 
@@ -437,11 +462,6 @@ Let's combine Database, Log and Cache settings:
        PASSWORD  = 'secret'
        SERVER = 'localhost@5432'
 
-   @prefix('CACHE')
-   class CacheSettings(Settings):
-       ENGINE = 'DatabaseCache'
-       TIMEOUT = 300
-
    @prefix('LOG')
    class LoggingSettings(Settings):
        LEVEL = 'INFO'
@@ -449,7 +469,6 @@ Let's combine Database, Log and Cache settings:
 
    class AppSettings(
        DBSettings,
-       CacheSettings,
        LoggingSettings
    ):
        pass
@@ -475,13 +494,11 @@ must be explicitly called for each of the base classes:
 
    class AppSettings(
        DBSettings,
-       CacheSettings,
        LoggingSettings
    ):
        def validate(self):
            super().validate()
            DBSettings.validate(self)
-           CacheSettings.validate(self)
            LoggingSettings.validate(self)
 
 

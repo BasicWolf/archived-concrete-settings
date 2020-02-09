@@ -53,6 +53,12 @@ plantuml = '/usr/bin/plantuml'
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
 
+doctest_global_setup = f'''
+import os
+__file__ = "{__file__}"
+SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+'''
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

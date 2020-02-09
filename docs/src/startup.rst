@@ -13,7 +13,7 @@ I. Define Settings
 
 As a *developer* of an application, define the settings:
 
-For example, ``my_app/settings_definition.py`` file:
+For example, ``my_app/app_settings.py`` file:
 
 .. testcode:: start-me-up
 
@@ -37,7 +37,7 @@ For example  via a ``.yaml`` file passed as a command-line argument:
    import os
    import sys
 
-   from .settings_definition import ApplicationSettings
+   from .app_settings import ApplicationSettings
 
 
    def main():
@@ -98,7 +98,7 @@ III. Remember to test settings object definition
 
     # we love pytest!
 
-    from my_app.settings_definition import ApplicationSettings
+    from my_app.app_settings import ApplicationSettings
 
     def test_settings_definiton():
         ApplicationSettings()
@@ -106,23 +106,24 @@ III. Remember to test settings object definition
 That's it! You are ready to start using Concrete Settings in your programs!
 
 
-Django Projects
-===============
+Django
+======
 
 Concrete Settings is shipped with batteries which help bootstrapping
 settings in a legacy or a brand new Django project.
-First, there is :class:`Django30Settings <concrete_settings.contrib.frameworks.django30.Django30Settings>`
-class which reflects Django's `global_settings` definitions.
+:class:`Django30Settings <concrete_settings.contrib.frameworks.django30.Django30Settings>`
+class reflects Django 3.0 `global_settings` definitions and allows quick
+integration with new and legacy projects.
 
-Django 3.0
-----------
 
-New project
-...........
+New projects
+------------
 
-Here is an example of how one can start up a new Django application with Concrete Settings.
+Here is an example of starting up a new Django application with Concrete Settings.
 Let's consider that a project was created by the traditional ``djago-admin.py startproject mysite``.
-The good old ``settings.py``. Why not instead have all Django settings in a yaml file instead?
+The project settings are defined in the good old ``settings.py``.
+Why not have all Django settings in a YAML file instead?
+(:download:`full example source <examples/django30_template.yml>`)
 
 .. code-block:: yaml
 
@@ -137,63 +138,28 @@ The good old ``settings.py``. Why not instead have all Django settings in a yaml
    INSTALLED_APPS:
      - django.contrib.admin
      - django.contrib.auth
-     - django.contrib.contenttypes
-     - django.contrib.sessions
-     - django.contrib.messages
-     - django.contrib.staticfiles
+     - ...
 
-   MIDDLEWARE:
-     - django.middleware.security.SecurityMiddleware
-     - django.contrib.sessions.middleware.SessionMiddleware
-     - django.middleware.common.CommonMiddleware
-     - django.middleware.csrf.CsrfViewMiddleware
-     - django.contrib.auth.middleware.AuthenticationMiddleware
-     - django.contrib.messages.middleware.MessageMiddleware
-     - django.middleware.clickjacking.XFrameOptionsMiddleware
+   ...
 
    ROOT_URLCONF: mysite.urls
 
-   TEMPLATES:
-     - BACKEND: django.template.backends.django.DjangoTemplates
-       DIRS: []
-       APP_DIRS: true
-       OPTIONS:
-         context_processors:
-           - django.template.context_processors.debug
-           - django.template.context_processors.request
-           - django.contrib.auth.context_processors.auth
-           - django.contrib.messages.context_processors.messages
-
-   WSGI_APPLICATION: mysite.wsgi.application
-
-   DATABASES:
-     default:
-       ENGINE: django.db.backends.sqlite3
-       NAME: '/path/to/db.sqlite3'
-
-   AUTH_PASSWORD_VALIDATORS:
-     - NAME: django.contrib.auth.password_validation.UserAttributeSimilarityValidator
-     - NAME: django.contrib.auth.password_validation.MinimumLengthValidator
-     - NAME: django.contrib.auth.password_validation.CommonPasswordValidator
-     - NAME: django.contrib.auth.password_validation.NumericPasswordValidator
-
-
-   LANGUAGE_CODE: en-us
-
-   TIME_ZONE: UTC
-
-   USE_I18N: true
-
-   USE_L10N: true
-
-   USE_TZ: true
+   ...
 
    STATIC_URL: '/static/'
 
 
-To read this file, ``settings.py`` has to be modified as follows:
+To read this file, ``settings.py`` can be modified as follows:
 
-.. code-block:: python
+.. testsetup:: read-django-yml
+
+   __file__ = '/tmp/django.yml'
+
+   with open('/tmp/django.yml', 'w') as f:
+       f.write('ROOT_URLCONF: mysite.urls')
+
+
+.. testcode:: read-django-yml
 
    import os
 
@@ -204,38 +170,81 @@ To read this file, ``settings.py`` has to be modified as follows:
 
    settings = Django30Settings()
 
+   # Read settings from djano.yml
    settings.update(SETTINGS_DIR + '/django.yml')
 
+   # Validate settings
    settings.is_valid(raise_exception=True)
-   settings.extract(globals())
+
+   # extract settings to module's global scope
+   # so that Django can read them
+   settings.extract_to(globals())
+
+
+.. testcleanup:: quickstart-json-source
+
+   import os
+   os.remove('/tmp/django.yml')
 
 Easy, isn't it?
 
 
 Separate application settings
-.............................
+-----------------------------
 
-Sometimes you need to put application settings to ``settings.py`` to access
-them from ``django.conf.settings``. Let's modify ``settings.py`` to separate
-Django and application settings:
+Developers often put application settings to a site's ``settings.py``
+which leads to mixing up Django and Application settings.
+Let's put application settings definiton to a separate file
+``application_settings.py``:
 
-.. code-block:: python
 
-   import os
+.. testcode:: read-django-application-yml
+
+   # mysite/application_settings.py
 
    from concrete_settings import Settings
-   from concrete_settings.contrib.frameworks.django30 import Django30Settings
-
-   SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
-
 
    class ApplicationSettings(Settings):
        GREETING_MESSAGE: str = 'Welcome'
 
+A corresponding ``application.yml`` would be:
+
+.. code-block:: yaml
+
+   # mysite/application.yml
+
+   GREETING_MESSAGE: Welcome, Concrete Settings User!
+
+
+Finally we can combine Django and application settings in ``settings.py``
+and load the settings from ``django.yml`` and ``application.yml``:
+
+
+.. testsetup:: read-django-application-yml
+
+   __file__ = '/tmp/django.yml'
+
+   with open('/tmp/django.yml', 'w') as f:
+       f.write('ROOT_URLCONF: mysite.urls')
+
+
+.. testcode:: read-django-application-yml
+   :hide:
+
+   __file__ = '/tmp/django.yml'
+
+   # Note, this should be the same as code-block below.
+   # Duplicating since unable to import ApplicationSettings relatively
+
+   from concrete_settings.contrib.frameworks.django30 import Django30Settings
+
+   SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 
    class SiteSettings(ApplicationSettings, Django30Settings):
-       pass
-
+       def validate(self):
+           super().validate()
+           ApplicationSettings.validate(self)
+           Django30Settings.validate(self)
 
    settings = SiteSettings()
 
@@ -243,10 +252,108 @@ Django and application settings:
    settings.update(SETTINGS_DIR + '/application.yml')
 
    settings.is_valid(raise_exception=True)
-   settings.extract(globals())
+   settings.extract_to(globals())
 
-And ``application.yml`` is:
+.. code-block::
 
-.. code-block:: yaml
+   # settings.py
 
-  GREETING_MESSAGE: Welcome, Concrete Settings User!
+   import os
+
+   from concrete_settings.contrib.frameworks.django30 import Django30Settings
+
+   from .application_settings import AppliactionSettings
+
+
+   SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+   class SiteSettings(ApplicationSettings, Django30Settings):
+       def validate(self):
+           super().validate()
+           ApplicationSettings.validate(self)
+           Django30Settings.validate(self)
+
+   settings = SiteSettings()
+
+   settings.update(SETTINGS_DIR + '/django.yml')
+   settings.update(SETTINGS_DIR + '/application.yml')
+
+   settings.is_valid(raise_exception=True)
+   settings.extract_to(globals())
+
+
+
+Legacy projects
+---------------
+
+Existing Django projects' settings can be gradually migrated to Concrete Settings
+without modifying the existing configuration files at all!
+
+The basic idea is to import the original settings attributes via
+``from settings import *``, then process the ``globals()`` with
+Concrete Settings:
+
+.. code-block:: python
+
+   # mysite/new_settings.py
+   # remember to update DJANGO_SETTINGS_MODULE
+
+   import os
+
+   from concrete_settings.contrib.frameworks.django30 import Django30Settings
+   from .settings import *  # import all existing application settings
+
+   SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+   settings = Django30Settings()
+
+   # load variables imported from settings.py
+   settings.update(globals())
+
+   settings.is_valid(raise_exception=True)
+
+   settings.extract_to(globals())
+
+Start migrating application settings by defining an empty
+``Settings`` class in ``application_settings.py``:
+
+.. code-block:: python
+
+   from concrete_settings import Settings
+
+   class ApplicationSettings(Settings):
+       ...
+
+Update ``new_settings.py`` to separate Django and application settings:
+
+
+.. code-block:: python
+
+   # new_settings.py
+
+   import os
+
+   from concrete_settings.contrib.frameworks.django30 import Django30Settings
+
+   from .application_settings import ApplicationSettings
+
+   from .settings import *
+
+   SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+   class SiteSettings(ApplicationSettings, Django30Settings):
+       def validate(self):
+           super().validate()
+           ApplicationSettings.validate(self)
+           Django30Settings.validate(self)
+
+
+   settings = SiteSettings()
+
+   settings.update(globals())
+   settings.update(SETTINGS_DIR + '/application.yml')  # optional
+
+   settings.is_valid(raise_exception=True)
+   settings.extract_to(globals())

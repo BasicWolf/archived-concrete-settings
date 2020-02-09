@@ -431,7 +431,7 @@ def test_settings_extract_to_module(build_module_mock):
         SITE_NAME = 'mysite'
 
     module = build_module_mock('test_settings')
-    MySettings().extract(module)
+    MySettings().extract_to(module)
     assert module.DEBUG
     assert module.SITE_NAME == 'mysite'
 
@@ -445,6 +445,6 @@ def test_nested_settings_extract_to_dict():
         DB = DBSettings()
 
     d = {}
-    MySettings().extract(d)
+    MySettings().extract_to(d)
     assert d['DB_USERNAME'] == 'alex'
     assert d['DB_PASSWORD'] == 'secret_password'
