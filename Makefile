@@ -38,4 +38,7 @@ doctest:
 clean:
 	rm -r concrete_settings.egg-info pip-wheel-metadata .pytest_cache
 
+test-upload:
+	poetry run twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
 .PHONY: docs
