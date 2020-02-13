@@ -40,7 +40,7 @@ deploy:
   # Uses Twine, requires  environmental variables:
   # TWINE_USERNAME, TWINE_PASSWORD
   provider: script
-  script: make test-upload
+  script: make test-deploy
   on:
     tags: true
     python: '3.8'
