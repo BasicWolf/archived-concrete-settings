@@ -43,4 +43,4 @@ deploy:
   script: make test-upload
   on:
     tags: true
-    python '3.8'
+    python: '3.8'
