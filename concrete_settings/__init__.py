@@ -30,3 +30,6 @@ def _load_contrib():
 
 
 _load_contrib()
+
+
+__version__ = "0.0.0"

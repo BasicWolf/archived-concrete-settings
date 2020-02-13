@@ -207,6 +207,14 @@ pipenv = ["pipenv"]
 
 [[package]]
 category = "dev"
+description = "Dynamic version generation"
+name = "dunamai"
+optional = false
+python-versions = ">=3.5,<4.0"
+version = "1.0.0"
+
+[[package]]
+category = "dev"
 description = "Discover and load entry points from installed packages."
 name = "entrypoints"
 optional = false
@@ -319,8 +327,8 @@ category = "main"
 description = "A very fast and expressive template engine."
 name = "jinja2"
 optional = false
-python-versions = "*"
-version = "2.10.3"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "2.11.1"
 
 [package.dependencies]
 MarkupSafe = ">=0.23"
@@ -435,6 +443,19 @@ version = ">=0.12"
 
 [package.extras]
 dev = ["pre-commit", "tox"]
+
+[[package]]
+category = "dev"
+description = "Plugin for Poetry to enable dynamic versioning based on VCS tags"
+name = "poetry-dynamic-versioning"
+optional = false
+python-versions = ">=3.5,<4.0"
+version = "0.5.0"
+
+[package.dependencies]
+dunamai = ">=1.0,<2.0"
+jinja2 = ">=2.11.1,<3.0.0"
+tomlkit = ">=0.4"
 
 [[package]]
 category = "dev"
@@ -846,6 +867,14 @@ version = "0.10.0"
 
 [[package]]
 category = "dev"
+description = "Style preserving TOML library"
+name = "tomlkit"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "0.5.8"
+
+[[package]]
+category = "dev"
 description = "tox is a generic virtualenv management and test command line tool"
 name = "tox"
 optional = false
@@ -996,7 +1025,7 @@ testing = ["jaraco.itertools"]
 pyyaml = ["pyyaml"]
 
 [metadata]
-content-hash = "a66ea0901101362cc14c463805932643c40e2ecad83883e57399bead8bea6aaf"
+content-hash = "c78d480f82e62e8a7168296d5ca2fb2ed30d418693aefd8fe16d4fd10b6b58a5"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -1146,6 +1175,10 @@ dparse = [
     {file = "dparse-0.4.1-py2-none-any.whl", hash = "sha256:cef95156fa0adedaf042cd42f9990974bec76f25dfeca4dc01f381a243d5aa5b"},
     {file = "dparse-0.4.1.tar.gz", hash = "sha256:00a5fdfa900629e5159bf3600d44905b333f4059a3366f28e0dbd13eeab17b19"},
 ]
+dunamai = [
+    {file = "dunamai-1.0.0-py3-none-any.whl", hash = "sha256:18e77ec3e68912cf396245b88377efddff60dd95d0cbe1700e06b42aaf9f6d6e"},
+    {file = "dunamai-1.0.0.tar.gz", hash = "sha256:82f099585b9477a85250fff660a20f6d8c7d2f78de7ecbcebb7df85389433bf8"},
+]
 entrypoints = [
     {file = "entrypoints-0.3-py2.py3-none-any.whl", hash = "sha256:589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19"},
     {file = "entrypoints-0.3.tar.gz", hash = "sha256:c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451"},
@@ -1187,8 +1220,8 @@ jeepney = [
     {file = "jeepney-0.4.2.tar.gz", hash = "sha256:0ba6d8c597e9bef1ebd18aaec595f942a264e25c1a48f164d46120eacaa2e9bb"},
 ]
 jinja2 = [
-    {file = "Jinja2-2.10.3-py2.py3-none-any.whl", hash = "sha256:74320bb91f31270f9551d46522e33af46a80c3d619f4a4bf42b3164d30b5911f"},
-    {file = "Jinja2-2.10.3.tar.gz", hash = "sha256:9fe95f19286cfefaa917656583d020be14e7859c6b0252588391e47db34527de"},
+    {file = "Jinja2-2.11.1-py2.py3-none-any.whl", hash = "sha256:b0eaf100007721b5c16c1fc1eecb87409464edc10469ddc9a22a27a99123be49"},
+    {file = "Jinja2-2.11.1.tar.gz", hash = "sha256:93187ffbc7808079673ef52771baa950426fd664d3aad1d0fa3e95644360e250"},
 ]
 keyring = [
     {file = "keyring-21.1.0-py2.py3-none-any.whl", hash = "sha256:24ae23ab2d6adc59138339e56843e33ec7b0a6b2f06302662477085c6c0aca00"},
@@ -1263,6 +1296,10 @@ pkginfo = [
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
+]
+poetry-dynamic-versioning = [
+    {file = "poetry-dynamic-versioning-0.5.0.tar.gz", hash = "sha256:a17a12337b5de3a14ad35427d76285cf5b179bf1aeadb262de2465e036e2e5a7"},
+    {file = "poetry_dynamic_versioning-0.5.0-py3-none-any.whl", hash = "sha256:048f95eaf438bd7a7bedbf981d7ba0e0206af00301700f61c06ed8a05b85cbeb"},
 ]
 pudb = [
     {file = "pudb-2019.2.tar.gz", hash = "sha256:e8f0ea01b134d802872184b05bffc82af29a1eb2f9374a277434b932d68f58dc"},
@@ -1410,6 +1447,10 @@ toml = [
     {file = "toml-0.10.0-py2.7.egg", hash = "sha256:f1db651f9657708513243e61e6cc67d101a39bad662eaa9b5546f789338e07a3"},
     {file = "toml-0.10.0-py2.py3-none-any.whl", hash = "sha256:235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e"},
     {file = "toml-0.10.0.tar.gz", hash = "sha256:229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c"},
+]
+tomlkit = [
+    {file = "tomlkit-0.5.8-py2.py3-none-any.whl", hash = "sha256:96e6369288571799a3052c1ef93b9de440e1ab751aa045f435b55e9d3bcd0690"},
+    {file = "tomlkit-0.5.8.tar.gz", hash = "sha256:32c10cc16ded7e4101c79f269910658cc2a0be5913f1252121c3cd603051c269"},
 ]
 tox = [
     {file = "tox-3.14.3-py2.py3-none-any.whl", hash = "sha256:806d0a9217584558cc93747a945a9d9bff10b141a5287f0c8429a08828a22192"},
