@@ -35,10 +35,15 @@ docs: doctest
 doctest:
 	$(MAKE) doctest -C docs
 
+
+test-deploy: build
+	poetry run twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+build:
+	poetry build
+
+
 clean:
 	rm -r concrete_settings.egg-info pip-wheel-metadata .pytest_cache
-
-test-upload:
-	poetry run twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
 .PHONY: docs
