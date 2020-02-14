@@ -952,7 +952,7 @@ doc = ["sphinx-rtd-theme", "sphinx-autodoc-typehints (>=1.2.0)"]
 test = ["pytest", "pytest-cov", "typing-extensions"]
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Backported and Experimental Type Hints for Python 3.5+"
 name = "typing-extensions"
 optional = false
@@ -1025,7 +1025,7 @@ testing = ["jaraco.itertools"]
 pyyaml = ["pyyaml"]
 
 [metadata]
-content-hash = "c78d480f82e62e8a7168296d5ca2fb2ed30d418693aefd8fe16d4fd10b6b58a5"
+content-hash = "4e8063467ad5dace72be686a7fe0a3be581791981f7473f5b70df29c489199a9"
 python-versions = "^3.6"
 
 [metadata.files]

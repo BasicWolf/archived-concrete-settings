@@ -1,7 +1,8 @@
 import abc
 import sys
+from typing import Any, TYPE_CHECKING
 
-from typing import Any, TYPE_CHECKING, Protocol
+from typing_extensions import Protocol
 
 if TYPE_CHECKING:
     from .core import Setting, Settings
@@ -99,12 +100,12 @@ class Validator(Protocol):
 
     @abc.abstractmethod
     def __call__(
-            self,
-            value,
-            *,
-            name: str = None,
-            owner: 'Settings' = None,
-            setting: 'Setting' = None,
+        self,
+        value,
+        *,
+        name: str = None,
+        owner: 'Settings' = None,
+        setting: 'Setting' = None,
     ):
         """Validate a value. Raise `SettingsValidationError` if value is wrong."""
         pass
