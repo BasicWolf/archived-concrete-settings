@@ -11,15 +11,20 @@ class StructureError(ConcreteSettingsError):
 
 SettingName = str
 
-ValidationErrorDetail = Union[  # type: ignore
+# fmt: off
+# type ignored due to cyclic definition, promised to be fixed in
+# future mypy versions
+ValidationErrorDetail = Union[                   # type: ignore
     str,
-    List['ValidationErrorDetail'],  # type: ignore
-    Dict[SettingName, 'ValidationErrorDetail']  # type: ignore
+    List['ValidationErrorDetail'],               # type: ignore
+    Dict[SettingName, 'ValidationErrorDetail'],  # type: ignore
 ]
+# fmt: on
 
 
 class SettingsValidationError(ConcreteSettingsError):
     """Raised by a setting validator when a setting value is invalid"""
+
     sources: List[str]
 
     def __init__(self, detail: ValidationErrorDetail = ''):

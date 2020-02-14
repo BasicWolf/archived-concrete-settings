@@ -42,8 +42,6 @@ Types
    .. autoattribute:: KNOWN_TYPES
 
 
-.. module:: concrete_settings.validator
-
 Validators
 ----------
 

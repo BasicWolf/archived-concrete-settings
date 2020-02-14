@@ -1,6 +1,10 @@
+import abc
 import sys
 
-from typing import Any
+from typing import Any, TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from .core import Setting, Settings
 
 
 class UndefinedMeta(type):
@@ -16,8 +20,14 @@ class Undefined(metaclass=UndefinedMeta):
     that something has not been explicitly set by a user.
     """
 
+    def __new__(cls, *args, **kwargs):
+        raise RuntimeError(f'{cls} should not be instantiated')
+
     def __bool__(self):
         return False
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}.{self.name}>'
 
 
 class GuessSettingType:
@@ -79,3 +89,22 @@ def type_hints_equal(hint1, hint2):
         h2 = getattr(hint2, '__extra__', hint2)
 
     return h1 is h2
+
+
+class Validator(Protocol):
+    """A validator is a callable that raises an exception if a value is wrong.
+
+    A validator accepts a value as a mandatory argument, and keyword-only arguments
+    referring to settings, setting and setting's name."""
+
+    @abc.abstractmethod
+    def __call__(
+            self,
+            value,
+            *,
+            name: str = None,
+            owner: 'Settings' = None,
+            setting: 'Setting' = None,
+    ):
+        """Validate a value. Raise `SettingsValidationError` if value is wrong."""
+        pass

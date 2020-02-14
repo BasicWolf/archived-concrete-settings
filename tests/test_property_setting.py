@@ -34,8 +34,9 @@ def test_no_return_type_hint_set_as_any():
 def test_init_asserts_first_argument():
     with pytest.raises(
         AssertionError,
-        match='No positional arguments should be passed to PropertySetting.__init__()'
+        match='No positional arguments should be passed to PropertySetting.__init__()',
     ):
+
         class TestSettings(Settings):
             @setting('Markus')
             def ADMIN(self):
@@ -45,8 +46,9 @@ def test_init_asserts_first_argument():
 def test_init_asserts_value_argument():
     with pytest.raises(
         AssertionError,
-        match='"value" argument should not be passed to PropertySetting.__init__()'
+        match='"value" argument should not be passed to PropertySetting.__init__()',
     ):
+
         class TestSettings(Settings):
             @setting(value='Markus')
             def ADMIN(self):

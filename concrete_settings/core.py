@@ -20,7 +20,7 @@ from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
 from .sources import get_source, AnySource, Source, NotFound
 from .sources.strategies import default as default_update_strategy
-from .types import Undefined, GuessSettingType, type_hints_equal
+from .types import Undefined, GuessSettingType, type_hints_equal, Validator
 from .validators import ValueTypeValidator
 
 logger = logging.getLogger(__name__)
@@ -37,19 +37,19 @@ class Setting:
     behaviors: 'Behaviors'
 
     def __init__(
-            self,
-            value: Any = Undefined,
-            *,
-            doc: Union[str, Type[Undefined]] = Undefined,
-            validators: Tuple[Callable, ...] = (),
-            type_hint: Any = GuessSettingType,
-            behaviors: Union['Behaviors', Iterable] = None,
+        self,
+        value: Any = Undefined,
+        *,
+        doc: str = '',
+        validators: Tuple[Validator, ...] = (),
+        type_hint: Any = GuessSettingType,
+        behaviors: Union['Behaviors', Iterable] = None,
     ):
         self.value = value
         self.type_hint = type_hint
         self.validators = tuple(validators)
         self.behaviors = Behaviors(behaviors or ())
-        self.__doc__ = str(doc or '')
+        self.__doc__ = doc
         self.name = ""
         self.override = False
 
@@ -87,7 +87,7 @@ class Setting:
 class PropertySetting(Setting):
     def __init__(self, *args, **kwargs):
         decorating_without_arguments = (
-                len(args) == 1 and len(kwargs) == 0 and callable(args[0])
+            len(args) == 1 and len(kwargs) == 0 and callable(args[0])
         )
         if decorating_without_arguments:
             self._init_decorator_without_arguments(args[0])
@@ -158,26 +158,19 @@ class SettingsMeta(type):
 
             # Make a Setting out of ALL_UPPERCASE_ATTRIBUTE
             if (
-                    not isinstance(field, Setting)
-                    and mcs._is_setting_name(name)
-                    and mcs._is_safe_setting_type(field)
+                not isinstance(field, Setting)
+                and mcs._is_setting_name(name)
+                and mcs._is_safe_setting_type(field)
             ):
-                new_field = mcs._make_setting_from_attribute(
-                    name,
-                    field,
-                    annotations,
-                )
+                new_field = mcs._make_setting_from_attribute(name, field, annotations,)
 
             # Should we try to guess a type_hint for a Setting?
             if (
-                    isinstance(new_field, Setting)
-                    and new_field.type_hint is GuessSettingType
+                isinstance(new_field, Setting)
+                and new_field.type_hint is GuessSettingType
             ):
                 new_field.type_hint = mcs._guess_type_hint(
-                    name,
-                    new_field,
-                    annotations,
-                    bases
+                    name, new_field, annotations, bases
                 )
 
             new_dict[name] = new_field
@@ -278,10 +271,10 @@ class Settings(Setting, metaclass=SettingsMeta):
 
     def __init__(self, **kwargs):
         assert (
-                'value' not in kwargs
+            'value' not in kwargs
         ), '"value" argument should not be passed to Settings.__init__()'
         assert (
-                'type_hint' not in kwargs
+            'type_hint' not in kwargs
         ), '"type_hint" argument should not be passed to Settings.__init__()'
 
         super().__init__(value=self, type_hint=self.__class__, **kwargs)
@@ -370,7 +363,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         return errors
 
     def _validate_setting(
-            self, name: str, setting: Setting, raise_exception=False
+        self, name: str, setting: Setting, raise_exception=False
     ) -> ValidationErrorDetail:
         value: Setting = getattr(self, name)
 
@@ -420,11 +413,11 @@ class Settings(Setting, metaclass=SettingsMeta):
         self._update(self, source_obj, parents=(), strategies=strategies)
 
     def _update(
-            self,
-            settings: 'Settings',
-            source: Source,
-            parents: Tuple[str, ...] = (),
-            strategies=None,
+        self,
+        settings: 'Settings',
+        source: Source,
+        parents: Tuple[str, ...] = (),
+        strategies=None,
     ):
         """Recursively update settings object from dictionary"""
         strategies = strategies or {}

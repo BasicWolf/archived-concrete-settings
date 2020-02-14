@@ -7,7 +7,7 @@ from factory import fuzzy
 from pyfakefs.fake_filesystem_unittest import Patcher
 
 from concrete_settings.exceptions import SettingsValidationError
-from concrete_settings.validator import Validator
+from concrete_settings.types import Validator
 
 seed = random.randint(1, 1e9)
 print(f"Running tests with seed: {seed:0>10}")
