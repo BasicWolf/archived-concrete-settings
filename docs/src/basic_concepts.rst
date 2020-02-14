@@ -216,7 +216,7 @@ A Settings object validates its setting-fields and itself when
 is called for the first time.
 Validation consists of two stages:
 
-1. Each :class:`validator <concrete_settings.validator.Validator>`
+1. Each :class:`validator <concrete_settings.types.Validator>`
    of every setting-field's ``.validators`` list is called
    to validate the setting-field's value.
 
@@ -265,7 +265,7 @@ to validate a setting's value.
 Otherwise it carries no meaning and is just a valid Python object.
 
 The :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
-is the :ref:`default validator <advanced_validators>`
+is the :ref:`default validator <setting_declration_validators>`
 for settings which have no validators defined explicitly:
 
 .. testcode:: quickstart-type-hint
