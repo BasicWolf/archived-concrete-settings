@@ -11,6 +11,7 @@ addons:
   apt:
     update: true
     packages:
+      - graphviz
       - plantuml
 
 before_install: pip install poetry
