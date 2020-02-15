@@ -1,13 +1,11 @@
-sudo: false
-
 language: python
-
+cache: pip
 dist: bionic
 
 python:
-  - '3.6'
-  - '3.7'
-  - '3.8'
+  - 3.6
+  - 3.7
+  - 3.8
 
 addons:
   apt:
@@ -15,32 +13,36 @@ addons:
     packages:
       - plantuml
 
-before_install:
-- pip install poetry
+before_install: pip install poetry
 
-install:
-- poetry install
+install: poetry install
+
 
 script:
   - make lint
   - make test
   - make docs
 
-deploy:
-  provider: pages
-  skip_cleanup: true
-  keep-history: true
-  local_dir: docs/_build/html/
-  github_token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
-  on:
-    branch: master
-    python: '3.8'
+
+jobs:
+  include:
+    if: type = cron
+    script: make safety
+
 
 deploy:
-  # Uses Twine, requires  environmental variables:
-  # TWINE_USERNAME, TWINE_PASSWORD
-  provider: script
-  script: make test-deploy
-  on:
-    tags: true
-    python: '3.8'
+  - provider: pages
+    on:
+      branch: master
+      python: '3.8'
+    keep-history: true
+    local_dir: docs/_build/html/
+    github_token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
+
+  - provider: script
+    on:
+      tags: true
+      python: '3.8'
+    # Uses Twine, requires  environmental variables:
+    # TWINE_USERNAME, TWINE_PASSWORD
+    provider: script

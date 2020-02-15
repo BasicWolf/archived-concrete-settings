@@ -17,7 +17,7 @@ tox:
 	tox
 
 
-lint: flake8 mypy safety
+lint: flake8 mypy
 
 
 flake8:
