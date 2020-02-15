@@ -1,10 +1,22 @@
-Welcome to ConcreteSettings
-===========================
+Welcome to Concrete Settings
+============================
 
-ConcreteSettings is a Python library which facilitates startup
+**Concrete Settings** is a small Python library which facilitates
 configuration management in applications.
 
-Here is an example of a minimal developer-facing setup:
+The settings definition DSL aims to be simple and easy readible.
+It is designed with these concepts in mind:
+
+* Settings are defined in classes.
+* Settings are documented.
+* Settings are type-annotated and validated.
+* Settings can be mixed and nested.
+* Settings can be read from any sources: Python dict, yaml, json, environmental variables etc.
+
+Here is a small example of Settings class with one
+boolean setting ``DEBUG``. A developer defines the
+settings in application code, while an end-user
+stores the configuration in a YAML file:
 
 .. code-block:: python
 
@@ -13,8 +25,8 @@ Here is an example of a minimal developer-facing setup:
    class AppSettings(Settings):
 
        #: Turns debug mode on/off
-       DEBUG: bool = True
-
+       DEBUG: bool = False
+       ..
    app_settings = AppSettings()
    app.read('/path/to/user/settings.yml')
    app_settings.is_valid(raise_exception=True)
@@ -25,7 +37,7 @@ While the end-user could set the values in a YAML file:
 
    # settings.yml
 
-   DEBUG: false
+   DEBUG: true
 
 
 Concrete Settings aims to provide a conveniet way to

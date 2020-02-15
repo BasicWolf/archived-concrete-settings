@@ -8,66 +8,45 @@ Concrete Settings
     :target: https://github.com/ambv/black
 
 .. image:: docs/src/_static/img/mypy_checked.svg
-    :target: https://github.com/python/mypy
+           :target: https://github.com/python/mypy..
 
 Welcome
 =======
 
-**concrete-settings** is a small library which helps handling settings in large projects.
+**Concrete Settings** is a small Python library which facilitates
+configuration management in applications.
 
-The settings specification DSL aims to be simple and easy readible.
+The settings definition DSL aims to be simple and easy readible.
 It is designed with these concepts in mind:
 
-* Specifications are declared in classes.
-* Settings should be documented and there should be an easy way to bundle the documentation.
-* Settings should be type-annotated and validated.
-* Settings should be mixable and nestable.
+* Settings are defined in classes.
+* Settings are documented.
+* Settings are type-annotated and validated.
+* Settings can be mixed and nested.
+* Settings can be read from any sources: Python dict, yaml, json, environmental variables etc.
 
-
-
-.. code-block:: python
-
-   class CommonSettings(Settings):
-       #: This is the documentation of MAX_SPEED setting
-       MAX_SPEED: int = 100
-
-Overriding settings
--------------------
+Here is a small example of Settings class with one
+boolean setting ``DEBUG``. A developer defines the
+settings in application code, while an end-user
+stores the configuration in a YAML file:
 
 .. code-block:: python
 
-   class S(Settings):
-       SPEED: int = 10
+   from concrete_settings import Settings
 
-   # Protect from accidental type changes
-   class S1(S):
-       SPEED: str = 'hello'
+   class AppSettings(Settings):
 
-   >>> S2(); S2.is_valid(raise_exception=True)
-   SettingsValidationError:
-      SPEED:
-          in classes <class 'S'> and <class 'S1'> setting has the following difference(s):
-          types differ: <class 'int'> != <class 'str'>
+       #: Turns debug mode on/off
+       DEBUG: bool = False
+       ..
+   app_settings = AppSettings()
+   app.read('/path/to/user/settings.yml')
+   app_settings.is_valid(raise_exception=True)
 
-.. code-block:: python
+While the end-user could set the values in a YAML file:
 
-   # Override is required
-   class S2(S):
-       SPEED: str = 'hello' @override
+.. code-block:: yaml
 
-    >>> S2();
-    >>> S2.is_valid()
-    True
+   # settings.yml
 
-
-Deprecated settings
--------------------
-
-.. code-block:: python
-
-   class S0(Settings):
-       SPEED: int = 10 @deprecated
-
-
-   >>> S0()
-   DepracationWarning: SPEED in class 'S0': Setting is deprecated and will be removed in future
+   DEBUG: true
