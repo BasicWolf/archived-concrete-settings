@@ -1,6 +1,9 @@
 Welcome to Concrete Settings
 ============================
 
+.. contents:: :depth: 1
+
+
 **Concrete Settings** is a small Python library which facilitates
 configuration management in applications.
 
@@ -38,6 +41,16 @@ While the end-user could set the values in a YAML file:
    # settings.yml
 
    DEBUG: true
+
+
+Accessing settings:
+
+.. code-block:: pycon
+
+   >>>  print(app_settings.DEBUG)
+
+   True
+
 
 
 Concrete Settings aims to provide a conveniet way to
@@ -134,6 +147,10 @@ Install Concrete Settings
 
    pip install concrete-settings
 
+Source
+------
+
+The source is available at `<https://github.com/basicwolf/concrete-settings>`_.
 
 Documentation
 =============
