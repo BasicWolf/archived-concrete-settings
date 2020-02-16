@@ -10,13 +10,14 @@ Concrete Settings
 .. image:: https://basicwolf.github.io/concrete-settings/_static/img/mypy_checked.svg
    :target: https://github.com/python/mypy
 
+.. contents:: :depth: 2
+
+
 Welcome
 =======
 
 **Concrete Settings** is a small Python library which facilitates
 configuration management in applications.
-
-.. contents:: :depth: 2
 
 The settings definition DSL aims to be simple and easy readible.
 It is designed with these concepts in mind:
