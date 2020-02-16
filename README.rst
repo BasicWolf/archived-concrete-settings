@@ -16,7 +16,7 @@ Welcome
 **Concrete Settings** is a small Python library which facilitates
 configuration management in applications.
 
-.. contents:: :depth: 1
+.. contents:: :depth: 2
 
 The settings definition DSL aims to be simple and easy readible.
 It is designed with these concepts in mind:
