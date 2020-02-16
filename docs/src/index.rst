@@ -104,7 +104,36 @@ Then you are very welcome to ConcreteSettings documentation!
 Installation
 ============
 
-TODO
+Python Version
+--------------
+
+We recommend using the latest version of Python 3.
+Concrete Settings supports Python 3.6 and newer.
+
+Dependencies
+------------
+
+These distributions will be installed automatically when installing Concrete Settings.
+
+* `Typeguard <https://github.com/agronholm/typeguard>`_  provides runtime type checking and allows validating settings values types.
+* `Sphinx <https://www.sphinx-doc.org/en/master/>`_ allows documenting settings in developer-friendly way - in comments above settings definitions.
+* `Typing Extensions <https://github.com/python/typing/tree/master/typing_extensions>`_ provides typing hints backports to Python 3.6.
+
+Optional dependencies
+---------------------
+
+These distributions will not be installed automatically. Concrete Settings will detect and use them if you install them.
+
+* `PyYAML <https://pyyaml.org/>`_ allows reading settings from YAML sources.
+
+
+Install Concrete Settings
+-------------------------
+
+.. code-block:: bash
+
+   pip install concrete-settings
+
 
 Documentation
 =============

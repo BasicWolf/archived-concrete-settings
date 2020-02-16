@@ -4,11 +4,11 @@ Concrete Settings
 .. image:: https://travis-ci.org/BasicWolf/concrete-settings.svg?branch=master
     :target: https://travis-ci.org/BasicWolf/concrete-settings
 
-.. image:: docs/src/_static/img/codestyle_black.svg
+.. image:: https://basicwolf.github.io/concrete-settings/_static/img/codestyle_black.svg
     :target: https://github.com/ambv/black
 
-.. image:: docs/src/_static/img/mypy_checked.svg
-           :target: https://github.com/python/mypy..
+.. image:: https://basicwolf.github.io/concrete-settings/_static/img/mypy_checked.svg
+   :target: https://github.com/python/mypy
 
 Welcome
 =======
@@ -50,3 +50,19 @@ While the end-user could set the values in a YAML file:
    # settings.yml
 
    DEBUG: true
+
+Accessing settings:
+
+.. code-block:: pycon
+
+   >>>  print(app_settings.DEBUG)
+
+   True
+
+
+Install Concrete Settings
+-------------------------
+
+.. code-block:: bash
+
+   pip install concrete-settings
