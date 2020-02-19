@@ -63,8 +63,6 @@ stores the configuration in a YAML file:
    app_settings.update('/path/to/user/settings.yml')
    app_settings.is_valid(raise_exception=True)
 
-While the end-user could set the values in a YAML file:
-
 .. code-block:: yaml
 
    # settings.yml
@@ -77,18 +75,16 @@ Accessing settings:
 .. code-block:: pycon
 
    >>>  print(app_settings.DEBUG)
-
    True
 
    >>> print(AppSettings.DEBUG.__doc__)
-
    Turns debug mode on/off
 
 
 
 Concrete Settings aims to provide a conveniet way to
-define and use application startup settings
-for developers and an end-users:
+define and use application initialization settings
+for developers and end-users:
 
 .. uml::
 

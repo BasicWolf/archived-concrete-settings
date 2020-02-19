@@ -12,13 +12,13 @@ Defining settings
 Defining settings starts
 by subclassing the :class:`Settings <concrete_settings.Settings>`
 class.
-A setting is defined by
+Each setting is defined by
 :class:`Setting <concrete_settings.Setting>` descriptor.
 The catch is that one does not have
 to declare each setting explicitly.
 
-Let's take a look at a small example, where we declare ``AppSettings``
-class with a single boolean-type setting named ``DEBUG``:
+Let's start by defining ``AppSettings``
+class with a single boolean-type  ``DEBUG`` setting:
 
 .. testcode::
 
@@ -109,7 +109,7 @@ Output:
 Before going further, let's take a look at the contents of a Setting object.
 Each implicitly or explicitly defined setting consists of a
 **name**, **default value**, a **type hint**,
-lists of **validators**, list of **behaviors**
+**validators**, **behaviors**
 and **documentation**:
 
 .. uml::
@@ -129,8 +129,8 @@ and **documentation**:
 * **Type hint** is a setting type. It is called a hint, since it carries no
   meaning on its own. However a **validator** like the built-in
   :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
-  can use the *type hint* to check whether the setting value corresponds
-  to the given type.
+  can use the type hint to check whether the setting value corresponds
+  to the required type.
 * **Validators** is a collection of callables which validate the value of the setting.
 * **Behaviors** is a collection of :class:`SettingBehavior <concrete_settings.SettingBehavior>`
   objects which modify a setting's behavior during different stages of its life cycle.
@@ -216,9 +216,8 @@ A Settings object validates its setting-fields and itself when
 is called for the first time.
 Validation consists of two stages:
 
-1. Each :class:`validator <concrete_settings.types.Validator>`
-   of every setting-field's ``.validators`` list is called
-   to validate the setting-field's value.
+1. For each setting, call every :class:`validator <concrete_settings.types.Validator>`
+   of ``setting.validators`` collection. This validates a setting value as standalone.
 
 2. :meth:`Settings.validate() <concrete_settings.Settings.validate>` is called.
    It is indtended to validate the Settings object as a whole.
@@ -259,9 +258,9 @@ Type hint
 ---------
 
 Type hint is a setting type.
-It is intended to be used by validators, like the built-in
+It is intended to be used by validators like the built-in
 :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
-to validate a setting's value.
+to validate a setting value.
 Otherwise it carries no meaning and is just a valid Python object.
 
 The :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
@@ -279,6 +278,8 @@ for settings which have no validators defined explicitly:
    print(app_settings.is_valid())
    print(app_settings.errors)
 
+Output:
+
 .. testoutput:: quickstart-type-hint
 
    False
@@ -290,10 +291,10 @@ for settings which have no validators defined explicitly:
 Behavior
 --------
 
-Imagine that you want to notify the users that a setting is now deprecated.
-You would like to raise a warning when settings are initialized and
-every time the setting is being read.
-
+Imagine that you would like to notify a user that a certain setting
+has been deprecated.
+Raising a warning when settings are initialized and
+every time the setting is being read - sounds like a plan.
 A straightforward way to do this is by sublassing the
 :class:`Setting <concrete_settings.Setting>` class and overriding
 :meth:`Setting.__get__() <concrete_settings.Setting.__get__>`.
@@ -388,11 +389,11 @@ that class :class:`Settings <concrete_settings.Settings>` is a
 subclass of class :class:`Setting <concrete_settings.Setting>`!
 Hence, nested Settings behave and can be treated
 as Setting descriptors - e.g. have validators, documentation
-or :ref:`bound behavior <quickstart_behavior>`.
+or bound behavior.
 
-Additionally, :ref:`validating <quickstart_validation>` top-level settings
-automatically cascades to all nested settings and the following
-would end up in a validation error:
+Additionally, validating top-level settings
+automatically cascades to all nested settings.
+The following example ends up with a validation error:
 
 
 .. testcode:: quickstart-nested2
@@ -422,7 +423,7 @@ Combining settings
 
 Another way of putting settings together is by using Python's
 multi-inheritance mechanism.
-It it very useful when putting a frameworks and application
+It it very useful when putting a framework and application
 settings together. For example, Django settings and
 application settings can be separated as follows:
 
@@ -484,7 +485,7 @@ For example, let's combine Database and Log settings:
    alex
 
 The :class:`prefix <concrete_settings.prefix>` decorator is used to add
-a common prefix to all  prefixes to the combined settings.
+a common prefix to all setting-fields of the decorated Settings class.
 
 Note that Python rules of multiple inheritance are applied.
 For example :meth:`validate() <concrete_settings.Settings.validate>`
