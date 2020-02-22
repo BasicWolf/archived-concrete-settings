@@ -1,5 +1,6 @@
 .idea/
 pip-wheel-metadata/
+coverage_html_report/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
