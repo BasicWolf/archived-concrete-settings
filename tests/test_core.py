@@ -60,7 +60,7 @@ def test_setting_set(v_int):
     assert S0().DEMO != S1().DEMO
 
 
-def test_guess_type():
+def test_guessed_type():
     class S(Settings):
         # Numeric types
         BOOLEAN = True

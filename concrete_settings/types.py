@@ -4,6 +4,8 @@ from typing import Any, TYPE_CHECKING
 
 from typing_extensions import Protocol
 
+
+# pragma: no_cover
 if TYPE_CHECKING:
     from .core import Setting, Settings
 
@@ -23,12 +25,6 @@ class Undefined(metaclass=UndefinedMeta):
 
     def __new__(cls, *args, **kwargs):
         raise RuntimeError(f'{cls} should not be instantiated')
-
-    def __bool__(self):
-        return False
-
-    def __repr__(self):
-        return f'<{self.__class__.__name__}.{self.name}>'
 
 
 class GuessSettingType:

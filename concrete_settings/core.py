@@ -87,9 +87,7 @@ class Setting:
 class PropertySetting(Setting):
     def __init__(self, *args, **kwargs):
         decorating_without_arguments = (
-            len(args) == 1
-            and len(kwargs) == 0
-            and callable(args[0])
+            len(args) == 1 and len(kwargs) == 0 and callable(args[0])
         )
         if decorating_without_arguments:
             self._init_decorator_without_arguments(args[0])
@@ -170,13 +168,10 @@ class SettingsMeta(type):
                 and mcs._is_setting_name(name)
                 and mcs._can_be_converted_to_setting_automatically(attr)
             ):
-                new_attr = mcs._make_setting_from_attribute(name, attr, annotations, )
+                new_attr = mcs._make_setting_from_attribute(name, attr, annotations,)
 
             # Should we try to guess a type_hint for a Setting?
-            if (
-                isinstance(new_attr, Setting)
-                and new_attr.type_hint is GuessSettingType
-            ):
+            if isinstance(new_attr, Setting) and new_attr.type_hint is GuessSettingType:
                 new_attr.type_hint = mcs._guess_type_hint(
                     name, new_attr, annotations, bases
                 )
@@ -186,8 +181,9 @@ class SettingsMeta(type):
         return new_dict
 
     @classmethod
-    def _make_setting_from_attribute(mcs, name, attr, annotations) -> Union[
-            PropertySetting, Setting]:
+    def _make_setting_from_attribute(
+        mcs, name, attr, annotations
+    ) -> Union[PropertySetting, Setting]:
         # is it a class method?
         if isinstance(attr, types.FunctionType):
             return PropertySetting(attr)
@@ -233,9 +229,7 @@ class SettingsMeta(type):
             return
 
         settings = {
-            name: attr
-            for name, attr in class_dict.items()
-            if isinstance(attr, Setting)
+            name: attr for name, attr in class_dict.items() if isinstance(attr, Setting)
         }
         if not settings:
             # class seems to contain to settings
@@ -482,11 +476,24 @@ class Settings(Setting, metaclass=SettingsMeta):
 
 class SettingBehaviorMeta(type):
     def __call__(self, *args, **kwargs):
+        # Act as a decorator
         from concrete_settings import Setting
 
-        if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], Setting):
+        _decorating_setting_or_method = (
+            len(args) == 1
+            and len(kwargs) == 0
+            and isinstance(args[0], (Setting, types.FunctionType))
+        )
+
+        if _decorating_setting_or_method:
             bhv = super().__call__()
-            return bhv(args[0])
+            if isinstance(args[0], types.FunctionType):
+                setting = PropertySetting(args[0])
+            else:
+                setting = args[0]
+
+            bhv = super().__call__()
+            return bhv(setting)
         else:
             bhv = super().__call__(*args, **kwargs)
             return bhv
@@ -504,7 +511,14 @@ class SettingBehaviorMeta(type):
 class SettingBehavior(metaclass=SettingBehaviorMeta):
     """The base class for Setting attributes behaviors."""
 
-    def __call__(self, setting: 'Setting'):
+    def __call__(self, setting_or_method: Union['Setting', types.FunctionType]):
+        setting: Setting
+
+        if isinstance(setting_or_method, types.FunctionType):
+            setting = PropertySetting(setting_or_method)
+        else:
+            setting = setting_or_method
+        # Act as a decorator
         return self.inject(setting)
 
     def __rmatmul__(self, setting: Any):

@@ -109,14 +109,23 @@ def test_setting_behavior_call_order(div, plus):
     assert s.D == 7
 
 
-def test_setting_behavior_with_property_setting(div):
-    class S(Settings):
+def test_setting_behavior_with_explicit_property_setting(div):
+    class MySettings(Settings):
         @div(5)
         @property_setting
-        def D(self):
+        def MICE_COUNT(self):
             return 30
 
-    assert S().D == 6
+    assert MySettings().MICE_COUNT == 6
+
+
+def test_setting_behavior_with_implicit_property_setting(div):
+    class MySettings(Settings):
+        @div(5)
+        def MICE_COUNT(self):
+            return 30
+
+    assert MySettings().MICE_COUNT == 6
 
 
 def test_setting_behavior_with_property_setting_order(div, plus):
