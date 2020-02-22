@@ -8,6 +8,18 @@ from concrete_settings import (
 )
 
 
+def test_method_automatically_converted_to_setting():
+    class MySettings(Settings):
+        def MICE_NUMBER(self) -> int:
+            """MICE_NUMBER docs"""
+            return 10
+
+    assert MySettings.MICE_NUMBER.__doc__ == "MICE_NUMBER docs"
+    assert MySettings.MICE_NUMBER.validators == tuple()
+    assert MySettings.MICE_NUMBER.type_hint == int
+    assert MySettings().MICE_NUMBER == 10
+
+
 def test_with_setting_attrs_decorated_method():
     class S(Settings):
         @setting

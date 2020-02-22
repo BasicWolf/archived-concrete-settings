@@ -86,11 +86,11 @@ class Setting:
 
 class PropertySetting(Setting):
     def __init__(self, *args, **kwargs):
-        decorating_without_arguments = all((
-            len(args) == 1,
-            len(kwargs) == 0,
-            callable(args[0])
-        ))
+        decorating_without_arguments = (
+            len(args) == 1
+            and len(kwargs) == 0
+            and callable(args[0])
+        )
         if decorating_without_arguments:
             self._init_decorator_without_arguments(args[0])
         else:
@@ -114,14 +114,20 @@ class PropertySetting(Setting):
         self.fget = None
 
     def __call__(self, fget: Callable):
-        self.fget = fget
+        # since functools.update_wrapper overwrite self.__doc__
+        # we have to temporarily persist it
+        doc_before_wrapping = self.__doc__
 
-        # Extract __doc__ and return type hint from the decorated function
-        if not self.__doc__:
-            self.__doc__ = fget.__doc__
+        functools.update_wrapper(self, fget)
 
+        # Restore __doc__
+        self.__doc__ = self.__doc__ or doc_before_wrapping
+
+        # Extract type_hint from fget annotations if needed
         if self.type_hint is GuessSettingType:
             self.type_hint = fget.__annotations__.get('return', self.type_hint)
+
+        self.fget = fget
         return self
 
     def __get__(self, owner: 'Settings', owner_type=None):
@@ -162,7 +168,7 @@ class SettingsMeta(type):
             if (
                 not isinstance(attr, Setting)
                 and mcs._is_setting_name(name)
-                and mcs._is_safe_setting_type(attr)
+                and mcs._can_be_converted_to_setting_automatically(attr)
             ):
                 new_attr = mcs._make_setting_from_attribute(name, attr, annotations, )
 
@@ -180,10 +186,14 @@ class SettingsMeta(type):
         return new_dict
 
     @classmethod
-    def _make_setting_from_attribute(mcs, name, attr, annotations):
-        doc = ""
+    def _make_setting_from_attribute(mcs, name, attr, annotations) -> Union[
+            PropertySetting, Setting]:
+        # is it a class method?
+        if isinstance(attr, types.FunctionType):
+            return PropertySetting(attr)
+
         type_hint = annotations.get(name, GuessSettingType)
-        return Setting(attr, doc=doc, type_hint=type_hint)
+        return Setting(attr, doc="", type_hint=type_hint)
 
     @classmethod
     def _guess_type_hint(mcs, name, setting: Setting, annotations, bases: List[type]):
@@ -210,7 +220,7 @@ class SettingsMeta(type):
         return not name.startswith('_') and name.upper() == name
 
     @classmethod
-    def _is_safe_setting_type(mcs, attr: Any) -> bool:
+    def _can_be_converted_to_setting_automatically(mcs, attr: Any) -> bool:
         """Return False if attribute should not be converted
            to a Setting automatically"""
         callable_types = (property, classmethod, staticmethod)

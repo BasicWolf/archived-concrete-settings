@@ -1,7 +1,6 @@
 import importlib
-import types
-import typing
 import sys
+import typing
 from collections import namedtuple
 
 import pytest
@@ -98,36 +97,31 @@ def test_guess_type():
     assert d["DICT"].type_hint is dict
 
 
-def test_callable_types_are_not_settings(v_int, v_str):
-    class S(Settings):
-        INT = v_int
-
-        @property
-        def PROP_BOOLEAN(self):
-            return False
-
-        def FUNC(self):
-            return v_str
-
+def test_classmethod_is_not_automatically_converted_setting():
+    class TestSettings(Settings):
         @classmethod
         def CLASS_METH(cls):
             return cls
 
+    assert not isinstance(TestSettings.CLASS_METH, Setting)
+
+
+def test_staticmethod_is_not_automatically_converted_setting():
+    class TestSettings(Settings):
         @staticmethod
         def STATIC_METH():
-            return v_str
+            return
 
-    assert S.INT.value == v_int
-    assert isinstance(S.PROP_BOOLEAN, property)
-    assert isinstance(S.FUNC, types.FunctionType)
-    assert isinstance(S.CLASS_METH, types.MethodType)
-    assert isinstance(S.STATIC_METH, types.FunctionType)
+    assert not isinstance(TestSettings.STATIC_METH, Setting)
 
-    s = S()
-    assert not s.PROP_BOOLEAN
-    assert s.FUNC() == v_str
-    assert s.CLASS_METH() == S
-    assert s.STATIC_METH() == v_str
+
+def test_property_is_not_automatically_converted_setting():
+    class TestSettings(Settings):
+        @property
+        def PROP_BOOLEAN(self):
+            return False
+
+    assert not isinstance(TestSettings.PROP_BOOLEAN, Setting)
 
 
 def test_guess_setting_type_inherits_type_hint():

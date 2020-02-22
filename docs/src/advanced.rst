@@ -1,7 +1,7 @@
 Advanced topics
 ===============
 
-In this chapter we explore the ConcreteSettings in-depth.
+In this chapter we explore Concrete Settings in depth.
 
 .. contents::
    :local:
@@ -15,9 +15,7 @@ In this chapter we explore the ConcreteSettings in-depth.
 Setting declaration
 -------------------
 
-Quickstart introduced the concept of automated setting creation.
-Recall, that a setting object can (and rather should) be created
-out of a specially-formed definition, such as:
+Concrete Settings' prefers reader-friendly settings definitions such as:
 
 .. testcode::
 
@@ -28,13 +26,12 @@ out of a specially-formed definition, such as:
        #: Turns debug mode on/off
        DEBUG: bool = True
 
-In this section we discuss this process, i.e. how
-``DEBUG`` from the example above turns into
-:class:`Setting <concrete_settings.Setting>`
-descriptor instance.
+In this section we discuss how such an implicit definition
+is parsed and processed into :class:`Setting <concrete_settings.Setting>`
+descriptor instances.
 
-ConcreteSettings has to find
-a setting attribute :ref:`name <setting_declration_name>`,
+In a nutshell Concrete Settings has to get
+a setting field's :ref:`name <setting_declration_name>`,
 :ref:`default value <setting_declration_default_value>`
 and :ref:`type hint <setting_declration_type_hint>`,
 its :ref:`validators <setting_declration_validators>`,
@@ -79,28 +76,50 @@ The exceptions are attributes starting with underscore:
    assert not isinstance(AppSettings._DEBUG, Setting)
    assert isinstance(AppSettings.DEBUG, Setting)
 
-Class method is **not** automatically converted
-to a property-setting even if its name is
+Class methods are also automatically converted
+to property-settings even if their names are written
 in upper case.
-It must be decorated as :class:`setting <concrete_settings.setting>`:
 
 .. testcode:: setting-declaration-name-property-setting
 
    from concrete_settings import Settings, setting
 
    class AppSettings(Settings):
-       def ADMIN(self):  # not a setting
+       def ADMIN(self) -> str:  # automatically concerted to setting
+           """Admin name"""
            return 'Alex'
-
-       @setting
-       def DEBUG(self):
-           return False
 
 .. testcleanup:: setting-declaration-name-property-setting
 
    from concrete_settings import Setting
-   assert not isinstance(AppSettings.ADMIN, Setting)
-   assert isinstance(AppSettings.DEBUG, Setting)
+   assert isinstance(AppSettings.ADMIN, Setting)
+
+
+A method can be decorated by
+:class:`@setting <concrete_settings.setting>`
+in order to control Setting initialization, e.g.
+to set validators:
+
+.. testcode:: setting-declaration-name-property-setting-decorator
+
+   from concrete_settings import Settings, setting
+   from concrete_settings.exceptions import SettingsValidationError
+
+   # a validator
+   def not_too_fast(speed):
+       if speed > 100:
+           raise SettingsValidationError('You are going too fast!')
+
+   class CarSettings(Settings):
+       @setting(validators=(not_too_fast, ))
+       def MAX_SPEED(self):
+           return Undefined
+
+.. testcleanup:: setting-declaration-name-property-setting-decorator
+
+   from concrete_settings import Setting
+   assert isinstance(CarSettings.MAX_SPEED, Setting)
+
 
 .. _setting_declration_default_value:
 
