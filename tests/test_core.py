@@ -416,7 +416,7 @@ def test_prefix_cannot_decorate_not_settings_class():
 def test_prefix_cannot_decorate_settings_with_existing_matching_field():
     with pytest.raises(
         ValueError,
-        match='''MySettings'> class already has setting field named "GEAR"''',
+        match='''MySettings'> class already has setting attribute named "GEAR"''',
     ):
 
         @prefix('MY')

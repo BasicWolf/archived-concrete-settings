@@ -86,9 +86,11 @@ class Setting:
 
 class PropertySetting(Setting):
     def __init__(self, *args, **kwargs):
-        decorating_without_arguments = (
-            len(args) == 1 and len(kwargs) == 0 and callable(args[0])
-        )
+        decorating_without_arguments = all((
+            len(args) == 1,
+            len(kwargs) == 0,
+            callable(args[0])
+        ))
         if decorating_without_arguments:
             self._init_decorator_without_arguments(args[0])
         else:
@@ -153,35 +155,35 @@ class SettingsMeta(type):
         new_dict = {}
         annotations = class_dict.get("__annotations__", {})
 
-        for name, field in class_dict.items():
-            new_field = field
+        for name, attr in class_dict.items():
+            new_attr = attr
 
             # Make a Setting out of ALL_UPPERCASE_ATTRIBUTE
             if (
-                not isinstance(field, Setting)
+                not isinstance(attr, Setting)
                 and mcs._is_setting_name(name)
-                and mcs._is_safe_setting_type(field)
+                and mcs._is_safe_setting_type(attr)
             ):
-                new_field = mcs._make_setting_from_attribute(name, field, annotations,)
+                new_attr = mcs._make_setting_from_attribute(name, attr, annotations, )
 
             # Should we try to guess a type_hint for a Setting?
             if (
-                isinstance(new_field, Setting)
-                and new_field.type_hint is GuessSettingType
+                isinstance(new_attr, Setting)
+                and new_attr.type_hint is GuessSettingType
             ):
-                new_field.type_hint = mcs._guess_type_hint(
-                    name, new_field, annotations, bases
+                new_attr.type_hint = mcs._guess_type_hint(
+                    name, new_attr, annotations, bases
                 )
 
-            new_dict[name] = new_field
+            new_dict[name] = new_attr
 
         return new_dict
 
     @classmethod
-    def _make_setting_from_attribute(mcs, name, value, annotations):
+    def _make_setting_from_attribute(mcs, name, attr, annotations):
         doc = ""
         type_hint = annotations.get(name, GuessSettingType)
-        return Setting(value, doc=doc, type_hint=type_hint)
+        return Setting(attr, doc=doc, type_hint=type_hint)
 
     @classmethod
     def _guess_type_hint(mcs, name, setting: Setting, annotations, bases: List[type]):
@@ -208,10 +210,11 @@ class SettingsMeta(type):
         return not name.startswith('_') and name.upper() == name
 
     @classmethod
-    def _is_safe_setting_type(mcs, field: Any) -> bool:
-        """Return False if field should not be converted to a Setting automatically"""
-        callable_types = (property, types.FunctionType, classmethod, staticmethod)
-        return not isinstance(field, callable_types)
+    def _is_safe_setting_type(mcs, attr: Any) -> bool:
+        """Return False if attribute should not be converted
+           to a Setting automatically"""
+        callable_types = (property, classmethod, staticmethod)
+        return not isinstance(attr, callable_types)
 
     @classmethod
     def _add_settings_help(mcs, cls_name: str, class_dict: dict):
@@ -220,9 +223,9 @@ class SettingsMeta(type):
             return
 
         settings = {
-            attr: field
-            for attr, field in class_dict.items()
-            if isinstance(field, Setting)
+            name: attr
+            for name, attr in class_dict.items()
+            if isinstance(attr, Setting)
         }
         if not settings:
             # class seems to contain to settings
@@ -489,7 +492,7 @@ class SettingBehaviorMeta(type):
 
 
 class SettingBehavior(metaclass=SettingBehaviorMeta):
-    """The base class for Setting field behaviors."""
+    """The base class for Setting attributes behaviors."""
 
     def __call__(self, setting: 'Setting'):
         return self.inject(setting)
@@ -574,7 +577,7 @@ identifier_re = re.compile(r"^[^\d\W]\w*\Z", re.UNICODE)
 
 class prefix:
     """A decorator for Settings classes which
-       appends the defined prefix to each Setting field."""
+       appends the defined prefix to each Setting attribute."""
 
     def __init__(self, prefix: str):
         if not prefix:
@@ -594,7 +597,7 @@ class prefix:
             new_name = f'{self.prefix}{name}'
             if hasattr(settings, new_name):
                 raise ValueError(
-                    f'{settings} class already has setting field named "{name}"'
+                    f'{settings} class already has setting attribute named "{name}"'
                 )
 
             delattr(settings, name)
