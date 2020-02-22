@@ -5,7 +5,6 @@ from typing import Any, TYPE_CHECKING
 from typing_extensions import Protocol
 
 
-# pragma: no_cover
 if TYPE_CHECKING:
     from .core import Setting, Settings
 
