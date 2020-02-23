@@ -26,8 +26,8 @@ For example, ``my_app/app_settings.py`` file:
 II. Think of an end-user
 ------------------------
 
-Provide a conventient way of entering the application settings to an end-user.
-For example  via a ``.yaml`` file passed as a command-line argument:
+What would be a convenient way to enter the application settings for an end-user?
+Perhaps via a JSON or YAML file or environmental variables?
 
 
 .. code-block::
@@ -37,19 +37,21 @@ For example  via a ``.yaml`` file passed as a command-line argument:
    import os
    import sys
 
+   from concrete_settings.contrib.sources import EnvVarSource
+
    from .app_settings import ApplicationSettings
 
 
    def main():
-       """Usage:
+       """Usage: python main.py /path/to/settings.[yml|json]"""
 
-
-       python main.py /path/to/settings.yaml
-       """
        settings = ApplicationSettings()
        if len(sys.argv) > 1 and os.path.exists(sys.argv[1]):
-           print(f'Reading settings from {sys.argv[1]}')
+           print(f"Reading settings from {sys.argv[1]}")
            settings.update(sys.argv[1])
+
+       print("Reading settings from environmental variables")
+       settings.update(EnvVarSource())
 
        # validate the settings,
        # raise exception if something is invalid
@@ -63,7 +65,7 @@ For example  via a ``.yaml`` file passed as a command-line argument:
 
 .. code-block:: yaml
 
-   # settings.yaml
+   # settings.yml
 
    DEBUG: true
 
@@ -74,11 +76,16 @@ For example  via a ``.yaml`` file passed as a command-line argument:
    import os
    import sys
 
+   from concrete_settings.contrib.sources import EnvVarSource
+
    def main():
        settings = ApplicationSettings()
        if len(sys.argv) > 1 and os.path.exists(sys.argv[1]):
-           print(f'Reading settings from {sys.argv[1]}')
+           print(f"Reading settings from {sys.argv[1]}")
            settings.update(sys.argv[1])
+
+       print("Reading settings from environmental variables")
+       settings.update(EnvVarSource())
 
        # validate the settings,
        # raise exception if something is invalid
@@ -90,6 +97,12 @@ For example  via a ``.yaml`` file passed as a command-line argument:
            ...
 
    main()
+
+.. testoutput:: start-me-up
+   :hide:
+
+   Reading settings from environmental variables
+
 
 III. Remember to test settings object definition
 ------------------------------------------------
@@ -122,8 +135,8 @@ New projects
 Here is an example of starting up a new Django application with Concrete Settings.
 Let's consider that a project was created by the traditional ``djago-admin.py startproject mysite``.
 The project settings are defined in the good old ``settings.py``.
-Why not have all Django settings in a YAML file instead?
-(:download:`full example source <examples/django30_template.yml>`)
+Why not have all Django project settings in a YAML file instead?
+(:download:`full source <examples/django30_template.yml>`)
 
 .. code-block:: yaml
 
@@ -236,7 +249,7 @@ and load the settings from ``django.yml`` and ``application.yml``:
 
    __file__ = '/tmp/django.yml'
 
-   # Note, this should be the same as code-block below.
+   # Note that this should be the same as code-block below.
    # Duplicating since unable to import ApplicationSettings relatively
 
    from concrete_settings.contrib.frameworks.django30 import Django30Settings

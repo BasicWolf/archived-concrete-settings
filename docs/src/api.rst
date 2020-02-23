@@ -101,12 +101,6 @@ Sources
 
 .. autoclass:: concrete_settings.sources.Source
 
-Update strategies
-.................
-
-.. module:: concrete_settings.sources.strategies
-
-
 
 Built-in Sources
 ................
@@ -116,3 +110,8 @@ Built-in Sources
 .. autoclass:: concrete_settings.contrib.sources.JsonSource
 
 .. autoclass:: concrete_settings.contrib.sources.EnvVarSource
+
+Update strategies
+.................
+
+.. module:: concrete_settings.sources.strategies

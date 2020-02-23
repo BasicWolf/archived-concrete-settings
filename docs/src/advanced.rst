@@ -10,12 +10,12 @@ In this chapter we explore Concrete Settings in depth.
 
    from concrete_settings import Settings
 
-.. _setting_declration:
+.. _setting_definition:
 
-Setting declaration
--------------------
+Setting definition
+------------------
 
-Concrete Settings' prefers reader-friendly settings definitions such as:
+Concrete Settings' loves reader-friendly implicit settings definitions such as:
 
 .. testcode::
 
@@ -31,12 +31,12 @@ is parsed and processed into :class:`Setting <concrete_settings.Setting>`
 descriptor instances.
 
 In a nutshell Concrete Settings has to get
-a setting field's :ref:`name <setting_declration_name>`,
-:ref:`default value <setting_declration_default_value>`
-and :ref:`type hint <setting_declration_type_hint>`,
-its :ref:`validators <setting_declration_validators>`,
-:ref:`behaviors <setting_declration_behaviors>`
-and :ref:`documentation <setting_declration_documentation>`
+a setting field's :ref:`name <setting_definition_name>`,
+:ref:`default value <setting_definition_default_value>`
+and :ref:`type hint <setting_definition_type_hint>`,
+its :ref:`validators <setting_definition_validators>`,
+:ref:`behaviors <setting_definition_behaviors>`
+and :ref:`documentation <setting_definition_documentation>`.
 
 .. uml::
    :align: center
@@ -51,7 +51,7 @@ and :ref:`documentation <setting_declration_documentation>`
    note left of (Setting) : NAME
    @enduml
 
-.. _setting_declration_name:
+.. _setting_definition_name:
 
 Name
 ....
@@ -60,7 +60,7 @@ Every attribute with **name** written in upper case
 is considered a potential Setting.
 The exceptions are attributes starting with underscore:
 
-.. testcode:: setting-declaration-name
+.. testcode:: setting-definition-name
 
    from concrete_settings import Settings
 
@@ -69,7 +69,7 @@ The exceptions are attributes starting with underscore:
        _DEBUG = True  # not a setting
        DEBUG = True   ### considered a setting
 
-.. testcleanup:: setting-declaration-name
+.. testcleanup:: setting-definition-name
 
    from concrete_settings import Setting
    assert not isinstance(AppSettings.debug, Setting)
@@ -80,16 +80,16 @@ Class methods are also automatically converted
 to property-settings even if their names are written
 in upper case.
 
-.. testcode:: setting-declaration-name-property-setting
+.. testcode:: setting-definition-name-property-setting
 
    from concrete_settings import Settings, setting
 
    class AppSettings(Settings):
-       def ADMIN(self) -> str:  # automatically concerted to setting
+       def ADMIN(self) -> str:  # automatically converted to setting
            """Admin name"""
            return 'Alex'
 
-.. testcleanup:: setting-declaration-name-property-setting
+.. testcleanup:: setting-definition-name-property-setting
 
    from concrete_settings import Setting
    assert isinstance(AppSettings.ADMIN, Setting)
@@ -97,10 +97,10 @@ in upper case.
 
 A method can be decorated by
 :class:`@setting <concrete_settings.setting>`
-in order to control Setting initialization, e.g.
-to set validators:
+in order to control Setting initialization.
+For example, to set validators:
 
-.. testcode:: setting-declaration-name-property-setting-decorator
+.. testcode:: setting-definition-name-property-setting-decorator
 
    from concrete_settings import Settings, setting
    from concrete_settings.exceptions import SettingsValidationError
@@ -113,15 +113,15 @@ to set validators:
    class CarSettings(Settings):
        @setting(validators=(not_too_fast, ))
        def MAX_SPEED(self):
-           return Undefined
+           return 200
 
-.. testcleanup:: setting-declaration-name-property-setting-decorator
+.. testcleanup:: setting-definition-name-property-setting-decorator
 
    from concrete_settings import Setting
    assert isinstance(CarSettings.MAX_SPEED, Setting)
 
 
-.. _setting_declration_default_value:
+.. _setting_definition_default_value:
 
 Default value
 .............
@@ -134,9 +134,8 @@ The *default value* is the value assigned to the attribute:
        DEBUG = True  # default value is `True`
        MAX_SPEED = 10  # default value is `10`
 
-When default value is not available (e.g. database credentials),
-use the special :class:`Undefined <concrete_settings.types.Undefined>`
-value:
+You can use the special :class:`Undefined <concrete_settings.types.Undefined>`
+value in cases when default value is not available:
 
 .. testcode::
 
@@ -155,7 +154,7 @@ It does not make much a sense to have a default value for
 a property-setting since the value is computed every
 time a setting is read.
 To prevent misuse, passing a ``value`` argument raises an :class:`AssertionError`
-when ``assert`` statements are available.
+when ``assert`` statements have effect.
 
 .. testcode::
 
@@ -164,7 +163,6 @@ when ``assert`` statements are available.
    class AppSettings(Settings):
        LOG_LEVEL = 'INFO'
 
-       @setting
        def DEBUG(self) -> bool:
            return self.LOG_LEVEL == 'DEBUG'
 
@@ -177,7 +175,7 @@ Output:
 
    False
 
-.. _setting_declration_type_hint:
+.. _setting_definition_type_hint:
 
 Type hint
 .........
@@ -191,7 +189,7 @@ A type hint is defined by a standard Python type annotation:
 
 If an attribute is not type-annotated, a *type hint* is computed
 by calling :class:`type() <type>` on the default value. The recognized types
-are declared in
+are defined in
 :attr:`GuessSettingType.KNOWN_TYPES <concrete_settings.types.GuessSettingType.KNOWN_TYPES>`.
 If the type is not recognized, the type hint is set to :data:`typing.Any`.
 
@@ -220,11 +218,9 @@ If no annotation is provided, the type hint is set to :data:`typing.Any`:
 .. testcode:: type-hint-property-setting
 
    class AppSettings(Settings):
-       @setting
        def DEBUG(self) -> bool:
            return True
 
-       @setting
        def MAX_SPEED(self):
            return 300
 
@@ -242,26 +238,25 @@ Output:
 
    assert AppSettings.DEBUG.type_hint is bool
 
-Type annotation is intended for validators, such as
-:class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`.
-It fails validation if the type of the setting's
-value does not correspond to the type hint.
+The ``type_hint`` attribute is intended for validators.
+For example, the built-in :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>` fails validation if the type of the setting
+value does not correspond to the defined type hint.
 
-.. _setting_declration_validators:
+.. _setting_definition_validators:
 
 Validators
 ..........
 
 
 Validators is a collection of callables which validate the value of the setting.
-The interface of the callable is defined in :meth:`Validator protocol <concrete_settings.types.Validator.__call__>`.
+The interface of the callable is defined in the :meth:`Validator protocol <concrete_settings.types.Validator.__call__>`.
 If validation fails, a validator raises
 :class:`SettingsValidationError <concrete_settings.exceptions.SettingsValidationError>`
 with failure details.
-Individual Setting validators are supplied in ``validators`` argument of an explicit Setting declaration.
-Also some :ref:`behaviors <setting_declration_behaviors>` add certain validators to a setting.
+Individual Setting validators are supplied in ``validators`` argument of an explicit Setting definition.
+Also some :ref:`behaviors <setting_definition_behaviors>` add certain validators to a setting.
 
-The *mandatory validators* are applied to every Setting in Settings.
+The *mandatory validators* are applied to every Setting in Settings class.
 They are defined
 in :attr:`Settings.mandatory_validators <concrete_settings.Settings.mandatory_validators>` tuple.
 The *default validators* are applied to a Setting that has no validators of its own.
@@ -277,7 +272,7 @@ the only validator in the base ``Settings.default_validators``.
    assert len(Settings.default_validators) == 1, 'Default validators is expected to have a single validator'
    assert isinstance(Settings.default_validators[0], ValueTypeValidator)
 
-Note, that both lists are inherited by standard Python class inheritance rules.
+Note that both lists are inherited by standard Python class inheritance rules.
 For example, to extend ``default_validators`` in a derived class, use
 concatenation. In the following example
 :class:`RequiredValidator <concrete_settings.validators.RequiredValidator>`
@@ -329,7 +324,7 @@ Output:
    False
    {'ADMIN_NAME': ["Expected value of type `<class 'str'>` got value of type `<class 'int'>`"]}
 
-.. _setting_declration_behaviors:
+.. _setting_definition_behaviors:
 
 Behaviors
 .........
@@ -337,10 +332,11 @@ Behaviors
 :class:`Setting Behaviors <concrete_settings.SettingBehavior>`
 allow executing some logic on different stages of a Setting lifecycle.
 
-In addition to declaring behaviors in a Setting
+In addition to defining behaviors in a Setting
 :class:`constructor <concrete_settings.Setting>`,
-ConcreteSettings utilizes matrix multiplication ``@`` (:meth:`object.__rmatmul__`) to
-add a behavior to a Setting. Let's declare the ``ADMIN_NAME`` setting from the
+Concrete Settings utilizes matrix multiplication
+``@`` (:meth:`object.__rmatmul__`) operator to add a behavior to a Setting.
+Let's define the ``ADMIN_NAME`` setting from the
 example above as :class:`required <concrete_settings.contrib.behaviors.required>`:
 
 .. testcode::
@@ -349,7 +345,7 @@ example above as :class:`required <concrete_settings.contrib.behaviors.required>
    from concrete_settings.contrib.behaviors import required
 
    class AppSettings(Settings):
-       ADMIN_NAME: str = Undefined @ required
+       ADMIN_NAME: str = Undefined @required
 
 The equivalent explicit form is:
 
@@ -369,7 +365,7 @@ Multiple behaviors can be chained via ``@`` operator:
    from concrete_settings.contrib.behaviors import required, deprecated
 
    class AppSettings(Settings):
-       ADMIN_NAME: str = Undefined @ required @ deprecated
+       ADMIN_NAME: str = Undefined @required @deprecated
 
 
 Behaviors can also decorate property-settings:
@@ -401,7 +397,7 @@ yields the following output:
    {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value. Current value is `Undefined`']}
 
 
-.. _setting_declration_documentation:
+.. _setting_definition_documentation:
 
 Documentation
 .............
@@ -412,9 +408,10 @@ and background should be carefully documented.
 One way to keep the documentation up-to-date is to
 do it in the code.
 
-ConcreteSettings uses `Sphinx <https://www.sphinx-doc.org/en/master/>`_
-to extract settings' docstrings. A docstring is written above the
-setting definition in a ``#:`` comment block:
+Concrete Settings uses `Sphinx <https://www.sphinx-doc.org/en/master/>`_
+to extract settings' docstrings from a source code.
+A docstring is written above the setting definition
+in a ``#:`` comment block:
 
 .. code::
 
@@ -439,7 +436,7 @@ Output:
    docstring explaining what
    ADMIN_NAME is and how to use it.
 
-Note, that extracting a docstring **works only if the settings are located in a readable file!**
+Note that extracting a docstring **works only if the settings are located in a readable file with source code!**
 Otherwise documentation has to be specified as an argument in :class:`Setting <concrete_settings.Setting>`
 constructor:
 
@@ -467,7 +464,6 @@ Property-settings are documented via standard Python function docstrings:
 
    class AppSettings(Settings):
 
-       @setting
        def ADMIN_NAME(self) -> str:
            '''This documents ADMIN_NAME.'''
            return 'Alex'

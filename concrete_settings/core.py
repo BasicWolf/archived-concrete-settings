@@ -511,7 +511,7 @@ class SettingBehaviorMeta(type):
 class SettingBehavior(metaclass=SettingBehaviorMeta):
     """The base class for Setting attributes behaviors."""
 
-    def __call__(self, setting_or_method: Union['Setting', types.FunctionType]):
+    def __call__(self, setting_or_method: Union[Setting, types.FunctionType]):
         setting: Setting
 
         if isinstance(setting_or_method, types.FunctionType):
