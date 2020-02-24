@@ -61,7 +61,7 @@ In a nutshell, if a field looks like a setting, but is not explicitly
 defined as an instance of class :class:`Setting <concrete_settings.Setting>`,
 a corresponding object is created instead.
 
-:ref:`Later in the documentation <setting_declration>` the setting creation
+:ref:`Later in the documentation <setting_definition>` the setting creation
 rules are explored in-depth.
 For now please accept that Concrete Settings' preferred way of declaring
 *basic* settings is by omitting the ``Setting(...)`` call at all.
@@ -264,7 +264,7 @@ to validate a setting value.
 Otherwise it carries no meaning and is just a valid Python object.
 
 The :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
-is the :ref:`default validator <setting_declration_validators>`
+is the :ref:`default validator <setting_definition_validators>`
 for settings which have no validators defined explicitly:
 
 .. testcode:: quickstart-type-hint
