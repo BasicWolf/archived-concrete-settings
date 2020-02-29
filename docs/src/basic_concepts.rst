@@ -132,7 +132,7 @@ and **documentation**:
   can use the type hint to check whether the setting value corresponds
   to the required type.
 * **Validators** is a collection of callables which validate the value of the setting.
-* **Behaviors** is a collection of :class:`SettingBehavior <concrete_settings.SettingBehavior>`
+* **Behaviors** is a collection of :class:`Behavior <concrete_settings.Behavior>`
   objects which modify a setting's behavior during different stages of its life cycle.
 * **Documentation** is a multi-line doc string intended for the end user.
 

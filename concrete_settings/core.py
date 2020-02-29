@@ -43,7 +43,7 @@ class Setting:
         doc: str = '',
         validators: Tuple[Validator, ...] = (),
         type_hint: Any = GuessSettingType,
-        behaviors: Union['Behaviors', Iterable] = None,
+        behaviors: Union['Behaviors', Iterable] = (),
     ):
         self.value = value
         self.type_hint = type_hint
@@ -474,8 +474,8 @@ class Settings(Setting, metaclass=SettingsMeta):
         return self._errors
 
 
-class SettingBehaviorMeta(type):
-    def __call__(self, *args, **kwargs):
+class BehaviorMeta(type):
+    def __call__(cls, *args, **kwargs):
         # Act as a decorator
         from concrete_settings import Setting
 
@@ -498,17 +498,17 @@ class SettingBehaviorMeta(type):
             bhv = super().__call__(*args, **kwargs)
             return bhv
 
-    def __rmatmul__(self, setting: Any):
+    def __rmatmul__(cls, setting: Any):
         from concrete_settings import Setting
 
         if not isinstance(setting, Setting):
             setting = Setting(setting)
 
-        bhv = self()
+        bhv = cls()
         return bhv(setting)
 
 
-class SettingBehavior(metaclass=SettingBehaviorMeta):
+class Behavior(metaclass=BehaviorMeta):
     """The base class for Setting attributes behaviors."""
 
     def __call__(self, setting_or_method: Union[Setting, types.FunctionType]):
@@ -590,7 +590,7 @@ class Behaviors(collections.abc.Container):
         return _set_value(val)
 
 
-class override(SettingBehavior):
+class override(Behavior):
     def inject(self, setting: 'Setting'):
         setting.override = True
         return super().inject(setting)

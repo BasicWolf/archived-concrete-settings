@@ -11,8 +11,17 @@ Settings
 --------
 
 .. autoclass:: concrete_settings.Setting
-   :members:
-   :special-members: __get__,__set__
+
+   :param typing.Any value: The default value of a setting
+   :param str doc: Setting docstring
+   :param tuple validators: A tuple of callable setting validators
+   :param typing.Any type_hint: Setting type
+   :param list behaviors: a collection of :class:`concrete_settings.Behavior` objects or 
+
+   .. method:: __get__
+
+   .. method:: __set__
+
 
 .. autoclass:: concrete_settings.Settings
    :members:
@@ -76,7 +85,7 @@ Behaviors
 
 .. module:: concrete_settings.behaviors
 
-.. autoclass:: concrete_settings.SettingBehavior
+.. autoclass:: concrete_settings.Behavior
 
 
 

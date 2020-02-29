@@ -1,8 +1,8 @@
-from concrete_settings import SettingBehavior
+from concrete_settings import Behavior
 from concrete_settings.validators import RequiredValidator
 
 
-class required(SettingBehavior):
+class required(Behavior):
     def __init__(self, message: str = None):
         self.message = message
 

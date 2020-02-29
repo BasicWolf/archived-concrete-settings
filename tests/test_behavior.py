@@ -5,7 +5,7 @@ from concrete_settings import (
     Setting,
     setting as property_setting,
     Behaviors,
-    SettingBehavior,
+    Behavior,
     override,
 )
 from concrete_settings.exceptions import StructureError
@@ -13,7 +13,7 @@ from concrete_settings.exceptions import StructureError
 
 @pytest.fixture
 def div():
-    class Div(SettingBehavior):
+    class Div(Behavior):
         def __init__(self, divisor=2):
             self.divisor = divisor
 
@@ -25,7 +25,7 @@ def div():
 
 @pytest.fixture
 def plus():
-    class Plus(SettingBehavior):
+    class Plus(Behavior):
         def __init__(self, addend):
             self.addend = addend
 
@@ -37,7 +37,7 @@ def plus():
 
 @pytest.fixture
 def setting_behavior_mock():
-    class SettingBehaviorMock(SettingBehavior):
+    class BehaviorMock(Behavior):
         get_setting_value_was_called = False
         set_setting_value_was_called = False
 
@@ -49,7 +49,7 @@ def setting_behavior_mock():
             self.set_setting_value_was_called = True
             set_value(val)
 
-    return SettingBehaviorMock
+    return BehaviorMock
 
 
 # == SettingsBehavior == #

@@ -1,10 +1,10 @@
 import warnings
 
-from concrete_settings import SettingBehavior
+from concrete_settings import Behavior
 from concrete_settings.contrib.validators import DeprecatedValidator
 
 
-class deprecated(SettingBehavior):
+class deprecated(Behavior):
     """Adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`  # noqa: E501 # line too long
        to the setting."""
 
