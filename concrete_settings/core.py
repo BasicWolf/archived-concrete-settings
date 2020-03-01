@@ -33,7 +33,7 @@ INVALID_SETTINGS = '__invalid__settings__'
 class Setting:
     value: Any
     type_hint: Any
-    validators: Tuple[Callable, ...]
+    validators: Tuple[Validator, ...]
     behaviors: 'Behaviors'
 
     def __init__(
@@ -43,7 +43,7 @@ class Setting:
         doc: str = '',
         validators: Tuple[Validator, ...] = (),
         type_hint: Any = GuessSettingType,
-        behaviors: Union['Behaviors', Iterable] = (),
+        behaviors: Union[Iterable, 'Behaviors'] = (),
     ):
         self.value = value
         self.type_hint = type_hint
@@ -57,7 +57,6 @@ class Setting:
         self.name = name
 
     def __get__(self, owner: 'Settings', owner_type=None):
-        """TODO"""
         assert isinstance(
             owner, (type(None), Settings)
         ), "owner should be None or an instance of Settings"
@@ -67,21 +66,18 @@ class Setting:
             return self
 
         # == object-level access ==
-        get_value = functools.partial(self.__descriptor__get__, owner, type(owner))
+        get_value = functools.partial(
+            getattr, owner, f"__setting_{self.name}_value", self.value
+        )
         return self.behaviors.get_setting_value(self, owner, get_value)
 
     def __set__(self, owner: 'Settings', val):
-        """TODO"""
         assert isinstance(owner, Settings), "owner should be an instance of Settings"
 
-        set_value = functools.partial(self.__descriptor__set__, owner)
+        set_value = functools.partial(
+            setattr, owner, f"__setting_{self.name}_value"
+        )
         self.behaviors.set_setting_value(self, owner, val, set_value)
-
-    def __descriptor__get__(self, owner, owner_type):
-        return getattr(owner, f"__setting_{self.name}_value", self.value)
-
-    def __descriptor__set__(self, owner, val):
-        setattr(owner, f"__setting_{self.name}_value", val)
 
 
 class PropertySetting(Setting):
@@ -548,6 +544,8 @@ class Behavior(metaclass=BehaviorMeta):
 
 
 class Behaviors(collections.abc.Container):
+    """A container for setting behaviors """
+
     def __init__(self, iterable=()):
         self._container = list(iterable)
 
