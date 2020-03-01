@@ -12,15 +12,16 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'Concrete Settings'
-copyright = '2019, Zaur Nasibov'
+copyright = '2020, Zaur Nasibov'
 author = 'Zaur Nasibov'
 
 # The short X.Y version
@@ -39,6 +40,7 @@ release = ''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'ext.patch_pydomain',
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
@@ -51,7 +53,6 @@ plantuml = '/usr/bin/plantuml'
 
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
-
 
 doctest_global_setup = f'''
 import os
