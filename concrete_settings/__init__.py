@@ -10,6 +10,7 @@ from .core import (  # noqa: F401 # imported but unused
     Behaviors,
     Behavior,
     override,
+    Validator,
 )
 
 from .types import Undefined  # noqa: F401 # imported but unused

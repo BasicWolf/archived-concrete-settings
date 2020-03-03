@@ -32,7 +32,7 @@ descriptor instances.
 
 In a nutshell Concrete Settings has to get
 a setting field's :ref:`name <setting_definition_name>`,
-:ref:`default value <setting_definition_default_value>`
+:ref:`initial value <setting_definition_initial_value>`
 and :ref:`type hint <setting_definition_type_hint>`,
 its :ref:`validators <setting_definition_validators>`,
 :ref:`behaviors <setting_definition_behaviors>`
@@ -42,7 +42,7 @@ and :ref:`documentation <setting_definition_documentation>`.
    :align: center
 
    @startuml
-   (Default value) --> (Setting)
+   (Initial value) --> (Setting)
    (Type hint) --> (Setting)
    (Validators) --> (Setting)
    (Behaviors) --> (Setting)
@@ -121,21 +121,21 @@ For example, to set validators:
    assert isinstance(CarSettings.MAX_SPEED, Setting)
 
 
-.. _setting_definition_default_value:
+.. _setting_definition_initial_value:
 
-Default value
+Initial value
 .............
 
-The *default value* is the value assigned to the attribute:
+The *initial value* is the value assigned to the attribute:
 
 .. testcode::
 
    class AppSettings(Settings):
-       DEBUG = True  # default value is `True`
-       MAX_SPEED = 10  # default value is `10`
+       DEBUG = True    # initial value is `True`
+       MAX_SPEED = 10  # initial value is `10`
 
 You can use the special :class:`Undefined <concrete_settings.types.Undefined>`
-value in cases when default value is not available:
+value in cases when initial value is not available:
 
 .. testcode::
 
@@ -150,7 +150,7 @@ value in cases when default value is not available:
 :class:`RequiredValidator <concrete_settings.validators.RequiredValidator>`
 would fail validation if the setting's value is ``Undefined``.
 
-It does not make much a sense to have a default value for
+It does not make much a sense to have a initial value for
 a property-setting since the value is computed every
 time a setting is read.
 To prevent misuse, passing a ``value`` argument raises an :class:`AssertionError`
@@ -188,7 +188,7 @@ A type hint is defined by a standard Python type annotation:
        MAX_SPEED: int = 10  # type hint is `int`
 
 If an attribute is not type-annotated, a *type hint* is computed
-by calling :class:`type() <type>` on the default value. The recognized types
+by calling :class:`type() <type>` on the initial value. The recognized types
 are defined in
 :attr:`GuessSettingType.KNOWN_TYPES <concrete_settings.types.GuessSettingType.KNOWN_TYPES>`.
 If the type is not recognized, the type hint is set to :data:`typing.Any`.
@@ -196,8 +196,8 @@ If the type is not recognized, the type hint is set to :data:`typing.Any`.
 .. testcode::
 
    class AppSettings(Settings):
-       DEBUG = True     # default value `True`, type `bool`
-       MAX_SPEED = 300  # default value `300`, type `int`
+       DEBUG = True     # initial value `True`, type `bool`
+       MAX_SPEED = 300  # initial value `300`, type `int`
 
 **It is recommended to explicitly annotate a setting with the intended type,
 in order to avoid invalid type detections**:
@@ -205,8 +205,8 @@ in order to avoid invalid type detections**:
 .. testcode::
 
    class AppSettings(Settings):
-       DEBUG: bool = True       # default value `True`, type `bool`
-       MAX_SPEED: float  = 300  # default value `300`, type `float`
+       DEBUG: bool = True       # initial value `True`, type `bool`
+       MAX_SPEED: float  = 300  # initial value `300`, type `float`
 
 Property-settings' type hint is read from the return type annotation.
 If no annotation is provided, the type hint is set to :data:`typing.Any`:

@@ -108,7 +108,7 @@ Output:
 
 Before going further, let's take a look at the contents of a Setting object.
 Each implicitly or explicitly defined setting consists of a
-**name**, **default value**, a **type hint**,
+**name**, **initial value**, a **type hint**,
 **validators**, **behaviors**
 and **documentation**:
 
@@ -116,7 +116,7 @@ and **documentation**:
    :align: center
 
    @startuml
-   (Default value) --> (Setting)
+   (Initial value) --> (Setting)
    (Type hint) --> (Setting)
    (Validators) --> (Setting)
    (Behaviors) --> (Setting)
@@ -125,7 +125,7 @@ and **documentation**:
    note left of (Setting) : NAME
    @enduml
 
-* **Default value** is a setting's initial value.
+* **Initial value** is a setting's default value.
 * **Type hint** is a setting type. It is called a hint, since it carries no
   meaning on its own. However a **validator** like the built-in
   :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>`
@@ -297,7 +297,7 @@ Raising a warning when settings are initialized and
 every time the setting is being read - sounds like a plan.
 A straightforward way to do this is by sublassing the
 :class:`Setting <concrete_settings.Setting>` class and overriding
-:meth:`Setting.__get__() <concrete_settings.Setting.__get__>`.
+``Setting.__get__()``.
 
 Another way would be using the supplied Settings Behavior mechanism.
 Behaviors can be passed to a Setting explicitly.
@@ -334,11 +334,7 @@ get a warning in stderr:
    DeprecationWarning: Setting `MAX_SPEED` in class `<class '__main__.AppSettings'>` is deprecated.
 
 In a nutshell, a *behavior* is a way to change how a setting field behaves
-during its initialization, validation and setting's
-:meth:`get <concrete_settings.Setting.__get__>`
-and
-:meth:`set <concrete_settings.Setting.__set__>`
-descriptors invocations.
+during its initialization, validation, reading and writing operations.
 A behavior can be passed to :class:`Setting.__init__() <concrete_settings.Setting>`
 or by using ``@`` operator: ``value @ behavior0 @ behavior1 @ ...``
 

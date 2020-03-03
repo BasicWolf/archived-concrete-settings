@@ -3,8 +3,6 @@
 API
 ===
 
-.. module:: concrete_settings
-
 This part of the documentation covers all the interfaces of Concrete Settings.
 
 Settings
@@ -12,15 +10,14 @@ Settings
 
 .. autoclass:: concrete_settings.Setting
 
-   :param typing.Any value: The default value of a setting
-   :param str doc: Setting docstring
-   :param tuple validators: A tuple of callable setting validators
-   :param typing.Any type_hint: Setting type
-   :param list behaviors: a collection of :class:`concrete_settings.Behavior` objects or 
+   A setting is a named object for storing, documenting and validating
+   a certain value.
 
-   .. method:: __get__
-
-   .. method:: __set__
+   :param value: the initial value of a setting. If no value is given,
+   :param doc: a user-friendly setting documentation.
+   :param validators: setting validators.
+   :param type_hint: setting type.
+   :param behaviors: setting behaviors.
 
 
 .. autoclass:: concrete_settings.Settings
@@ -83,10 +80,9 @@ DeprecatedValidator
 Behaviors
 ---------
 
-.. module:: concrete_settings.behaviors
-
 .. autoclass:: concrete_settings.Behavior
 
+.. autoclass:: concrete_settings.Behaviors
 
 
 deprecated

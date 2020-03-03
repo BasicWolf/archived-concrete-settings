@@ -74,9 +74,7 @@ class Setting:
     def __set__(self, owner: 'Settings', val):
         assert isinstance(owner, Settings), "owner should be an instance of Settings"
 
-        set_value = functools.partial(
-            setattr, owner, f"__setting_{self.name}_value"
-        )
+        set_value = functools.partial(setattr, owner, f"__setting_{self.name}_value")
         self.behaviors.set_setting_value(self, owner, val, set_value)
 
 
