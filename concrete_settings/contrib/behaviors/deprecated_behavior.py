@@ -1,7 +1,11 @@
 import warnings
+from typing import TYPE_CHECKING
 
 from concrete_settings import Behavior
 from concrete_settings.contrib.validators import DeprecatedValidator
+
+if TYPE_CHECKING:
+    from concrete_settings import Setting, Settings
 
 
 class deprecated(Behavior):
@@ -23,7 +27,7 @@ class deprecated(Behavior):
         self.warn_on_get = warn_on_get
         self.warn_on_set = warn_on_set
 
-    def inject(self, setting):
+    def inject(self, setting: 'Setting'):
         if self.warn_on_validation or self.error_on_validation:
             setting.validators = (
                 DeprecatedValidator(self.deprecation_message, self.error_on_validation),
@@ -31,16 +35,16 @@ class deprecated(Behavior):
 
         return super().inject(setting)
 
-    def get_setting_value(self, setting, owner, get_value):
+    def get_setting_value(self, setting: 'Setting', owner: 'Settings', get_value):
         if self.warn_on_get:
-            if owner and not owner.validating:
+            if owner and not owner.is_being_validated:
                 msg = self.deprecation_message.format(owner=owner, name=setting.name)
                 warnings.warn(msg, DeprecationWarning)
         return get_value()
 
-    def set_setting_value(self, setting, owner, val, set_value):
+    def set_setting_value(self, setting: 'Setting', owner: 'Settings', val, set_value):
         if self.warn_on_set:
-            if not owner.validating:
+            if not owner.is_being_validated:
                 msg = self.deprecation_message.format(owner=owner, name=setting.name)
                 warnings.warn(msg, DeprecationWarning)
         set_value(val)

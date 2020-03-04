@@ -3,7 +3,7 @@
 API
 ===
 
-This part of the documentation covers all the interfaces of Concrete Settings.
+This part of the documentation briefly covers the interfaces of Concrete Settings.
 
 Settings
 --------
@@ -13,19 +13,18 @@ Settings
    A setting is a named object for storing, documenting and validating
    a certain value.
 
-   :param value: the initial value of a setting. If no value is given,
-   :param doc: a user-friendly setting documentation.
-   :param validators: setting validators.
-   :param type_hint: setting type.
-   :param behaviors: setting behaviors.
+   :param value: the initial value of a setting with the default :class:`Undefined <concrete_settings.types.Undefined>`.
+   :param doc: an end-user -friendly setting documentation.
+   :param validators: setting validators, a tuple of :class:`Validator <concrete_settings.types.Validator>` callables.
+   :param type_hint: setting type, something one would use as type annotation.
+   :param behaviors: setting behaviors, a container of :class:`Behavior` objects.
 
 
 .. autoclass:: concrete_settings.Settings
    :members:
 
-   .. attribute:: default_validators
-
-   .. attribute:: mandatory_validators
+   Settings is a container for one or more :class:`Setting` objects.
+   Settings classes can be mixed and nested.
 
 .. autoclass:: concrete_settings.core.PropertySetting
    :members:
