@@ -1,6 +1,6 @@
 from typeguard import check_type
 
-from concrete_settings.exceptions import SettingsValidationError
+from concrete_settings.exceptions import ValidationError
 from concrete_settings.types import Undefined, Validator
 
 
@@ -17,7 +17,7 @@ class ValueTypeValidator(Validator):
         try:
             check_type(name, value, type_hint)
         except TypeError as e:
-            raise SettingsValidationError(
+            raise ValidationError(
                 f'Expected value of type `{type_hint}` '
                 f'got value of type `{type(value)}`'
             ) from e

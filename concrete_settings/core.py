@@ -4,20 +4,10 @@ import logging
 import re
 import types
 from collections import defaultdict
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Type,
-    Union,
-    List,
-    Tuple,
-    Generator,
-    Iterable,
-)
+from typing import Any, Callable, Dict, Type, Union, List, Tuple, Iterable, Iterator
 
 from .docreader import extract_doc_comments_from_class_or_module
-from .exceptions import StructureError, SettingsValidationError, ValidationErrorDetail
+from .exceptions import StructureError, ValidationError, ValidationErrorDetail
 from .sources import get_source, AnySource, Source, NotFound
 from .sources.strategies import default as default_update_strategy
 from .types import Undefined, GuessSettingType, type_hints_equal, Validator
@@ -253,13 +243,6 @@ class SettingsMeta(type):
                 # no comment-style documentation exists
                 pass
 
-    @property
-    def settings_attributes(self) -> Generator[Tuple[str, Setting], None, None]:
-        for name in dir(self):
-            attr = getattr(self, name)
-            if isinstance(attr, Setting):
-                yield name, attr
-
 
 class Settings(Setting, metaclass=SettingsMeta):
     #: Validators which are applied to each Setting that has no validators of their own.
@@ -332,14 +315,24 @@ class Settings(Setting, metaclass=SettingsMeta):
 
         return differences
 
-    @property
-    def settings_attributes(self):
-        return self.__class__.settings_attributes
+    @classmethod
+    def settings_attributes(cls) -> Iterator[Tuple[str, Setting]]:
+        for name in dir(cls):
+            attr = getattr(cls, name)
+            if isinstance(attr, Setting):
+                yield name, attr
 
     def is_valid(self, raise_exception=False) -> bool:
-        """Validate settings and return a boolean indicate whether settings are valid"""
-        if not self._validated:
-            self._errors = self._run_validation(raise_exception)
+        """Validate settings and return True if settings are valid.
+
+        If `raise_exception` is False, validation errors are stored
+        in `self.errors`. Otherwise a ValidationError is raised when
+        the first invalid
+        :param bool raise_exception:
+        """
+        self._errors = {}
+        self._errors = self._run_validation(raise_exception)
+        self._validated = True
         return self._errors == {}
 
     def _run_validation(self, raise_exception=False) -> ValidationErrorDetail:
@@ -347,7 +340,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         errors = {}
 
         # validate each setting individually
-        for name, setting in self.settings_attributes:
+        for name, setting in self.settings_attributes():
             setting_errors = self._validate_setting(name, setting, raise_exception)
             if setting_errors:
                 errors[name] = setting_errors
@@ -355,14 +348,13 @@ class Settings(Setting, metaclass=SettingsMeta):
         if errors == {}:
             try:
                 self.validate()
-            except SettingsValidationError as e:
+            except ValidationError as e:
                 if raise_exception:
                     raise e
                 else:
                     errors[INVALID_SETTINGS] = [str(e)]
 
         self._is_being_validated = False
-        self._validated = True
         return errors
 
     def _validate_setting(
@@ -370,14 +362,14 @@ class Settings(Setting, metaclass=SettingsMeta):
     ) -> ValidationErrorDetail:
         value: Setting = getattr(self, name)
 
-        errors = []
+        errors: List[ValidationErrorDetail] = []
         validators = setting.validators or self.default_validators
         validators += self.mandatory_validators
 
         for validator in validators:
             try:
                 validator(value, name=name, owner=self, setting=setting)
-            except SettingsValidationError as e:
+            except ValidationError as e:
                 if raise_exception:
                     raise e
                 errors.append(str(e))
@@ -387,7 +379,7 @@ class Settings(Setting, metaclass=SettingsMeta):
             nested_settings = value
             try:
                 nested_settings.is_valid(raise_exception=raise_exception)
-            except SettingsValidationError as e:
+            except ValidationError as e:
                 assert raise_exception
                 e.prepend_source(name)
                 raise e
@@ -400,11 +392,11 @@ class Settings(Setting, metaclass=SettingsMeta):
     def validate(self):
         """Validate settings altogether.
 
-        This is a stub method. It is called after individual
-        settings' validation is completed without any errors only.
-        Override the method in your child Settings classes.
+        This is a stub method intended to be overriden when needed.
+        It is called after individual settings have been validated
+        without any errors.
 
-        SettingsValidationError should be raised in case of validation errors.
+        :class:`ValidationError` should be raised in case of validation errors.
         """
         pass
 
@@ -425,7 +417,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         """Recursively update settings object from dictionary"""
         strategies = strategies or {}
 
-        for name, setting in settings.settings_attributes:
+        for name, setting in settings.settings_attributes():
             if isinstance(setting, Settings):
                 settings._update(setting, source, (*parents, name), strategies)
             else:
@@ -450,14 +442,14 @@ class Settings(Setting, metaclass=SettingsMeta):
                 setattr(settings, name, new_val)
 
     def extract_to(self, destination: Union[types.ModuleType, dict], prefix: str = ''):
-        """Populate settings to Python module as local variables"""
+        """Populate settings to dict or module scope."""
         if prefix != '':
             prefix = prefix + '_'
 
         if isinstance(destination, types.ModuleType):
             destination = destination.__dict__
 
-        for name, attr in self.settings_attributes:
+        for name, attr in self.settings_attributes():
             var_name = prefix + name
             if isinstance(attr, Settings):  # nested settings
                 attr.extract_to(destination, var_name)
@@ -465,22 +457,31 @@ class Settings(Setting, metaclass=SettingsMeta):
                 destination[var_name] = getattr(self, name)
 
     @property
-    def errors(self):
-        """Validation errors"""
+    def errors(self) -> ValidationErrorDetail:
+        """Validation errors.
+
+        :type: :data:`ValidationErrorDetail
+               <concrete_settings.exceptions.ValidationErrorDetail>`
+        """
         return self._errors
 
     @property
-    def is_being_validated(self):
+    def is_being_validated(self) -> bool:
         """Indicates that settings are being validated.
 
         Can be used by behaviors to e.g. distinguish between Setting access
         during validation and normal usage.
+
+        :type: bool
         """
         return self._is_being_validated
 
     @property
-    def validated(self):
-        """Indicates whether the current Settings object havs been validated."""
+    def validated(self) -> bool:
+        """Indicates whether the current Settings object has been validated.
+
+        :type: bool
+        """
         return self._validated
 
 
@@ -624,19 +625,19 @@ class prefix:
 
         self.prefix = f'{prefix}_'
 
-    def __call__(self, settings):
+    def __call__(self, settings_cls: Type[Settings]) -> Type[Settings]:
         assert issubclass(
-            settings, Settings
+            settings_cls, Settings
         ), 'Intended to decorate Settings sub-classes only'
 
-        for name, attr in settings.settings_attributes:
+        for name, attr in settings_cls.settings_attributes():
             new_name = f'{self.prefix}{name}'
-            if hasattr(settings, new_name):
+            if hasattr(settings_cls, new_name):
                 raise ValueError(
-                    f'{settings} class already has setting attribute named "{name}"'
+                    f'{settings_cls} class already has setting attribute named "{name}"'
                 )
 
-            delattr(settings, name)
-            setattr(settings, new_name, attr)
+            delattr(settings_cls, name)
+            setattr(settings_cls, new_name, attr)
             attr.name = new_name
-        return settings
+        return settings_cls

@@ -229,15 +229,15 @@ All validation errors are collected and stored in :meth:`Settings.errors <concre
 .. testcode:: quickstart-validation
 
    from concrete_settings import Settings, Setting
-   from concrete_settings.exceptions import SettingsValidationError
+   from concrete_settings.exceptions import ValidationError
 
    def not_too_fast(speed, **kwargs):
        if speed > 100:
-           raise SettingsValidationError(f'{speed} is too fast!')
+           raise ValidationError(f'{speed} is too fast!')
 
    def not_too_slow(speed, **kwargs):
        if speed < 10:
-           raise SettingsValidationError(f'{speed} is too slow!')
+           raise ValidationError(f'{speed} is too slow!')
 
    class AppSettings(Settings):
        SPEED: int = Setting(50, validators=(not_too_fast, not_too_slow))
@@ -413,7 +413,7 @@ The following example ends up with a validation error:
 
    Traceback (most recent call last):
        ...
-   concrete_settings.exceptions.SettingsValidationError: DB: Expected value of type `<class 'str'>` got value of type `<class 'int'>`
+   concrete_settings.exceptions.ValidationError: DB: Expected value of type `<class 'str'>` got value of type `<class 'int'>`
 
 
 Combining settings

@@ -6,7 +6,7 @@ import pytest
 from factory import fuzzy
 from pyfakefs.fake_filesystem_unittest import Patcher
 
-from concrete_settings.exceptions import SettingsValidationError
+from concrete_settings.exceptions import ValidationError
 from concrete_settings.types import Validator
 
 seed = random.randint(1, 1e9)
@@ -62,7 +62,7 @@ def build_module_mock(mocker):
 def is_positive():
     def is_positive(val, **kwargs):
         if val <= 0:
-            raise SettingsValidationError('Value should be positive')
+            raise ValidationError('Value should be positive')
 
     return is_positive
 
@@ -71,7 +71,7 @@ def is_positive():
 def is_less_that_10():
     def is_less_that_10(val, **kwargs):
         if val >= 10:
-            raise SettingsValidationError('Value should be less that 10')
+            raise ValidationError('Value should be less that 10')
 
     return is_less_that_10
 

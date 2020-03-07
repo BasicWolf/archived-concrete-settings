@@ -1,4 +1,4 @@
-from concrete_settings.exceptions import SettingsValidationError
+from concrete_settings.exceptions import ValidationError
 from concrete_settings.types import Undefined, Validator
 
 
@@ -14,4 +14,4 @@ class RequiredValidator(Validator):
     def __call__(self, value, *, name, owner, **ignore):
         if value == Undefined:
             msg = self.message.format(name=name, owner=type(owner))
-            raise SettingsValidationError(msg)
+            raise ValidationError(msg)

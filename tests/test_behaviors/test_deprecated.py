@@ -1,7 +1,7 @@
 import pytest
 
 from concrete_settings import Settings, setting
-from concrete_settings.exceptions import SettingsValidationError
+from concrete_settings.exceptions import ValidationError
 from concrete_settings.contrib.behaviors import deprecated
 
 
@@ -33,7 +33,7 @@ def test_deprecated_error_when_validating():
     class S(Settings):
         D = 10 @ deprecated(error_on_validation=True)
 
-    with pytest.raises(SettingsValidationError):
+    with pytest.raises(ValidationError):
         S().is_valid(raise_exception=True)
 
 

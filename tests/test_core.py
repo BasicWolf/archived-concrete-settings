@@ -7,7 +7,7 @@ import pytest
 
 import concrete_settings
 from concrete_settings import INVALID_SETTINGS, Settings, Setting, Undefined, prefix
-from concrete_settings.exceptions import SettingsValidationError
+from concrete_settings.exceptions import ValidationError
 
 
 def test_cls_init_empty_settings():
@@ -166,7 +166,7 @@ def test_value_type_validator():
         T: str = 10
 
     with pytest.raises(
-        SettingsValidationError,
+        ValidationError,
         match="Expected value of type `<class 'str'>` got value of type `<class 'int'>`",
     ):
         S().is_valid(raise_exception=True)
@@ -281,7 +281,7 @@ def test_nested_settings_validation_raises():
         T_S0 = S0()
 
     with pytest.raises(
-        SettingsValidationError,
+        ValidationError,
         match=(
             "T_S0: Expected value of type `<class 'str'>` "
             "got value of type `<class 'int'>`"
@@ -326,7 +326,7 @@ def test_validate_called():
 def test_error_preserved_when_validate_raises_settings_validation_error():
     class S(Settings):
         def validate(self):
-            raise SettingsValidationError('there was an error XXXX')
+            raise ValidationError('there was an error XXXX')
 
     s = S()
     assert not s.is_valid()
@@ -336,10 +336,10 @@ def test_error_preserved_when_validate_raises_settings_validation_error():
 def test_error_raised_when_validate_raises_settings_validation_error():
     class S(Settings):
         def validate(self):
-            raise SettingsValidationError('there was an error XXXX')
+            raise ValidationError('there was an error XXXX')
 
     s = S()
-    with pytest.raises(SettingsValidationError, match='there was an error XXXX'):
+    with pytest.raises(ValidationError, match='there was an error XXXX'):
         s.is_valid(raise_exception=True)
 
 

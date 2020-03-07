@@ -8,7 +8,7 @@ This part of the documentation briefly covers the interfaces of Concrete Setting
 Settings
 --------
 
-.. autoclass:: concrete_settings.Setting
+.. autoclass:: concrete_settings.Setting([value, *, doc, validators, type_hint, behaviors])
 
    A setting is a named object for storing, documenting and validating
    a certain value.
@@ -17,8 +17,14 @@ Settings
    :param doc: an end-user -friendly setting documentation.
    :param validators: setting validators, a tuple of :class:`Validator <concrete_settings.types.Validator>` callables.
    :param type_hint: setting type, something one would use as type annotation.
+                     The default value
+                     (:class:`GuessSettingType <concrete_settings.types.GuessSettingType>`)
+                     would invoke type guessing mechanism.
    :param behaviors: setting behaviors, a container of :class:`Behavior` objects.
-
+   :type value: :data:`Any <typing.Any>`
+   :type doc: str
+   :type validators: tuple
+   :type type_hint: :data:`Any <typing.Any>`
 
 .. autoclass:: concrete_settings.Settings
    :members:
@@ -53,7 +59,7 @@ Validators
 .. autoclass:: Validator
    :members: __call__
 
-.. autoclass:: concrete_settings.exceptions.SettingsValidationError
+.. autoclass:: concrete_settings.exceptions.ValidationError
 
 
 .. module:: concrete_settings.validators
@@ -119,3 +125,11 @@ Update strategies
 .................
 
 .. module:: concrete_settings.sources.strategies
+
+
+Exceptions
+----------
+
+.. module:: concrete_settings.exceptions
+
+.. autodata:: ValidationErrorDetail

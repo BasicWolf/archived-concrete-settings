@@ -103,12 +103,12 @@ For example, to set validators:
 .. testcode:: setting-definition-name-property-setting-decorator
 
    from concrete_settings import Settings, setting
-   from concrete_settings.exceptions import SettingsValidationError
+   from concrete_settings.exceptions import ValidationError
 
    # a validator
    def not_too_fast(speed):
        if speed > 100:
-           raise SettingsValidationError('You are going too fast!')
+           raise ValidationError('You are going too fast!')
 
    class CarSettings(Settings):
        @setting(validators=(not_too_fast, ))
@@ -251,7 +251,7 @@ Validators
 Validators is a collection of callables which validate the value of the setting.
 The interface of the callable is defined in the :meth:`Validator protocol <concrete_settings.types.Validator.__call__>`.
 If validation fails, a validator raises
-:class:`SettingsValidationError <concrete_settings.exceptions.SettingsValidationError>`
+:class:`ValidationError <concrete_settings.exceptions.ValidationError>`
 with failure details.
 Individual Setting validators are supplied in ``validators`` argument of an explicit Setting definition.
 Also some :ref:`behaviors <setting_definition_behaviors>` add certain validators to a setting.

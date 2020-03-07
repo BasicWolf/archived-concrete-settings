@@ -102,5 +102,5 @@ class Validator(Protocol):
         owner: 'Settings' = None,
         setting: 'Setting' = None,
     ):
-        """Validate a value. Raise `SettingsValidationError` if value is wrong."""
+        """Validate a value. Raise `ValidationError` if value is wrong."""
         raise NotImplementedError

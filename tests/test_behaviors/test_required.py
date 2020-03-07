@@ -1,7 +1,7 @@
 import pytest
 
 from concrete_settings import Settings, Undefined
-from concrete_settings.exceptions import SettingsValidationError
+from concrete_settings.exceptions import ValidationError
 from concrete_settings.contrib.behaviors import required
 
 
@@ -10,7 +10,7 @@ def test_required_behavior_validation_fails_when_value_is_undefined():
         DEBUG = Undefined @ required
 
     with pytest.raises(
-        SettingsValidationError,
+        ValidationError,
         match="Setting `DEBUG` is required to have a value. "
         "Current value is `Undefined`",
     ):

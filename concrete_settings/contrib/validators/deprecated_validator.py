@@ -1,6 +1,6 @@
 import warnings
 
-from concrete_settings.exceptions import SettingsValidationError
+from concrete_settings.exceptions import ValidationError
 from concrete_settings.types import Validator
 
 
@@ -13,6 +13,6 @@ class DeprecatedValidator(Validator):
         msg = self.msg.format(name=name, owner=type(owner))
 
         if self.raise_exception:
-            raise SettingsValidationError(msg)
+            raise ValidationError(msg)
         else:
             warnings.warn(msg, DeprecationWarning)

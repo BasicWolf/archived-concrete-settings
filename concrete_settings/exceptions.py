@@ -14,6 +14,8 @@ SettingName = str
 # fmt: off
 # type ignored due to cyclic definition, promised to be fixed in
 # future mypy versions
+
+#: A recursive Union type to store settings validation errors.
 ValidationErrorDetail = Union[                   # type: ignore
     str,
     List['ValidationErrorDetail'],               # type: ignore
@@ -22,7 +24,7 @@ ValidationErrorDetail = Union[                   # type: ignore
 # fmt: on
 
 
-class SettingsValidationError(ConcreteSettingsError):
+class ValidationError(ConcreteSettingsError):
     """Raised by a setting validator when a setting value is invalid"""
 
     sources: List[str]

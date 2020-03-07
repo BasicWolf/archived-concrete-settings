@@ -44,5 +44,5 @@ def test_django30_template_py_yml_equal():
 
     django30_yml.update(frameworks_dir / 'django30_template.yml')
 
-    for name, _ in django30_py.settings_attributes:
+    for name, _ in django30_py.settings_attributes():
         assert getattr(django30_yml, name) == getattr(django30_py, name)
