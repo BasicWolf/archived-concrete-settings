@@ -35,6 +35,7 @@ black = "^18.9b0"
 flake8 = "*"
 flake8-bugbear = "*"
 coverage = "*"
+mkdocs-nature = '*'
 pytest-cov = "*"
 setuptools = "^41.0"
 sphinx = "*"
