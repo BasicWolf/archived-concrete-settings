@@ -3,6 +3,12 @@
 API
 ===
 
+**======== IN PROGRESS ========**
+
+API documentation is not complete yet.
+
+**======== IN PROGRESS ========**
+
 This part of the documentation briefly covers the interfaces of Concrete Settings.
 
 Settings
@@ -10,7 +16,7 @@ Settings
 
 .. autoclass:: concrete_settings.Setting([value, *, doc, validators, type_hint, behaviors])
 
-   A setting is a named object for storing, documenting and validating
+   A setting is a **named** object for storing, documenting and validating
    a certain value.
 
    :param value: the initial value of a setting with the default :class:`Undefined <concrete_settings.types.Undefined>`.
@@ -25,6 +31,19 @@ Settings
    :type doc: str
    :type validators: tuple
    :type type_hint: :data:`Any <typing.Any>`
+
+   THe corresponding implicit definition of a setting in Settings class is written as following:
+
+   .. code-block::
+
+      class MySettings(Settings):
+          default_validators = (...)
+          mandatory_validators = (...)
+
+          #: Documentation is written
+          #: in Sphinx-style comments above
+          #: the setting definition
+          SETTING_NAME: type_hint = value @ behavior1 @ behavior2 @ ...
 
 .. autoclass:: concrete_settings.Settings
    :members:

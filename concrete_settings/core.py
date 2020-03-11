@@ -306,7 +306,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         NO_DIFF = []  # type: ignore
         differences = []
 
-        # No checks are performed if setting is overriden
+        # No checks are performed if setting is overridden
         if s1.override:
             return NO_DIFF
 
@@ -396,7 +396,8 @@ class Settings(Setting, metaclass=SettingsMeta):
         It is called after individual settings have been validated
         without any errors.
 
-        :class:`ValidationError` should be raised in case of validation errors.
+        :class:`exceptions.ValidationError` should be raised in
+        case of validation errors.
         """
         pass
 
