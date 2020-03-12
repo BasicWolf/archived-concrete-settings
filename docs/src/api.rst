@@ -32,7 +32,7 @@ Settings
    :type validators: tuple
    :type type_hint: :data:`Any <typing.Any>`
 
-   THe corresponding implicit definition of a setting in Settings class is written as following:
+   The corresponding implicit definition of a setting in Settings class is written as following:
 
    .. code-block::
 
@@ -46,13 +46,41 @@ Settings
           SETTING_NAME: type_hint = value @ behavior1 @ behavior2 @ ...
 
 .. autoclass:: concrete_settings.Settings
-   :members:
 
    Settings is a container for one or more :class:`Setting` objects.
    Settings classes can be mixed and nested.
 
+   .. attribute:: default_validators
+
+      Validators applied to each Setting that have no defined validators.
+
+      :type: tuple[Validator]
+      :value: :class:`(ValueTypeValidator(), ) <concrete_settings.validators.ValueTypeValidator>`
+
+   .. attribute:: mandatory_validators
+
+      Validators applied to every Setting in the class.
+
+      :type: tuple[Validator]
+      :value: ()
+
+   .. method:: is_valid(raise_exception=False) -> bool
+
+      Validate settings and return ``True`` if settings are valid.
+
+      If ``raise_exception`` is False, validation errors are stored
+      in ``self.errors``. Otherwise a ValidationError is raised when
+      the first invalid setting is encountered.
+
+   .. automethod:: validate
+
+   .. autoproperty:: errors
+
+   .. autoproperty:: is_being_validated
+
+   .. automethod:: update
+
 .. autoclass:: concrete_settings.core.PropertySetting
-   :members:
 
 .. autoclass:: concrete_settings.setting
 

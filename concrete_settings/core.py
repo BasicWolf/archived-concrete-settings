@@ -245,13 +245,10 @@ class SettingsMeta(type):
 
 
 class Settings(Setting, metaclass=SettingsMeta):
-    #: Validators which are applied to each Setting that has no validators of their own.
-    default_validators: Tuple = (ValueTypeValidator(),)
-    #: Validators which are applied to every Setting in the class.
-    mandatory_validators: Tuple = ()
+    default_validators: Tuple[Validator, ...] = (ValueTypeValidator(),)
+    mandatory_validators: Tuple[Validator, ...] = ()
 
     _is_being_validated: bool
-    _validated: bool
 
     _errors: ValidationErrorDetail = {}
 
@@ -266,7 +263,6 @@ class Settings(Setting, metaclass=SettingsMeta):
         super().__init__(value=self, type_hint=self.__class__, **kwargs)
 
         self._is_being_validated = False
-        self._validated = False
         self._verify_structure()
 
     def _verify_structure(self):
@@ -323,13 +319,6 @@ class Settings(Setting, metaclass=SettingsMeta):
                 yield name, attr
 
     def is_valid(self, raise_exception=False) -> bool:
-        """Validate settings and return True if settings are valid.
-
-        If `raise_exception` is False, validation errors are stored
-        in `self.errors`. Otherwise a ValidationError is raised when
-        the first invalid
-        :param bool raise_exception:
-        """
         self._errors = {}
         self._errors = self._run_validation(raise_exception)
         self._validated = True
@@ -476,14 +465,6 @@ class Settings(Setting, metaclass=SettingsMeta):
         :type: bool
         """
         return self._is_being_validated
-
-    @property
-    def validated(self) -> bool:
-        """Indicates whether the current Settings object has been validated.
-
-        :type: bool
-        """
-        return self._validated
 
 
 class BehaviorMeta(type):
