@@ -43,7 +43,7 @@ Settings
           #: Documentation is written
           #: in Sphinx-style comments above
           #: the setting definition
-          SETTING_NAME: type_hint = value @ behavior1 @ behavior2 @ ...
+          SETTING_NAME: type_hint = value @behavior1 @behavior2 @...
 
 .. autoclass:: concrete_settings.Settings
 
@@ -69,20 +69,86 @@ Settings
       Validate settings and return ``True`` if settings are valid.
 
       If ``raise_exception`` is False, validation errors are stored
-      in ``self.errors``. Otherwise a ValidationError is raised when
-      the first invalid setting is encountered.
+      in :meth:`self.errors <Settings.errors>`.
+      Otherwise a :class:`ValidationError <exceptions.ValidationError>`
+      is raised when the first invalid setting is encountered.
 
-   .. automethod:: validate
+   .. method:: validate
 
-   .. autoproperty:: errors
+      Validate settings altogether.
+
+      This is a stub method intended to be overriden when needed.
+      It is called after individual settings have been validated
+      without any errors.
+
+      Raise :class:`ValidationError <exceptions.ValidationError>`
+      to indicate errors.
+
+   .. method:: errors
+      :property:
+
+      ``errors`` property contains validation errors from the last
+      :meth:`settings.is_valid(raise_exception=False) <Settings.is_valid>`
+      call. The errors are packed in recursive
+      :class:`ValidationErrorDetail <concrete_settings.exceptions.ValidationErrorDetail>`
+      structure.
 
    .. autoproperty:: is_being_validated
 
-   .. automethod:: update
+      Indicates that settings are being validated.
 
-.. autoclass:: concrete_settings.core.PropertySetting
+      The property is intended to be used by behaviors to
+      distinguish between Setting reads during validation
+      and normal usage.
 
-.. autoclass:: concrete_settings.setting
+   .. method:: update(source, [strategies])
+
+      Update settings from the given source.
+
+      The update process consist of two stages:
+
+      1. Intializing an access and/or reading a source object -
+         Python, YAML or JSON file, environmental variables, a dict,
+         ``locals()`` etc.
+
+      2. Stroing the read values to corresponding setting attributes.
+
+      :param source: can either be a dict, an instance of
+                     :class:`Source <concrete_settings.sources.Source>`
+                     or a path to the source file.
+
+      :param strategies: is a list of 
+
+   .. method:: extract_to(destination, [prefix])
+
+
+
+.. class:: concrete_settings.setting
+
+.. class:: concrete_settings.core.PropertySetting
+
+  ``@setting`` (an alias to ``PropertySetting`` decorator-class) is used to mark
+  class methods as settings. The property-settings are read-only and used to
+  compute a value, usually based on other settings. For example:
+
+  .. testsetup:: api_property_settings
+
+     from concrete_settings import Settings, setting
+
+  .. testcode:: api_property_settings
+
+     class AppSettings(Settings):
+         ADMIN_NAME: str = 'Alex'
+         ADMIN_EMAIL: str = 'alex@example.com'
+
+         @setting
+         def ADMIN_FULL_EMAIL(self) -> str:
+             """Full admin email in `name <email>` format"""
+             return f'{self.ADMIN_NAME} <{self.ADMIN_EMAIL}>'
+
+  Note that methods written in UPPER_CASE are converted to
+  ``PropertySetting`` automatically and do not require
+  decoration by ``@setting``.
 
 .. autoclass:: concrete_settings.prefix
 

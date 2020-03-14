@@ -321,7 +321,6 @@ class Settings(Setting, metaclass=SettingsMeta):
     def is_valid(self, raise_exception=False) -> bool:
         self._errors = {}
         self._errors = self._run_validation(raise_exception)
-        self._validated = True
         return self._errors == {}
 
     def _run_validation(self, raise_exception=False) -> ValidationErrorDetail:
@@ -379,19 +378,9 @@ class Settings(Setting, metaclass=SettingsMeta):
         return errors
 
     def validate(self):
-        """Validate settings altogether.
-
-        This is a stub method intended to be overriden when needed.
-        It is called after individual settings have been validated
-        without any errors.
-
-        :class:`exceptions.ValidationError` should be raised in
-        case of validation errors.
-        """
         pass
 
     def update(self, source: AnySource, strategies: dict = None):
-        """Update the object from given source and strategies."""
         strategies = strategies or {}
 
         source_obj = get_source(source)
@@ -432,7 +421,6 @@ class Settings(Setting, metaclass=SettingsMeta):
                 setattr(settings, name, new_val)
 
     def extract_to(self, destination: Union[types.ModuleType, dict], prefix: str = ''):
-        """Populate settings to dict or module scope."""
         if prefix != '':
             prefix = prefix + '_'
 
@@ -448,22 +436,10 @@ class Settings(Setting, metaclass=SettingsMeta):
 
     @property
     def errors(self) -> ValidationErrorDetail:
-        """Validation errors.
-
-        :type: :data:`ValidationErrorDetail
-               <concrete_settings.exceptions.ValidationErrorDetail>`
-        """
         return self._errors
 
     @property
     def is_being_validated(self) -> bool:
-        """Indicates that settings are being validated.
-
-        Can be used by behaviors to e.g. distinguish between Setting access
-        during validation and normal usage.
-
-        :type: bool
-        """
         return self._is_being_validated
 
 

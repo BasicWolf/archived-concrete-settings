@@ -3,6 +3,7 @@
 This module contains the basic and default update strategies used
 when calling `concrete_settings.Settings.update`
 """
+# from typing_extensions import Protocol
 
 
 def overwrite(old_val, new_val):

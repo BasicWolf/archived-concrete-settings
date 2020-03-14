@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 class deprecated(Behavior):
     """Adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`  # noqa: E501 # line too long
-       to the setting."""
+       to setting validators."""
 
     def __init__(
         self,
