@@ -4,14 +4,25 @@ import logging
 import re
 import types
 from collections import defaultdict
-from typing import Any, Callable, Dict, Type, Union, List, Tuple, Iterable, Iterator
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Tuple,
+    Type,
+    Union,
+)
 
 from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, ValidationError, ValidationErrorDetail
 from .sources import get_source, AnySource, Source, NotFound
-from .sources.strategies import default as default_update_strategy
-from .types import Undefined, GuessSettingType, type_hints_equal, Validator
-from .validators import ValueTypeValidator
+from .sources.strategies import Strategy, default as default_update_strategy
+from .types import Undefined, GuessSettingType, type_hints_equal
+from .validators import Validator, ValueTypeValidator
 
 logger = logging.getLogger(__name__)
 
@@ -381,7 +392,8 @@ class Settings(Setting, metaclass=SettingsMeta):
         pass
 
     def update(self, source: AnySource, strategies: dict = None):
-        strategies = strategies or {}
+        strategies = strategies if strategies is not None else {}
+        assert isinstance(strategies, Mapping), '`strategies` type should be `dict`'
 
         source_obj = get_source(source)
         self._update(self, source_obj, parents=(), strategies=strategies)
@@ -391,7 +403,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         settings: 'Settings',
         source: Source,
         parents: Tuple[str, ...] = (),
-        strategies=None,
+        strategies: Dict[str, Strategy] = None,
     ):
         """Recursively update settings object from dictionary"""
         strategies = strategies or {}
@@ -407,7 +419,7 @@ class Settings(Setting, metaclass=SettingsMeta):
                     logger.debug(
                         'Updating setting %s with strategy %s',
                         full_setting_name,
-                        update_strategy.__qualname__,
+                        getattr(update_strategy, '__qualname__', 'unknown strategy'),
                     )
                 else:
                     update_strategy = default_update_strategy
@@ -571,9 +583,6 @@ identifier_re = re.compile(r"^[^\d\W]\w*\Z", re.UNICODE)
 
 
 class prefix:
-    """A decorator for Settings classes which
-       appends the defined prefix to each Setting attribute."""
-
     def __init__(self, prefix: str):
         if not prefix:
             raise ValueError('prefix cannot be empty')

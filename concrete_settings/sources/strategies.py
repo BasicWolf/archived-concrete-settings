@@ -3,19 +3,27 @@
 This module contains the basic and default update strategies used
 when calling `concrete_settings.Settings.update`
 """
-# from typing_extensions import Protocol
+import abc
+
+from typing_extensions import Protocol
 
 
-def overwrite(old_val, new_val):
-    return new_val
+class Strategy(Protocol):
+    @abc.abstractmethod
+    def __call__(self, current_value, new_value):
+        ...
 
 
-def append(old_val, new_val):
-    return old_val + new_val
+def overwrite(current_val, new_value):
+    return new_value
 
 
-def prepend(old_val, new_val):
-    return new_val + old_val
+def append(current_val, new_value):
+    return current_val + new_value
 
 
-default = overwrite
+def prepend(current_value, new_value):
+    return new_value + current_value
+
+
+default: Strategy = overwrite

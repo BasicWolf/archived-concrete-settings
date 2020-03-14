@@ -19,9 +19,11 @@ Settings
    A setting is a **named** object for storing, documenting and validating
    a certain value.
 
-   :param value: the initial value of a setting with the default :class:`Undefined <concrete_settings.types.Undefined>`.
+   :param value: the initial value of a setting with the default
+                 :class:`Undefined <concrete_settings.types.Undefined>`.
    :param doc: an end-user -friendly setting documentation.
-   :param validators: setting validators, a tuple of :class:`Validator <concrete_settings.types.Validator>` callables.
+   :param validators: setting validators, a tuple of
+                      :class:`Validator <concrete_settings.validators.Validator>` callables.
    :param type_hint: setting type, something one would use as type annotation.
                      The default value
                      (:class:`GuessSettingType <concrete_settings.types.GuessSettingType>`)
@@ -111,13 +113,17 @@ Settings
          Python, YAML or JSON file, environmental variables, a dict,
          ``locals()`` etc.
 
-      2. Stroing the read values to corresponding setting attributes.
+      2. Update the settings by the values read from the sources.
 
       :param source: can either be a dict, an instance of
                      :class:`Source <concrete_settings.sources.Source>`
                      or a path to the source file.
 
-      :param strategies: is a list of 
+      :param strategies: a dictionary of
+                         { setting_name:
+                         :class:`Strategy <concrete_settings.sources.strategies.Strategy>` callable}
+                         which affect how settings' values are updated.
+
 
    .. method:: extract_to(destination, [prefix])
 
@@ -150,9 +156,30 @@ Settings
   ``PropertySetting`` automatically and do not require
   decoration by ``@setting``.
 
-.. autoclass:: concrete_settings.prefix
+.. class:: concrete_settings.prefix
 
-.. autoclass:: concrete_settings.core.SettingsMeta
+   A decorator for Settings classes which appends
+   the defined prefix to each Setting attribute.
+   For example:
+
+  .. testsetup:: api_prefix
+
+     from concrete_settings import Settings, prefix
+
+  .. testcode:: api_prefix
+
+     @prefix('MY')
+     class AppSettings(Settings):
+        SPEED = 10
+        NAME = 'alex'
+
+     print(AppSettings().MY_NAME)
+
+  Output:
+
+  .. testoutput:: api_prefix
+
+     alex
 
 Types
 -----
@@ -161,7 +188,31 @@ Types
 
 .. autoclass:: Undefined
 
+  A special Setting value which indicates
+  that a value should be set by other means, e.g. by updating
+  the settings object.
+  Often used in conjuction with
+  :class:`RequiredValidator <concrete_settings.validators.RequiredValidator>`
+  and
+  :class:`required <concrete_settings.contrib.behaviors.required>` behavior.
+
+  .. testsetup:: api_prefix
+
+     from concrete_settings import Settings, Undefined
+
+  .. testcode:: api_prefix
+
+     class AppSettings(Settings):
+        SPEED: int = Undefined
+
+
 .. autoclass:: GuessSettingType
+
+   A special value for ``Setting.type_hint``, which indicates
+   that a Setting type should be guessed from the default value.
+
+   For an ``Undefined`` or an unknown type, the guessed type
+   hint is :class:`typing.Any`.
 
    .. autoattribute:: KNOWN_TYPES
 
@@ -169,13 +220,13 @@ Types
 Validators
 ----------
 
-.. autoclass:: Validator
+.. module:: concrete_settings.validators
+
+.. autoclass:: Validator(Protocol)
    :members: __call__
 
 .. autoclass:: concrete_settings.exceptions.ValidationError
 
-
-.. module:: concrete_settings.validators
 
 ValueTypeValidator
 ..................
@@ -238,6 +289,53 @@ Update strategies
 .................
 
 .. module:: concrete_settings.sources.strategies
+
+.. autoclass:: Strategy(Protocol)
+
+   A strategy decides how a setting value will be :meth:`updated <concrete_settings.Settings.update>`.
+
+   :method: __call__(current_value, new_value)
+
+      The signature of Strategy callables
+
+      :param current_value: is the current value of a setting
+      :param new_value: is the new_value from a source.
+
+   Usually a strategy is a simple and small function.
+   For example if a setting is a tuple, the following strategy
+   would append values, instead of overwriting the tuple:
+
+   .. testsetup:: api_strategies
+
+     from typing import Tuple
+     from concrete_settings import Settings
+
+   .. testcode:: api_strategies
+
+      # the required strategy
+      def append(new_val, old_val):
+          return new_val + old_val
+
+      class AppSettings(Settings):
+          ADMIN_EMAILS: Tuple[str] = ('cto@example.com', )
+
+      app_settings = AppSettings()
+      app_settings.update(
+          source={
+              'ADMIN_EMAILS': ('alex@example.com', )
+          },
+          strategies={
+              'ADMIN_EMAILS': append
+          }
+      )
+
+      print(app_settings.ADMIN_EMAILS)
+
+   Output:
+
+   .. testoutput:: api_strategies
+
+      ('cto@example.com', 'alex@example.com')
 
 
 Exceptions

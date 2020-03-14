@@ -154,6 +154,15 @@ def test_update_nested_setting_from_source(mocker):
     assert s1.NESTED_S.T == 20
 
 
+def test_update_strategy_requires_dict():
+    class TestSettings(Settings):
+        ADMINS = ('alice', )
+
+    test_settings = TestSettings()
+    with pytest.raises(AssertionError):
+        test_settings.update({'ADMINS': ('bob', )}, strategies=(strategies.append))
+
+
 def test_update_strategy_overwrite_explicit():
     class S(Settings):
         T: list = [1, 2]
