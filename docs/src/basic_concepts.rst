@@ -57,8 +57,7 @@ with a sphinx-style documentation above it.
 Still, all the required details are extracted
 and a corresponding ``Setting`` attribute is created.
 
-The magic behind the scenes is happening in the metaclass
-:class:`SettingsMeta <concrete_settings.core.SettingsMeta>`.
+The magic behind the scenes is happening in the metaclass ``SettingsMeta``.
 In a nutshell, if a field looks like a setting, but is not explicitly
 defined as an instance of class :class:`Setting <concrete_settings.Setting>`,
 a corresponding object is created instead.
