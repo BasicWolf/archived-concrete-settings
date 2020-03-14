@@ -218,7 +218,7 @@ A Settings object validates its setting-fields and itself when
 is called for the first time.
 Validation consists of two stages:
 
-1. For each setting, call every :class:`validator <concrete_settings.types.Validator>`
+1. For each setting, call every :class:`validator <concrete_settings.validators.Validator>`
    of ``setting.validators`` collection. This validates a setting value as standalone.
 
 2. :meth:`Settings.validate() <concrete_settings.Settings.validate>` is called.

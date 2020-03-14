@@ -1,5 +1,6 @@
 from concrete_settings.exceptions import ValidationError
-from concrete_settings.types import Undefined, Validator
+from concrete_settings.types import Undefined
+from .validator import Validator
 
 
 class RequiredValidator(Validator):

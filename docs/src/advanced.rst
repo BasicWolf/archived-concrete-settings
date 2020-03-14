@@ -249,7 +249,7 @@ Validators
 
 
 Validators is a collection of callables which validate the value of the setting.
-The interface of the callable is defined in the :meth:`Validator protocol <concrete_settings.types.Validator.__call__>`.
+The interface of the callable is defined in the :meth:`Validator protocol <concrete_settings.validators.Validator.__call__>`.
 If validation fails, a validator raises
 :class:`ValidationError <concrete_settings.exceptions.ValidationError>`
 with failure details.
