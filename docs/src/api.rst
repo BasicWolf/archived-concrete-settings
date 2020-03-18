@@ -249,11 +249,42 @@ ValueTypeValidator
 
 .. autoclass:: concrete_settings.validators.ValueTypeValidator
 
+   Matches setting value type and its type hint.
+
+   Setting value type should match ``setting.type_hint``.
+   :class:`Undefined <concrete_settings.types.Undefined>` value is considered
+   valid for any type hint.
+
+   ``ValueTypeValidator`` is the default validator in
+   :data:`Settings.default_validators <concrete_settings.Settings.default_validators>`.
+
+   :param type_hint: If ``setting.type_hint`` is ``None``, then
+                     type match is performed against the given
+                     ``type_hint``.
+
 
 RequiredValidator
 .................
 
 .. autoclass:: concrete_settings.validators.RequiredValidator
+
+   Validates that setting value is not
+   :class:`Undefined <concrete_settings.types.Undefined>`
+
+   :param message: Custom validation error message template.
+
+   :value message: "Setting `{name}` is required to have a value.
+                    Current value is \`Undefined\`"
+
+
+.. testcode::
+   :hide:
+
+   from concrete_settings.validators.required_validator import RequiredValidator
+   assert RequiredValidator().message == (
+       'Setting `{name}` is required to have a value. '
+       'Current value is `Undefined`'
+   )
 
 
 DeprecatedValidator
@@ -261,11 +292,30 @@ DeprecatedValidator
 
 .. autoclass:: concrete_settings.contrib.validators.DeprecatedValidator
 
+   Emits a warning or raises
+   `ValidationError <concrete_settings.exceptions.ValidationError>`
+   indicating that setting is deprecated.
+
+   This is a helper validator added to a Setting attribute validators
+   by :class:`@deprecated <concrete_settings.contrib.behaviors.deprecated>`
+   behavior.
 
 Behaviors
 ---------
 
 .. autoclass:: concrete_settings.Behavior
+
+   Base class for Setting attributes behaviors.
+
+   .. automethod:: inject
+
+      Inject self to Setting attribute behaviors.
+
+      :param setting: Setting to which the behavior is injected.
+      :return: Passed setting object.
+
+   .. automethod:: get_setting_value
+   .. automethod:: set_setting_value
 
 .. autoclass:: concrete_settings.Behaviors
 

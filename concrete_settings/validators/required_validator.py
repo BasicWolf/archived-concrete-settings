@@ -14,5 +14,5 @@ class RequiredValidator(Validator):
 
     def __call__(self, value, *, name, owner, **ignore):
         if value == Undefined:
-            msg = self.message.format(name=name, owner=type(owner))
+            msg = self.message.format(name=name)
             raise ValidationError(msg)
