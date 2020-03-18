@@ -311,7 +311,19 @@ Behaviors
 
       Inject self to Setting attribute behaviors.
 
-      :param setting: Setting to which the behavior is injected.
+      If your custom behavior adds a decorator to the Setting,
+      override this method as follows:
+
+      .. code-block::
+
+         def inject(self, setting: 'Setting'):
+            setting.validators = (
+                   MyValidator()
+            ) + setting.validators
+
+            super().inject(setting)
+
+      :param setting: Setting to which the behavior is attached.
       :return: Passed setting object.
 
    .. automethod:: get_setting_value
