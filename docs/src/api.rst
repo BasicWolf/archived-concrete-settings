@@ -227,6 +227,22 @@ Validators
 
 .. autoclass:: concrete_settings.exceptions.ValidationError
 
+.. autodata:: concrete_settings.exceptions.ValidationErrorDetail
+
+   A recursive union type which describes validation errors.
+
+   ``ValidationErrorDetail`` is defined as
+
+   ::
+
+      SettingName = str
+
+      ValidationErrorDetail = Union[
+          str,
+          List[ValidationErrorDetail],
+          Dict[SettingName, ValidationErrorDetail]
+      ]
+
 
 ValueTypeValidator
 ..................
@@ -336,11 +352,3 @@ Update strategies
    .. testoutput:: api_strategies
 
       ('cto@example.com', 'alex@example.com')
-
-
-Exceptions
-----------
-
-.. module:: concrete_settings.exceptions
-
-.. autodata:: ValidationErrorDetail
