@@ -490,8 +490,6 @@ class BehaviorMeta(type):
 
 
 class Behavior(metaclass=BehaviorMeta):
-    """The base class for Setting attributes behaviors."""
-
     def __call__(self, setting_or_method: Union[Setting, types.FunctionType]):
         setting: Setting
 
@@ -500,7 +498,8 @@ class Behavior(metaclass=BehaviorMeta):
         else:
             setting = setting_or_method
         # Act as a decorator
-        return self.inject(setting)
+        self.inject(setting)
+        return setting
 
     def __rmatmul__(self, setting: Any):
         from concrete_settings import Setting
@@ -508,16 +507,11 @@ class Behavior(metaclass=BehaviorMeta):
         if not isinstance(setting, Setting):
             setting = Setting(setting)
 
-        return self.inject(setting)
-
-    def inject(self, setting: Setting) -> Setting:
-        """Inject self to setting behaviors.
-
-        :setting: Setting to which the behavior is injected.
-        :return: Passed setting object.
-        """
-        setting.behaviors.inject(self)
+        self.inject(setting)
         return setting
+
+    def inject(self, setting: Setting):
+        setting.behaviors.inject(self)
 
     def get_setting_value(self, setting, owner, get_value):
         """Called when setting.__get__() is invoked."""
@@ -576,7 +570,8 @@ class Behaviors(collections.abc.Container):
 class override(Behavior):
     def inject(self, setting: 'Setting'):
         setting.override = True
-        return super().inject(setting)
+        super().inject(setting)
+        return setting
 
 
 identifier_re = re.compile(r"^[^\d\W]\w*\Z", re.UNICODE)

@@ -33,7 +33,7 @@ class deprecated(Behavior):
                 DeprecatedValidator(self.deprecation_message, self.error_on_validation),
             ) + setting.validators
 
-        return super().inject(setting)
+        super().inject(setting)
 
     def get_setting_value(self, setting: 'Setting', owner: 'Settings', get_value):
         if self.warn_on_get:

@@ -8,4 +8,4 @@ class required(Behavior):
 
     def inject(self, setting):
         setting.validators = (RequiredValidator(self.message),) + setting.validators
-        return super().inject(setting)
+        super().inject(setting)
