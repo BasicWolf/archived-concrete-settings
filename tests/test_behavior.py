@@ -151,18 +151,18 @@ def test_setting_behavior_with_property_setting_order(div, plus):
 # Behaviors
 
 
-def test_behaviors_injecting_item_increases_length(setting_behavior_mock):
+def test_behaviors_prepending_behavior_increases_length(setting_behavior_mock):
     bhv_mock = setting_behavior_mock()
     behaviors = Behaviors()
-    behaviors.inject(bhv_mock)
+    behaviors.prepend(bhv_mock)
 
     assert len(behaviors) == 1
 
 
-def test_behaviors_injected_item_can_be_get_by_index(setting_behavior_mock):
+def test_behaviors_prepended_behavior_can_be_get_by_index(setting_behavior_mock):
     bhv_mock = setting_behavior_mock()
     behaviors = Behaviors()
-    behaviors.inject(bhv_mock)
+    behaviors.prepend(bhv_mock)
 
     assert behaviors[0] == bhv_mock
 
@@ -182,7 +182,7 @@ def test_behavior_get_setting_value_call_chain(setting_behavior_mock):
 
     bhv_mock = setting_behavior_mock()
     behaviors = Behaviors()
-    behaviors.inject(bhv_mock)
+    behaviors.prepend(bhv_mock)
 
     assert 10 == behaviors.get_setting_value(
         MySettings.SOME_SETTING, settings, get_value
@@ -206,7 +206,7 @@ def test_behavior_set_setting_value_call_chain(setting_behavior_mock):
 
     bhv_mock = setting_behavior_mock()
     behaviors = Behaviors()
-    behaviors.inject(bhv_mock)
+    behaviors.prepend(bhv_mock)
 
     behaviors.set_setting_value(MySettings.SOME_SETTING, settings, 20, set_value)
 

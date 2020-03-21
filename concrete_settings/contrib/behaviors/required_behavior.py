@@ -6,6 +6,6 @@ class required(Behavior):
     def __init__(self, message: str = None):
         self.message = message
 
-    def inject(self, setting):
+    def attach_to(self, setting):
         setting.validators = (RequiredValidator(self.message),) + setting.validators
-        super().inject(setting)
+        super().attach_to(setting)

@@ -27,13 +27,13 @@ class deprecated(Behavior):
         self.warn_on_get = warn_on_get
         self.warn_on_set = warn_on_set
 
-    def inject(self, setting: 'Setting'):
+    def attach_to(self, setting: 'Setting'):
         if self.warn_on_validation or self.error_on_validation:
             setting.validators = (
                 DeprecatedValidator(self.deprecation_message, self.error_on_validation),
             ) + setting.validators
 
-        super().inject(setting)
+        super().attach_to(setting)
 
     def get_setting_value(self, setting: 'Setting', owner: 'Settings', get_value):
         if self.warn_on_get:

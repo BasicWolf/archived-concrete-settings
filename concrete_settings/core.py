@@ -83,6 +83,9 @@ class Setting:
             set_value = functools.partial(setattr, owner, f"__setting_{self.name}_value")
             self.behaviors.set_setting_value(self, owner, val, set_value)
 
+    def attach_behavior(self, behavior: 'Behavior'):
+        self.behaviors.prepend(behavior)
+
 
 class PropertySetting(Setting):
     def __init__(self, *args, **kwargs):
@@ -503,18 +506,18 @@ class Behavior(metaclass=BehaviorMeta):
         else:
             setting = setting_or_method
         # Act as a decorator
-        self.inject(setting)
+        self.attach_to(setting)
         return setting
 
     def __rmatmul__(self, setting: Any):
         if not isinstance(setting, Setting):
             setting = Setting(setting)
 
-        self.inject(setting)
+        self.attach_to(setting)
         return setting
 
-    def inject(self, setting: Setting):
-        setting.behaviors.inject(self)
+    def attach_to(self, setting: Setting):
+        setting.attach_behavior(self)
 
     def get_setting_value(self, setting, owner, get_value):
         """Called when setting.__get__() is invoked."""
@@ -543,7 +546,7 @@ class Behaviors(collections.abc.Container):
     def __contains__(self, item):
         return item in self._container
 
-    def inject(self, behavior):
+    def prepend(self, behavior):
         self._container.insert(0, behavior)
 
     def get_setting_value(self, setting, owner, get_value):
@@ -574,9 +577,9 @@ class Behaviors(collections.abc.Container):
 
 
 class override(Behavior):
-    def inject(self, setting: 'Setting'):
+    def attach_to(self, setting: 'Setting'):
         setting.override = True
-        super().inject(setting)
+        super().attach_to(setting)
         return setting
 
 

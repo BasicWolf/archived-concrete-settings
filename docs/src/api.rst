@@ -307,21 +307,21 @@ Behaviors
 
    Base class for Setting attributes behaviors.
 
-   .. automethod:: inject
+   .. automethod:: attach_to
 
-      Inject self to Setting attribute behaviors.
+      Attach self into Setting attribute behaviors.
 
       If your custom behavior adds a decorator to the Setting,
       override this method as follows:
 
       .. code-block::
 
-         def inject(self, setting: 'Setting'):
+         def attach_to(self, setting: 'Setting'):
             setting.validators = (
                    MyValidator()
             ) + setting.validators
 
-            super().inject(setting)
+            super().attach_to(setting)
 
       :param setting: Setting to which the behavior is attached.
       :return: Passed setting object.
