@@ -67,16 +67,21 @@ class Setting:
             return self
 
         # == object-level access ==
-        get_value = functools.partial(
-            getattr, owner, f"__setting_{self.name}_value", self.value
-        )
-        return self.behaviors.get_setting_value(self, owner, get_value)
+        if not self.behaviors:
+            return getattr(owner, f"__setting_{self.name}_value", self.value)
+        else:
+            def get_value():
+                return getattr(owner, f"__setting_{self.name}_value", self.value)
+            return self.behaviors.get_setting_value(self, owner, get_value)
 
     def __set__(self, owner: 'Settings', val):
         assert isinstance(owner, Settings), "owner should be an instance of Settings"
 
-        set_value = functools.partial(setattr, owner, f"__setting_{self.name}_value")
-        self.behaviors.set_setting_value(self, owner, val, set_value)
+        if not self.behaviors:
+            setattr(owner, f"__setting_{self.name}_value", val)
+        else:
+            set_value = functools.partial(setattr, owner, f"__setting_{self.name}_value")
+            self.behaviors.set_setting_value(self, owner, val, set_value)
 
 
 class PropertySetting(Setting):
@@ -502,8 +507,6 @@ class Behavior(metaclass=BehaviorMeta):
         return setting
 
     def __rmatmul__(self, setting: Any):
-        from concrete_settings import Setting
-
         if not isinstance(setting, Setting):
             setting = Setting(setting)
 
@@ -527,6 +530,9 @@ class Behaviors(collections.abc.Container):
 
     def __init__(self, iterable=()):
         self._container = list(iterable)
+
+    def __bool__(self):
+        return bool(self._container)
 
     def __len__(self):
         return len(self._container)
