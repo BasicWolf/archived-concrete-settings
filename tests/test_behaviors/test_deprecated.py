@@ -7,7 +7,6 @@ from concrete_settings.contrib.behaviors import deprecated
 
 # == Deprecated == #
 
-
 def test_deprecated_warns_when_validating():
     class S(Settings):
         D = 10 @ deprecated

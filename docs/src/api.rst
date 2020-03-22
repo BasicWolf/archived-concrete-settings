@@ -327,15 +327,61 @@ Behaviors
       :return: Passed setting object.
 
    .. automethod:: get_setting_value
+
+      A chained callback invoked when Setting is being read.
+
+      :param Setting setting: Setting to which behavior is attached.
+      :param Settings owner: Settings object - setting attribute's owner.
+      :param get_value(): a chained behavior's ``get_setting_value()``
+                        or the base setting value getter if the current
+                        behavior is the first one attached to the setting.
+
+      When overriding this method remember to call ``get_value()``.
+      This would invoke the chained behaviors down to the setting's
+      original value getter.
+
    .. automethod:: set_setting_value
 
+      А chained callback invoked when Setting is being written.
+
+      :param Setting setting: Setting to which behavior is attached.
+      :param Settings owner: Settings object - setting attribute's owner.
+      :param value: Value being written to the setting.
+      :param set_value(value): a chained behavior's ``set_setting_value()``
+                               or the base setting value setter if the current
+                               behavior is the first one attached to the setting.
+
+      When overriding this method, remember to call ``set_value(value)``.
+      This would invoke the chained behaviors down to the setting's
+      original value setter.
+
 .. autoclass:: concrete_settings.Behaviors
+
+   An internal class - a container for Setting behaviors.
 
 
 deprecated
 ..........
 
 .. autoclass:: concrete_settings.contrib.behaviors.deprecated
+
+   Emit warnings when Setting is read, written or being validated.
+
+   :param deprecation_message: Warning message template. Placeholders:
+
+                               * ``{name}`` - setting name.
+                               * ``{owner}`` - owner :class:`Settings <concrete_settings.Settings>` object.
+
+   :param bool warn_on_validation: Add warning-raising
+                                   :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`
+                                   to the setting's validators list.
+   :param bool error_on_validation: Add exception-raising
+                                    :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`
+                                    to the setting's validators list. When this parameter is set to ``True``,
+                                    ``warn_on_validation`` is ignored.
+
+   :param bool warn_on_get: Emit warning when reading the setting.
+   :param bool warn_on_set: Emit warning when writing the setting.
 
 
 required

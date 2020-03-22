@@ -9,9 +9,6 @@ if TYPE_CHECKING:
 
 
 class deprecated(Behavior):
-    """Adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`  # noqa: E501 # line too long
-       to setting validators."""
-
     def __init__(
         self,
         deprecation_message: str = 'Setting `{name}` in class `{owner}` is deprecated.',
@@ -42,9 +39,11 @@ class deprecated(Behavior):
                 warnings.warn(msg, DeprecationWarning)
         return get_value()
 
-    def set_setting_value(self, setting: 'Setting', owner: 'Settings', val, set_value):
+    def set_setting_value(
+        self, setting: 'Setting', owner: 'Settings', value, set_value
+    ):
         if self.warn_on_set:
             if not owner.is_being_validated:
                 msg = self.deprecation_message.format(owner=owner, name=setting.name)
                 warnings.warn(msg, DeprecationWarning)
-        set_value(val)
+        set_value(value)
