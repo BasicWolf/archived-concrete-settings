@@ -9,13 +9,12 @@ from concrete_settings.contrib.behaviors import required
 
 # flake8: noqa
 
+
 def gettext_noop(s):
     return s
 
 
 class Django30Settings(Settings):
-    """Parent class for Django 3.0 -based settings."""
-
     DEBUG: bool = False
 
     #: Whether the framework should propagate raw exceptions rather than catching

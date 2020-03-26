@@ -8,13 +8,15 @@ from concrete_settings.sources import FileSource, register_source, NotFound
 
 @register_source
 class JsonSource(FileSource):
-    extensions = ['.json']
+    extensions = ['.json', '.js']
 
     def __init__(self, path):
         super().__init__(path)
         self._data = None
 
-    def read(self, setting, parents: Tuple[str, ...] = ()) -> Union[Type[NotFound], Any]:
+    def read(
+        self, setting, parents: Tuple[str, ...] = ()
+    ) -> Union[Type[NotFound], Any]:
         if self._data is None:
             self._data = self._read_file(self.path)
 

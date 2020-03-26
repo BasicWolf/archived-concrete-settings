@@ -115,13 +115,13 @@ Settings
 
       2. Update the settings by the values read from the sources.
 
-      :param source: can either be a dict, an instance of
+      :param source: can either be a :class:`dict`, an instance of
                      :class:`Source <concrete_settings.sources.Source>`
                      or a path to the source file.
 
       :param strategies: a dictionary of
                          { setting_name:
-                         :class:`Strategy <concrete_settings.sources.strategies.Strategy>` callable}
+                         :class:`Strategy <concrete_settings.sources.strategies.Strategy>`}
                          which affect how settings' values are updated.
 
 
@@ -399,15 +399,6 @@ Sources
 
 .. autoclass:: concrete_settings.sources.Source
 
-
-Built-in Sources
-................
-
-.. autoclass:: concrete_settings.contrib.sources.YamlSource
-
-.. autoclass:: concrete_settings.contrib.sources.JsonSource
-
-.. autoclass:: concrete_settings.contrib.sources.EnvVarSource
 
 Update strategies
 .................
