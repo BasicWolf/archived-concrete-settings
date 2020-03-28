@@ -16,22 +16,29 @@ Concrete Settings
 Welcome
 =======
 
-**Concrete Settings** is a small Python library which facilitates
-configuration management in big and small applications.
+**Concrete Settings** is a Python library which facilitates
+configuration management in big and small programs.
 
-The settings definition DSL aims at being simple and easy readible.
-Settings are:
+The project was born out of necessity to manage a huge
+decade-old Django-based SaaS solution with more than two hundred
+different application settings scattered around ``settings.py``.
+`What does this setting do?`
+`What type is it?`
+`Why does it have such a weird format?`
+`Is this the final value, or it changes somewhere on the way?`
+- Sometimes developers spent hours getting answers to those
+questions.
 
-* Defined in classes
-* Type-annotated and validated
-* Mixable and nestable
-* Can be read from any sources: Python dict, yaml, json, environmental variables etc.
-* Documentation matters.
+**Concrete Settigns** tackles these problems altogether.
+It was designed to be end-user and developer-friendly.
+The settings are defined in normal Python with few
+totally valid tricks which significantly improve readability
+and maintainability.
 
-Here is a small example of Settings class with one
+Take a look at a small example of Settings class with one
 boolean setting ``DEBUG``. A developer defines the
 settings in application code, while an end-user
-stores the configuration in a YAML file:
+decides to read the configuration from a YAML file:
 
 .. code-block:: python
 
@@ -65,9 +72,18 @@ Accessing settings:
    >>> print(AppSettings.DEBUG.__doc__)
    Turns debug mode on/off
 
-Install Concrete Settings
--------------------------
 
-.. code-block:: bash
+As you can see, all settings are **defined in classes**. All Python mechanism
+of inheritance and nesting apply here, so settings can be **mixed** (multiple inheritance)
+and **nested** (settings as class fields).
+Settings are typed (via type annotations) and values are **validated**.
+Documentation matters! Each settings can be documented in Sphinx-style comments `#:` written
+above a definition.
+An instance of ``Settings`` can be updated i.e. read from any kind of source:
+YAML, JSON or Python files, environmental variables, Python dicts.
 
-   pip install concrete-settings
+Finally, **Concrete Settings** comes with batteries like Django 3.0 support out of the box.
+
+Are you ready to try it out?
+
+``pip install concrete-settings`` and welcome to the documentation!
