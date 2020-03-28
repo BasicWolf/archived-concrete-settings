@@ -3,23 +3,29 @@ Welcome to Concrete Settings
 
 .. contents:: :depth: 1
 
+**Concrete Settings** is a Python library which facilitates
+configuration management in big and small programs.
 
-**Concrete Settings** is a small Python library which facilitates
-configuration management in big and small applications.
+The project was born out of necessity to manage a huge
+decade-old Django-based SaaS solution with more than two hundred
+different application settings scattered around ``settings.py``.
+*What does this setting do?*
+*What type is it?*
+*Why does it have such a weird format?*
+*Is this the final value, or it changes somewhere on the way?*
+Sometimes developers spent *hours* seeking answers to these
+questions.
 
-The settings definition DSL aims to be simple and easy readible.
-Settings are:
+**Concrete Settigns** tackles these problems altogether.
+It was designed to be developer and end-user friendly.
+The settings are defined via normal Python code with few
+tricks which significantly improve readability
+and maintainability.
 
-* Defined in classes
-* Type-annotated and validated
-* Mixable and nestable
-* Can be read from any sources: Python dict, yaml, json, environmental variables etc.
-* Documentation matters.
-
-Here is a small example of Settings class with one
+Take a look at a small example of Settings class with one
 boolean setting ``DEBUG``. A developer defines the
 settings in application code, while an end-user
-stores the configuration in a YAML file:
+controls the final configuration in a YAML file:
 
 .. testcode:: index-example
    :hide:
@@ -81,10 +87,18 @@ Accessing settings:
    Turns debug mode on/off
 
 
+As you can see, settings are **defined in classes**. Python mechanism
+of inheritance and nesting apply here, so settings can be **mixed** (multiple inheritance)
+and be **nested** (settings as class fields).
+Settings are **type-annotated** and are **validated**.
+Documentation matters! Each settings can be documented in Sphinx-style comments ``#:`` written
+above its definition.
+An instance of ``Settings`` can be updated i.e. read from any kind of source:
+YAML, JSON or Python files, environmental variables, Python dicts, and you can add more!
 
-Concrete Settings aims to provide a conveniet way to
-define and use application initialization settings
-for developers and end-users:
+Finally, **Concrete Settings** comes with batteries like Django 3.0 support out of the box.
+
+In a nutshell:
 
 .. uml::
 
@@ -113,22 +127,22 @@ for developers and end-users:
    User ==> (py_source)
    User ==> (...)
 
-   note "Read from sources" as note_read_settings
-
    Dev ==> (Settings)
 
-   (yaml_source) .. note_read_settings
-   (json_source) .. note_read_settings
-   (envvar) .. note_read_settings
-   (...) .. note_read_settings
-   note_read_settings ..> (Settings)
+   (yaml_source) .. (Sources)
+   (json_source) .. (Sources)
+   (envvar) .. (Sources)
+   (...) .. (Sources)
 
    note "Verify definition structure" as note_verify
+   note "Update Settings from sources" as note_update
    note "Validate values" as note_validate
 
+   note_update <== (Sources)
+
    (Settings) .. note_verify
-   note_verify ..> (Application)
-   (Settings) .. note_validate
+   note_verify ..> note_update
+   note_update .. note_validate
    note_validate ..> (Application)
 
    @enduml
@@ -139,8 +153,8 @@ This flow is a perfect fit for
   and all the settings required to start it up.
 * A rich feed-execute-output tools like Sphinx documentation.
 
-Sounds interesting?
-Then you are very welcome to ConcreteSettings documentation!
+Are you ready to try it out?
+Then you are very welcome to Concrete Settings documentation!
 
 
 Installation
@@ -152,10 +166,16 @@ Python Version
 We recommend using the latest version of Python 3.
 Concrete Settings supports Python 3.6 and newer.
 
+With pip:
+
+.. code-block:: bash
+
+   pip install concrete-settings
+
 Dependencies
 ------------
 
-These distributions will be installed automatically when installing Concrete Settings.
+These distributions will be installed automatically when installing Concrete Settings:
 
 * `Typeguard <https://github.com/agronholm/typeguard>`_  provides runtime type checking and allows validating settings values types.
 * `Sphinx <https://www.sphinx-doc.org/en/master/>`_ allows documenting settings in developer-friendly way - in comments above settings definitions.
@@ -180,6 +200,8 @@ Source
 ------
 
 The source is available at `<https://github.com/basicwolf/concrete-settings>`_.
+
+Contributions are warmly welcomed!
 
 Documentation
 =============
