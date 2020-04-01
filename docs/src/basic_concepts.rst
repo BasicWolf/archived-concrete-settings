@@ -336,8 +336,18 @@ get a warning in stderr:
 
 In a nutshell, a *behavior* is a way to change how a setting field behaves
 during its initialization, validation, reading and writing operations.
-A behavior can be passed to :class:`Setting.__init__() <concrete_settings.Setting>`
-or by using ``@`` operator: ``value @ behavior0 @ behavior1 @ ...``
+A behavior can be passed to :class:`Setting.__init__() <concrete_settings.Setting>`,
+by using ``@`` operator: ``value @behavior0 @behavior1 @...`` and by decorating
+property-settings:
+
+.. testcode:: quickstart-behavior
+
+   class AppSettings(Settings):
+       MIN_SPEED: int = 30
+
+       @deprecated
+       def MAX_SPEED() -> int:
+           return 100
 
 
 
@@ -498,6 +508,51 @@ must be explicitly called for each of the base classes:
            super().validate()
            DBSettings.validate(self)
            LoggingSettings.validate(self)
+
+
+Inheritance and overriding settings
+-----------------------------------
+
+One of classical configuration patterns is to use multi-tier settings
+definitions. For example:
+
+.. uml::
+   :align: center
+
+   @startuml
+   (Base settings) --> (Dev Setting)
+   (Base settings) --> (Production Setting)
+   @enduml
+
+Imagine a situation, where a setting annotated as ``int`` in Base settings
+is accidentally redefined in Dev or Production settings as ``str``:
+
+.. testcode:: basic_inheritance_override
+
+   from concrete_settings import Settings
+
+   class BaseSettings(Settings):
+       MAX_CONNECTIONS: int = 100
+       ...
+
+   class DevSettings(BaseSettings):
+       MAX_CONNECTIONS: str = '100'
+
+
+Concrete Settings detects this difference and raises an exception during early structure verification:
+
+.. testcode:: basic_inheritance_override
+   :hide:
+
+   from concrete_settings.exceptions import StructureError
+   try:
+      DevSettings().is_valid()
+   except StructureError as e:
+      print(e)
+
+.. testoutput:: basic_inheritance_override
+
+   in classes <class 'BaseSettings'> and <class 'DevSettings'> setting MAX_CONNECTIONS has the following difference(s): types differ: <class 'int'> != <class 'str'>
 
 
 

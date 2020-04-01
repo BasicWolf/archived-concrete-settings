@@ -203,6 +203,7 @@ The source is available at `<https://github.com/basicwolf/concrete-settings>`_.
 
 Contributions are warmly welcomed!
 
+
 Documentation
 =============
 
@@ -213,6 +214,7 @@ Documentation
    startup
    advanced
    batteries
+
 
 API Reference
 =============

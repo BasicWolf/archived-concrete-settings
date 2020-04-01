@@ -29,10 +29,12 @@ Settings
                      (:class:`GuessSettingType <concrete_settings.types.GuessSettingType>`)
                      would invoke type guessing mechanism.
    :param behaviors: setting behaviors, a container of :class:`Behavior` objects.
+   :param override: a flag which indicates that settings definiton is explicitly overriden
    :type value: :data:`Any <typing.Any>`
    :type doc: str
    :type validators: tuple
    :type type_hint: :data:`Any <typing.Any>`
+   :type override: bool
 
    The corresponding implicit definition of a setting in Settings class is written as following:
 
@@ -270,6 +272,9 @@ RequiredValidator
 
    Validates that setting value is not
    :class:`Undefined <concrete_settings.types.Undefined>`
+   For convenient usage, see
+   :class:`required <concrete_settings.contrib.behaviors.required>`
+   behavior.
 
    :param message: Custom validation error message template.
 
@@ -359,6 +364,32 @@ Behaviors
 
    An internal class - a container for Setting behaviors.
 
+override
+........
+
+.. autoclass:: concrete_settings.override
+
+
+required
+........
+
+.. autoclass:: concrete_settings.contrib.behaviors.required
+
+   Attaches
+   :class:`RequiredValidator <concrete_settings.validators.RequiredValidator>`
+   to the setting which
+   validates that setting value is not
+   :class:`Undefined <concrete_settings.types.Undefined>`.
+
+   Usage:
+
+   .. testcode:: api_required_behavior
+
+      from concrete_settings import Settings, Undefined, required
+
+      class AppSettings(Settings):
+          SECRET_STRING: str = Undefined @required
+
 
 deprecated
 ..........
@@ -384,13 +415,7 @@ deprecated
    :param bool warn_on_set: Emit warning when writing the setting.
 
 
-required
-........
-
-.. autoclass:: concrete_settings.contrib.behaviors.required
-
 .. _api_sources:
-
 
 Sources
 -------

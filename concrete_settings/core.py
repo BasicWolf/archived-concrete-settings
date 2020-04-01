@@ -36,6 +36,8 @@ class Setting:
     type_hint: Any
     validators: Tuple[Validator, ...]
     behaviors: 'Behaviors'
+    name: str
+    override: bool
 
     def __init__(
         self,
@@ -45,6 +47,7 @@ class Setting:
         validators: Tuple[Validator, ...] = (),
         type_hint: Any = GuessSettingType,
         behaviors: Union[Iterable, 'Behaviors'] = (),
+        override: bool = False,
     ):
         self.value = value
         self.type_hint = type_hint
@@ -52,7 +55,7 @@ class Setting:
         self.behaviors = Behaviors(behaviors or ())
         self.__doc__ = doc
         self.name = ""
-        self.override = False
+        self.override = override
 
     def __set_name__(self, _, name):
         self.name = name

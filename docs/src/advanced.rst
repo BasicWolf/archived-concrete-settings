@@ -242,11 +242,11 @@ The ``type_hint`` attribute is intended for validators.
 For example, the built-in :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>` fails validation if the type of the setting
 value does not correspond to the defined type hint.
 
+
 .. _setting_definition_validators:
 
 Validators
 ..........
-
 
 Validators is a collection of callables which validate the value of the setting.
 The interface of the callable is defined in the :meth:`Validator protocol <concrete_settings.validators.Validator.__call__>`.
