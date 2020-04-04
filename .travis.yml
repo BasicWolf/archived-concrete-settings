@@ -47,4 +47,4 @@ deploy:
       python: '3.8'
     # Uses Twine, requires  environmental variables:
     # TWINE_USERNAME, TWINE_PASSWORD
-    provider: script
+    script: make test-deploy

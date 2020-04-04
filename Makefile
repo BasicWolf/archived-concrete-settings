@@ -13,9 +13,6 @@ all:
 test:
 	poetry run pytest -s $(PYTEST_ARGS)
 
-tox:
-	tox
-
 
 lint: flake8 mypy
 
