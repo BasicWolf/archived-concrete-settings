@@ -10,9 +10,8 @@ Concrete Settings
 .. image:: https://basicwolf.github.io/concrete-settings/_static/img/mypy_checked.svg
    :target: https://github.com/python/mypy
 
-
-Welcome
-=======
+Welcome to Concrete Settings
+============================
 
 **Concrete Settings** is a Python library which facilitates
 configuration management in big and small programs.
@@ -36,7 +35,7 @@ and maintainability.
 Take a look at a small example of Settings class with one
 boolean setting ``DEBUG``. A developer defines the
 settings in application code, while an end-user
-controls the final configuration in a YAML file:
+chooses to store the configuration in a YAML file:
 
 .. code-block:: python
 
@@ -60,6 +59,7 @@ controls the final configuration in a YAML file:
 
    DEBUG: true
 
+
 Accessing settings:
 
 .. code-block:: pycon
@@ -82,6 +82,9 @@ YAML, JSON or Python files, environmental variables, Python dicts, and you can a
 
 Finally, **Concrete Settings** comes with batteries like Django 3.0 support out of the box.
 
+Concrete Settings are here to improve configuration handling
+whether you are starting from scratch, or dealing with an
+old legacy Cthulhu.
 Are you ready to try it out?
 
 ``pip install concrete-settings`` and welcome to the `documentation <https://basicwolf.github.io/concrete-settings>`_!

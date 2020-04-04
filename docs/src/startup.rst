@@ -3,8 +3,8 @@
 Start me up
 ###########
 
-Scratch
-=======
+From scratch
+============
 
 An extremely short guide to start using Concrete Setting in your application.
 

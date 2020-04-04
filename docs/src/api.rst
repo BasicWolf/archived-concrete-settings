@@ -29,7 +29,7 @@ Settings
                      (:class:`GuessSettingType <concrete_settings.types.GuessSettingType>`)
                      would invoke type guessing mechanism.
    :param behaviors: setting behaviors, a container of :class:`Behavior` objects.
-   :param override: a flag which indicates that settings definiton is explicitly overriden
+   :param override: a indicates that settings definiton is explicitly overriden.
    :type value: :data:`Any <typing.Any>`
    :type doc: str
    :type validators: tuple
@@ -368,6 +368,21 @@ override
 ........
 
 .. autoclass:: concrete_settings.override
+
+Sets ``Setting.override = True``.
+
+Usage:
+
+.. testcode:: api_override_behavior
+
+   from concrete_settings import Settings, override
+
+   class BaseSettings(Settings):
+       SECRET: int = 100200300400500
+       ...
+
+   class DevSettings(BaseSettings):
+       SECRET: str = 'abcdef12345' @override
 
 
 required

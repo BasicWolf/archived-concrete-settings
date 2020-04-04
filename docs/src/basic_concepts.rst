@@ -111,7 +111,7 @@ Before going further, let's take a look at the contents of a Setting object.
 Each implicitly or explicitly defined setting consists of a
 **name**, **initial value**, a **type hint**,
 **validators**, **behaviors**
-and **documentation**:
+and **documentation**.
 
 .. uml::
    :align: center
@@ -122,7 +122,6 @@ and **documentation**:
    (Validators) --> (Setting)
    (Behaviors) --> (Setting)
    (Documentation) --> (Setting)
-
    note left of (Setting) : NAME
    @enduml
 
@@ -134,9 +133,8 @@ and **documentation**:
   to the required type.
 * **Validators** is a collection of callables which validate the value of the setting.
 * **Behaviors** is a collection of :class:`Behavior <concrete_settings.Behavior>`
-  objects which modify a setting's behavior during different stages of its life cycle.
+  objects which modify a setting behavior during different stages of its life cycle.
 * **Documentation** is a multi-line doc string intended for the end user.
-
 
 Reading settings
 ----------------
@@ -508,51 +506,6 @@ must be explicitly called for each of the base classes:
            super().validate()
            DBSettings.validate(self)
            LoggingSettings.validate(self)
-
-
-Inheritance and overriding settings
------------------------------------
-
-One of classical configuration patterns is to use multi-tier settings
-definitions. For example:
-
-.. uml::
-   :align: center
-
-   @startuml
-   (Base settings) --> (Dev Setting)
-   (Base settings) --> (Production Setting)
-   @enduml
-
-Imagine a situation, where a setting annotated as ``int`` in Base settings
-is accidentally redefined in Dev or Production settings as ``str``:
-
-.. testcode:: basic_inheritance_override
-
-   from concrete_settings import Settings
-
-   class BaseSettings(Settings):
-       MAX_CONNECTIONS: int = 100
-       ...
-
-   class DevSettings(BaseSettings):
-       MAX_CONNECTIONS: str = '100'
-
-
-Concrete Settings detects this difference and raises an exception during early structure verification:
-
-.. testcode:: basic_inheritance_override
-   :hide:
-
-   from concrete_settings.exceptions import StructureError
-   try:
-      DevSettings().is_valid()
-   except StructureError as e:
-      print(e)
-
-.. testoutput:: basic_inheritance_override
-
-   in classes <class 'BaseSettings'> and <class 'DevSettings'> setting MAX_CONNECTIONS has the following difference(s): types differ: <class 'int'> != <class 'str'>
 
 
 

@@ -1,8 +1,6 @@
 Welcome to Concrete Settings
 ============================
 
-.. contents:: :depth: 1
-
 **Concrete Settings** is a Python library which facilitates
 configuration management in big and small programs.
 
@@ -25,7 +23,7 @@ and maintainability.
 Take a look at a small example of Settings class with one
 boolean setting ``DEBUG``. A developer defines the
 settings in application code, while an end-user
-controls the final configuration in a YAML file:
+chooses to store the configuration in a YAML file:
 
 .. testcode:: index-example
    :hide:
@@ -147,12 +145,15 @@ In a nutshell:
 
    @enduml
 
-This flow is a perfect fit for
+This flow perfectly applies to
 
 * A web application backend. Think of Django or Flask application
   and all the settings required to start it up.
 * A rich feed-execute-output tools like Sphinx documentation.
 
+Concrete Settings are here to improve configuration handling
+whether you are starting from scratch, or dealing with an
+old legacy Cthulhu.
 Are you ready to try it out?
 Then you are very welcome to Concrete Settings documentation!
 
@@ -164,7 +165,7 @@ Python Version
 --------------
 
 We recommend using the latest version of Python 3.
-Concrete Settings supports Python 3.6 and newer.
+Concrete Settings supports **Python 3.6** and newer.
 
 With pip:
 
@@ -187,14 +188,6 @@ Optional dependencies
 These distributions will not be installed automatically. Concrete Settings will detect and use them if you install them.
 
 * `PyYAML <https://pyyaml.org/>`_ allows reading settings from YAML sources.
-
-
-Install Concrete Settings
--------------------------
-
-.. code-block:: bash
-
-   pip install concrete-settings
 
 Source
 ------

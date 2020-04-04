@@ -476,6 +476,78 @@ Output:
 
    This documents ADMIN_NAME.
 
+
+Inheritance and overriding settings
+-----------------------------------
+
+One of classical configuration patterns is to use multi-tier settings
+definitions. For example:
+
+.. uml::
+   :align: center
+
+   @startuml
+   (Base settings) --> (Dev Setting)
+   (Base settings) --> (Production Setting)
+   @enduml
+
+Imagine a situation, where a setting annotated as ``int`` in Base settings
+is accidentally redefined in Dev or Production settings as ``str``:
+
+.. testcode:: advanced_inheritance_override
+
+   from concrete_settings import Settings
+
+   class BaseSettings(Settings):
+       MAX_CONNECTIONS: int = 100
+       ...
+
+   class DevSettings(BaseSettings):
+       MAX_CONNECTIONS: str = '100'
+
+
+Concrete Settings detects this difference and raises an exception during early structure verification:
+
+.. testcode:: advanced_inheritance_override
+   :hide:
+
+   from concrete_settings.exceptions import StructureError
+   try:
+      DevSettings().is_valid()
+   except StructureError as e:
+      print(e)
+
+.. testoutput:: advanced_inheritance_override
+
+   in classes <class 'BaseSettings'> and <class 'DevSettings'> setting MAX_CONNECTIONS has the following difference(s): types differ: <class 'int'> != <class 'str'>
+
+To tell Concrete Settings that the re-defition is valid, a Setting has to be overriden,
+either explicitly by passing ``override=True`` or by using :class:`@override <concrete_settings.override>` behavior:
+
+
+.. testcode:: advanced_inheritance_override_works
+
+   from concrete_settings import Settings, Setting, override
+
+   class BaseSettings(Settings):
+       MAX_CONNECTIONS: int = 100
+       MIN_CONNECTIONS: int = 10
+       ...
+
+   class DevSettings(BaseSettings):
+       MAX_CONNECTIONS: str = '100' @override
+       MIN_CONNECTIONS = Setting('100', type_hint=str, override=True)
+
+   print(DevSettings().is_valid())
+
+Output:
+
+.. testoutput:: advanced_inheritance_override_works
+
+   True
+
+
+
 Update strategies
 -----------------
 
