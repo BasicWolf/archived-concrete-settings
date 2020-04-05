@@ -286,25 +286,24 @@ def test_nested_settings_validation_raises():
             "got value of type `<class 'int'>`"
         ),
     ):
-        s = AppSettings()
-        s.is_valid(raise_exception=True)
-    pass
+        app_settings = AppSettings()
+        app_settings.is_valid(raise_exception=True)
 
 
 def test_nested_triple_nested_validation_errors():
-    class S3(Settings):
-        Т: str = 10
+    class HostSettings(Settings):
+        NAME: str = 10
 
-    class S2(Settings):
-        NESTED_S3 = S3()
+    class DBSettings(Settings):
+        HOST = HostSettings()
 
-    class S1(Settings):
-        NESTED_S2 = S2()
+    class AppSettings(Settings):
+        DB = DBSettings()
 
-    s1 = S1()
-    assert not s1.is_valid()
+    app_settings = AppSettings()
+    assert not app_settings.is_valid()
     # fmt: off
-    assert s1.errors == {'NESTED_S2': [{'NESTED_S3': [{'Т': [
+    assert app_settings.errors == {'DB': [{'HOST': [{'NAME': [
         "Expected value of type `<class 'str'>` got value of type `<class 'int'>`"
     ]}]}]}
     # fmt: on
@@ -313,42 +312,42 @@ def test_nested_triple_nested_validation_errors():
 def test_validate_called():
     validate_called = False
 
-    class S(Settings):
+    class TestSettings(Settings):
         def validate(self):
             nonlocal validate_called
             validate_called = True
             return {}
 
-    assert S().is_valid()
+    assert TestSettings().is_valid()
     assert validate_called
 
 
 def test_error_preserved_when_validate_raises_settings_validation_error():
-    class S(Settings):
+    class TestSettings(Settings):
         def validate(self):
             raise ValidationError('there was an error XXXX')
 
-    s = S()
-    assert not s.is_valid()
-    assert s.errors == {INVALID_SETTINGS: ['there was an error XXXX']}
+    test_settings = TestSettings()
+    assert not test_settings.is_valid()
+    assert test_settings.errors == {INVALID_SETTINGS: ['there was an error XXXX']}
 
 
 def test_error_raised_when_validate_raises_settings_validation_error():
-    class S(Settings):
+    class TestSettings(Settings):
         def validate(self):
             raise ValidationError('there was an error XXXX')
 
-    s = S()
+    test_settings = TestSettings()
     with pytest.raises(ValidationError, match='there was an error XXXX'):
-        s.is_valid(raise_exception=True)
+        test_settings.is_valid(raise_exception=True)
 
 
 def test_settings_errors_readonly():
-    class S(Settings):
-        T: int = 10
+    class TestSettings(Settings):
+        ...
 
     with pytest.raises(AttributeError):
-        S().errors = {}
+        TestSettings().errors = {}
 
 
 # prefix
@@ -356,7 +355,6 @@ def test_settings_errors_readonly():
 
 def test_prefix_empty_field_not_allowed():
     with pytest.raises(ValueError, match='prefix cannot be empty'):
-
         @prefix('')
         class MySettings(Settings):
             ...
@@ -365,7 +363,6 @@ def test_prefix_empty_field_not_allowed():
 @pytest.mark.parametrize('invalid_prefix', ['1', '.', '-'])
 def test_prefix_bad_identifier_not_allowed(invalid_prefix):
     with pytest.raises(ValueError, match='prefix should be a valid Python identifier'):
-
         @prefix(invalid_prefix)
         class MySettings(Settings):
             ...
@@ -401,7 +398,6 @@ def test_prefix_cannot_decorate_not_settings_class():
     with pytest.raises(
         AssertionError, match='Intended to decorate Settings sub-classes only'
     ):
-
         @prefix('MY')
         class NotSettings:
             ...
@@ -412,7 +408,6 @@ def test_prefix_cannot_decorate_settings_with_existing_matching_field():
         ValueError,
         match='''MySettings'> class already has setting attribute named "GEAR"''',
     ):
-
         @prefix('MY')
         class MySettings(Settings):
             GEAR = 10
