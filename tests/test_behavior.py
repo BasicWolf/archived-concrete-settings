@@ -58,94 +58,94 @@ def setting_behavior_mock():
 def test_setting_behavior_get(setting_behavior_mock):
     bhv_mock = setting_behavior_mock()
 
-    class S(Settings):
-        D = Setting(10) @ bhv_mock
+    class TestSettings(Settings):
+        MAX_SPEED = Setting(10) @ bhv_mock
 
-    assert S().D == 10
+    assert TestSettings().MAX_SPEED == 10
     assert bhv_mock.get_setting_value_was_called
 
 
 def test_setting_behavior_set(setting_behavior_mock):
     bhv_mock = setting_behavior_mock()
 
-    class S(Settings):
-        D = Setting(10) @ bhv_mock
+    class TestSettings(Settings):
+        MAX_SPEED = Setting(10) @ bhv_mock
 
-    s = S()
-    s.D = 20
-    assert s.D == 20
+    test_settings = TestSettings()
+    test_settings.MAX_SPEED = 20
+    assert test_settings.MAX_SPEED == 20
     assert bhv_mock.set_setting_value_was_called
 
 
 def test_universal_constructor_matmul_on_right_side(div):
-    class S(Settings):
-        D = Setting(10) @ div
-        E = Setting(9) @ div(3)
+    class TestSettings(Settings):
+        MAX_SPEED = Setting(10) @ div
+        MIN_SPEED = Setting(9) @ div(3)
 
-    assert S().D == 5
-    assert S().E == 3
+    assert TestSettings().MAX_SPEED == 5
+    assert TestSettings().MIN_SPEED == 3
 
 
 def test_universal_constructor_value_on_left_side(div):
-    class S(Settings):
-        D = 10 @ div
-        E = 9 @ div(3)
+    class TestSettings(Settings):
+        MAX_SPEED = 10 @ div
+        MIN_SPEED = 9 @ div(3)
 
-    assert S().D == 5
-    assert S().E == 3
+    assert TestSettings().MAX_SPEED == 5
+    assert TestSettings().MIN_SPEED == 3
 
 
 def test_setting_behavior_call_order(div, plus):
-    class S(Settings):
-        D = Setting(23) @ plus(2) @ div(5)
+    class TestSettings(Settings):
+        MAX_SPEED = Setting(23) @ plus(2) @ div(5)
 
-    s = S()
-    assert s.D == 5
+    test_settings = TestSettings()
+    assert test_settings.MAX_SPEED == 5
 
-    class S(Settings):
-        D = Setting(25) @ div(5) @ plus(2)
+    class TestSettings(Settings):
+        MAX_SPEED = Setting(25) @ div(5) @ plus(2)
 
-    s = S()
-    assert s.D == 7
+    test_settings = TestSettings()
+    assert test_settings.MAX_SPEED == 7
 
 
 def test_setting_behavior_with_explicit_property_setting(div):
-    class MySettings(Settings):
+    class TestSettings(Settings):
         @div(5)
         @property_setting
         def MICE_COUNT(self):
             return 30
 
-    assert MySettings().MICE_COUNT == 6
+    assert TestSettings().MICE_COUNT == 6
 
 
 def test_setting_behavior_with_implicit_property_setting(div):
-    class MySettings(Settings):
+    class TestSettings(Settings):
         @div(5)
         def MICE_COUNT(self):
             return 30
 
-    assert MySettings().MICE_COUNT == 6
+    assert TestSettings().MICE_COUNT == 6
 
 
 def test_setting_behavior_with_property_setting_order(div, plus):
-    class S(Settings):
+    class MiceSettings(Settings):
         @div(2)
         @plus(5)
         @property_setting
-        def D(self):
+        def MICE_COUNT(self):
             return 15
 
-    assert S().D == 10
+    assert MiceSettings().MICE_COUNT == 10
 
-    class S(Settings):
+    class HamsterSettings(Settings):
         @div(5)
         @plus(2)
         @property_setting
-        def D(self):
+        def HAMSTER_COUNT(self):
             return 18
 
-    assert S().D == 4
+    assert HamsterSettings().HAMSTER_COUNT == 4
 
 
 # Behaviors
@@ -222,9 +222,9 @@ def test_validate_override():
     class DevSettings(BaseSettings):
         AGE: str = 'old' @ override
 
-    s1 = DevSettings()
-    assert s1.is_valid()
-    assert s1.AGE == 'old'
+    dev_settings = DevSettings()
+    assert dev_settings.is_valid()
+    assert dev_settings.AGE == 'old'
 
 
 def test_structure_error_without_override():
@@ -240,28 +240,28 @@ def test_structure_error_without_override():
 
 
 def test_override_on_property_setting():
-    class S(Settings):
-        T: int = 10
+    class BaseSettings(Settings):
+        MAX_SPEED: int = 10
 
-    class S1(S):
+    class DevSettings(BaseSettings):
         @override
         @property_setting
-        def T(self) -> str:
+        def MAX_SPEED(self) -> str:
             return 'abc'
 
-    s1 = S1()
-    assert s1.is_valid()
-    assert s1.T == 'abc'
+    dev_settings = DevSettings()
+    assert dev_settings.is_valid()
+    assert dev_settings.MAX_SPEED == 'abc'
 
 
 def test_structure_error_without_override_on_property_setting():
-    class S(Settings):
-        T: int = 10
+    class BaseSettings(Settings):
+        MAX_SPEED: int = 10
 
-    class S1(S):
+    class DevSettings(BaseSettings):
         @property_setting
-        def T(self) -> str:
+        def MAX_SPEED(self) -> str:
             return 'abc'
 
     with pytest.raises(StructureError):
-        S1()
+        DevSettings()
