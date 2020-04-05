@@ -10,7 +10,7 @@ from concrete_settings import INVALID_SETTINGS, Settings, Setting, Undefined, pr
 from concrete_settings.exceptions import ValidationError
 
 
-def test_cls_init_empty_settings():
+def test_init_empty_settings():
     Settings()
 
 
@@ -41,27 +41,27 @@ def test_setting_ctor(v_int):
 
 
 def test_settings_converted_from_attributes(v_int):
-    class S0(Settings):
+    class TestSettings(Settings):
         DEMO: int = v_int
         demo: str = v_int
 
-    assert isinstance(S0.DEMO, Setting)
-    assert S0.__dict__["DEMO"].type_hint is int
-    assert isinstance(S0.demo, int)
+    assert isinstance(TestSettings.DEMO, Setting)
+    assert TestSettings.__dict__["DEMO"].type_hint is int
+    assert isinstance(TestSettings.demo, int)
 
 
 def test_setting_set(v_int):
-    class S0(Settings):
+    class TestSettings(Settings):
         DEMO: int = v_int
 
-    class S1(Settings):
+    class DevSettings(Settings):
         DEMO = v_int + 1
 
-    assert S0().DEMO != S1().DEMO
+    assert TestSettings().DEMO != DevSettings().DEMO
 
 
 def test_guessed_type():
-    class S(Settings):
+    class TestSettings(Settings):
         # Numeric types
         BOOLEAN = True
         INT = 10
@@ -82,7 +82,7 @@ def test_guessed_type():
         FROZENSET = frozenset()
         DICT = dict()
 
-    d = S.__dict__
+    d = TestSettings.__dict__
     assert d["BOOLEAN"].type_hint is bool
     assert d["INT"].type_hint is int
     assert d["FLOAT"].type_hint is float
@@ -135,11 +135,11 @@ def test_guess_setting_type_inherits_type_hint():
 
 
 def test_validate_smoke():
-    class S(Settings):
+    class TestSettings(Settings):
         ...
 
-    s = S()
-    s.is_valid()
+    test_settings = TestSettings()
+    test_settings.is_valid()
 
 
 def test_setting_is_validated():
@@ -149,10 +149,10 @@ def test_setting_is_validated():
         nonlocal validate_called
         validate_called = True
 
-    class S(Settings):
-        T = Setting(10, validators=(validator,))
+    class TestSettigs(Settings):
+        MAX_SPEED = Setting(10, validators=(validator,))
 
-    assert S().is_valid()
+    assert TestSettigs().is_valid()
     assert validate_called
 
 
@@ -162,24 +162,24 @@ def test_setting_is_validated():
 
 
 def test_value_type_validator():
-    class S(Settings):
-        T: str = 10
+    class TestSettings(Settings):
+        MAX_SPEED: str = 10
 
     with pytest.raises(
         ValidationError,
         match="Expected value of type `<class 'str'>` got value of type `<class 'int'>`",
     ):
-        S().is_valid(raise_exception=True)
+        TestSettings().is_valid(raise_exception=True)
 
 
 def test_value_type_validator_with_inheritance():
-    class S0(Settings):
-        T: str = 10
+    class BaseSettings(Settings):
+        MAX_SPEED: str = 10
 
-    class S1(S0):
-        T = 'abc'
+    class DevSettings(BaseSettings):
+        MAX_SPEED = 'abc'
 
-    assert S1().is_valid()
+    assert DevSettings().is_valid()
 
 
 def test_value_type_validator_allows_undefined_for_any_type():
@@ -195,33 +195,33 @@ def test_value_type_validator_allows_undefined_for_any_type():
 
 
 def test_settings_default_validators(is_positive):
-    class S(Settings):
+    class TestSettings(Settings):
         default_validators = (is_positive,)
 
-        T0 = 0
-        T1 = 10
+        MIN_SPEED = 0
+        MAX_SPEED = 10
 
-    s = S()
-    assert not s.is_valid()
-    assert 'T0' in s.errors
+    test_settings = TestSettings()
+    assert not test_settings.is_valid()
+    assert 'MIN_SPEED' in test_settings.errors
 
-    assert s.errors['T0'] == [f'Value should be positive']
-    assert 'T1' not in s.errors
+    assert test_settings.errors['MIN_SPEED'] == ['Value should be positive']
+    assert 'MAX_SPEED' not in test_settings.errors
 
 
 def test_settings_mandatory_validators(is_positive, is_less_that_10):
-    class S(Settings):
+    class TestSettings(Settings):
         mandatory_validators = (is_positive,)
 
-        T0: int = Setting(0, validators=(is_less_that_10,))
-        T1: int = Setting(11, validators=(is_less_that_10,))
+        MIN_SPEED: int = Setting(0, validators=(is_less_that_10,))
+        MAX_SPEED: int = Setting(11, validators=(is_less_that_10,))
 
-    s = S()
+    s = TestSettings()
     assert not s.is_valid()
-    assert 'T0' in s.errors
-    assert 'T1' in s.errors
-    assert s.errors['T0'] == ['Value should be positive']
-    assert s.errors['T1'] == ['Value should be less that 10']
+    assert 'MIN_SPEED' in s.errors
+    assert 'MAX_SPEED' in s.errors
+    assert s.errors['MIN_SPEED'] == ['Value should be positive']
+    assert s.errors['MAX_SPEED'] == ['Value should be less that 10']
 
 
 #
@@ -230,65 +230,65 @@ def test_settings_mandatory_validators(is_positive, is_less_that_10):
 
 
 def test_settings_cannot_init_with_value():
-    class S(Settings):
+    class TestSettings(Settings):
         ...
 
     with pytest.raises(AssertionError):
-        S(value=10)
+        TestSettings(value=10)
 
 
 def test_settings_cannot_init_with_type_hint():
-    class S(Settings):
+    class TestSettings(Settings):
         ...
 
     with pytest.raises(AssertionError):
-        S(type_hint=int)
+        TestSettings(type_hint=int)
 
 
 def test_nested_settings_valid():
-    class S2(Settings):
-        VAL2 = 20
+    class NestedSettings(Settings):
+        MAX_SPEED = 20
 
-    class S1(Settings):
-        NESTED_S2 = S2()
+    class TestSettings(Settings):
+        NESTED_SETTINGS = NestedSettings()
 
-    s1 = S1()
-    assert s1.is_valid()
+    assert TestSettings().is_valid()
 
 
 def test_nested_setting_values():
-    class S3(Settings):
-        VAL3 = 30
+    class HostSettings(Settings):
+        NAME = 'localhost'
 
-    class S2(Settings):
-        VAL2 = 20
-        NESTED_S3 = S3()
+    class DBSettings(Settings):
+        USERNAME = 'alex'
+        HOST = HostSettings()
 
-    class S1(Settings):
-        NESTED_S2 = S2()
+    class AppSettings(Settings):
+        DB = DBSettings()
 
-    s1 = S1()
-    assert s1.is_valid()
-    assert s1.NESTED_S2.VAL2 == 20
-    assert s1.NESTED_S2.NESTED_S3.VAL3 == 30
+    app_settings = AppSettings()
+    assert app_settings.is_valid()
+    assert app_settings.DB.USERNAME == 'alex'
+    assert app_settings.DB.HOST.NAME == 'localhost'
 
 
 def test_nested_settings_validation_raises():
-    class S0(Settings):
-        T: str = 10
+    class DBSettings(Settings):
+        HOST: str = 10
 
-    class S(Settings):
-        T_S0 = S0()
+    class AppSettings(Settings):
+        DB = DBSettings()
 
     with pytest.raises(
         ValidationError,
         match=(
-            "T_S0: Expected value of type `<class 'str'>` "
+            "DB: Expected value of type `<class 'str'>` "
             "got value of type `<class 'int'>`"
         ),
     ):
-        s = S()
+        s = AppSettings()
         s.is_valid(raise_exception=True)
+    pass
 
 
 def test_nested_triple_nested_validation_errors():
