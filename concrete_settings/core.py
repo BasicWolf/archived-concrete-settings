@@ -18,7 +18,7 @@ from typing import (
 )
 
 from .docreader import extract_doc_comments_from_class_or_module
-from .exceptions import StructureError, ValidationError, ValidationErrorDetail
+from .exceptions import StructureError, ValidationError, ValidationErrorDetails
 from .sources import get_source, AnySource, Source, NotFound
 from .sources.strategies import Strategy, default as default_update_strategy
 from .types import Undefined, GuessSettingType, type_hints_equal
@@ -276,7 +276,7 @@ class Settings(Setting, metaclass=SettingsMeta):
 
     _is_being_validated: bool
 
-    _errors: ValidationErrorDetail = {}
+    _errors: ValidationErrorDetails = {}
 
     def __init__(self, **kwargs):
         assert (
@@ -349,7 +349,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         self._errors = self._run_validation(raise_exception)
         return self._errors == {}
 
-    def _run_validation(self, raise_exception=False) -> ValidationErrorDetail:
+    def _run_validation(self, raise_exception=False) -> ValidationErrorDetails:
         self._is_being_validated = True
         errors = {}
 
@@ -373,10 +373,10 @@ class Settings(Setting, metaclass=SettingsMeta):
 
     def _validate_setting(
         self, name: str, setting: Setting, raise_exception=False
-    ) -> ValidationErrorDetail:
+    ) -> ValidationErrorDetails:
         value: Setting = getattr(self, name)
 
-        errors: List[ValidationErrorDetail] = []
+        errors: List[ValidationErrorDetails] = []
         validators = setting.validators or self.default_validators
         validators += self.mandatory_validators
 
@@ -462,7 +462,7 @@ class Settings(Setting, metaclass=SettingsMeta):
                 destination[var_name] = getattr(self, name)
 
     @property
-    def errors(self) -> ValidationErrorDetail:
+    def errors(self) -> ValidationErrorDetails:
         return self._errors
 
     @property

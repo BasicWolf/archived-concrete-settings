@@ -94,7 +94,7 @@ Settings
       ``errors`` property contains validation errors from the last
       :meth:`settings.is_valid(raise_exception=False) <Settings.is_valid>`
       call. The errors are packed in recursive
-      :class:`ValidationErrorDetail <concrete_settings.exceptions.ValidationErrorDetail>`
+      :class:`ValidationErrorDetail <concrete_settings.exceptions.ValidationErrorDetails>`
       structure.
 
    .. autoproperty:: is_being_validated
@@ -229,20 +229,20 @@ Validators
 
 .. autoclass:: concrete_settings.exceptions.ValidationError
 
-.. autodata:: concrete_settings.exceptions.ValidationErrorDetail
+.. autodata:: concrete_settings.exceptions.ValidationErrorDetails
 
    A recursive union type which describes validation errors.
 
-   ``ValidationErrorDetail`` is defined as
+   ``ValidationErrorDetails`` is defined as
 
    ::
 
       SettingName = str
 
-      ValidationErrorDetail = Union[
+      ValidationErrorDetails = Union[
           str,
-          List[ValidationErrorDetail],
-          Dict[SettingName, ValidationErrorDetail]
+          List[ValidationErrorDetails],
+          Dict[SettingName, ValidationErrorDetails]
       ]
 
 

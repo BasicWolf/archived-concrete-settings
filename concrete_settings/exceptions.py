@@ -16,7 +16,7 @@ SettingName = str
 # future mypy versions
 
 #:
-ValidationErrorDetail = Union[                   # type: ignore
+ValidationErrorDetails = Union[                   # type: ignore
     str,
     List['ValidationErrorDetail'],               # type: ignore
     Dict[SettingName, 'ValidationErrorDetail'],  # type: ignore
@@ -29,15 +29,15 @@ class ValidationError(ConcreteSettingsError):
 
     sources: List[str]
 
-    def __init__(self, detail: ValidationErrorDetail = ''):
-        self.detail = detail
+    def __init__(self, details: ValidationErrorDetails = ''):
+        self.details = details
         self.sources = []
 
     def prepend_source(self, source):
         self.sources.insert(0, source)
 
     def __str__(self):
-        detail_str = _format_detail(self.detail)
+        detail_str = _format_detail(self.details)
         if self.sources:
             source = '.'.join(self.sources)
             return f'{source}: {detail_str}'
