@@ -385,7 +385,7 @@ class Settings(Setting, metaclass=SettingsMeta):
                 validator(value, name=name, owner=self, setting=setting)
             except ValidationError as e:
                 if raise_exception:
-                    raise e
+                    raise ValidationError({name: e.details}) from e
                 errors.append(str(e))
 
         # nested Settings
@@ -396,7 +396,7 @@ class Settings(Setting, metaclass=SettingsMeta):
             except ValidationError as e:
                 assert raise_exception
                 e.prepend_source(name)
-                raise e
+                raise ValidationError({name: e.details}) from e
 
             if nested_settings.errors:
                 errors.append(nested_settings.errors)

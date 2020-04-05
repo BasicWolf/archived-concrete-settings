@@ -282,7 +282,7 @@ def test_nested_settings_validation_raises():
     with pytest.raises(
         ValidationError,
         match=(
-            "DB: Expected value of type `<class 'str'>` "
+            "DB: HOST: Expected value of type `<class 'str'>` "
             "got value of type `<class 'int'>`"
         ),
     ):
