@@ -3,18 +3,20 @@ import pytest
 
 
 @pytest.fixture(scope='module')
-def one_cls_setting():
-    return """from concrete_settings import Settings
+def test_settings_with_docs_module():
+    return """
+from concrete_settings import Settings
 
-class OneSettingCls(Settings):
+class TestSettings(Settings):
     #: This is doc
     #: For max_speed
-    MAX_SPEED = 10"""
+    MAX_SPEED = 10
+"""
 
 
-def test_one_cls_setting(build_module_mock, one_cls_setting):
-    build_module_mock('cls1', one_cls_setting)
+def test_attribute_setting_doc_read(build_module_mock, test_settings_with_docs_module):
+    build_module_mock('test_settings_module', test_settings_with_docs_module)
     assert (
-        sys.modules['cls1'].OneSettingCls.MAX_SPEED.__doc__
+        sys.modules['test_settings_module'].TestSettings.MAX_SPEED.__doc__
         == 'This is doc\nFor max_speed'
     )

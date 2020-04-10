@@ -2,15 +2,15 @@ from concrete_settings.exceptions import ValidationError
 
 
 class TestValidationError:
-    def test_str_detail(self):
+    def test_str_details_to_string(self):
         assert ValidationError('abc').details == 'abc'
         assert str(ValidationError('abc')) == 'abc'
 
-    def test_list_detail(self):
+    def test_list_details_to_string(self):
         assert ValidationError(['a', 'b']).details == ['a', 'b']
         assert str(ValidationError(['a', 'b'])) == "a; b"
 
-    def test_dict_detail(self):
+    def test_dict_details_to_string(self):
         assert ValidationError(
             {'field': 'There has been a sad error'}
         ).details == {'field': 'There has been a sad error'}
@@ -26,7 +26,7 @@ class TestValidationError:
             "another_field: A number was expected."
         )
 
-    def test_dict_with_list_detail(self):
+    def test_dict_with_list_details_to_string(self):
         assert str(
             ValidationError(
                 {
