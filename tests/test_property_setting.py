@@ -9,38 +9,37 @@ from concrete_settings import (
 
 
 def test_method_automatically_converted_to_setting():
-    class MySettings(Settings):
+    class TestSettings(Settings):
         def MICE_NUMBER(self) -> int:
             """MICE_NUMBER docs"""
             return 10
 
-    assert MySettings.MICE_NUMBER.__doc__ == "MICE_NUMBER docs"
-    assert MySettings.MICE_NUMBER.validators == tuple()
-    assert MySettings.MICE_NUMBER.type_hint == int
-    assert MySettings().MICE_NUMBER == 10
+    assert TestSettings.MICE_NUMBER.__doc__ == "MICE_NUMBER docs"
+    assert TestSettings.MICE_NUMBER.validators == tuple()
+    assert TestSettings.MICE_NUMBER.type_hint == int
+    assert TestSettings().MICE_NUMBER == 10
 
 
 def test_with_setting_attrs_decorated_method():
-    class S(Settings):
+    class TestSettings(Settings):
         @setting
-        def V(self) -> int:
-            """V docs"""
+        def DECORATED_NUMBER(self) -> int:
+            """DECORATED_NUMBER docs"""
             return 10
 
-    assert S.V.__doc__ == "V docs"
-    assert S.V.validators == tuple()
-    assert S.V.type_hint == int
-    s = S()
-    assert s.V == 10
+    assert TestSettings.DECORATED_NUMBER.__doc__ == "DECORATED_NUMBER docs"
+    assert TestSettings.DECORATED_NUMBER.validators == tuple()
+    assert TestSettings.DECORATED_NUMBER.type_hint == int
+    assert TestSettings().DECORATED_NUMBER == 10
 
 
 def test_no_return_type_hint_set_as_any():
-    class S(Settings):
+    class TestSettings(Settings):
         @setting
-        def V(self):
+        def ANY_MICE(self):
             return 10
 
-    assert S.V.type_hint is typing.Any
+    assert TestSettings.ANY_MICE.type_hint is typing.Any
 
 
 def test_init_asserts_first_argument():
@@ -52,7 +51,7 @@ def test_init_asserts_first_argument():
         class TestSettings(Settings):
             @setting('Markus')
             def ADMIN(self):
-                return 'Alex'
+                ...
 
 
 def test_init_asserts_value_argument():
@@ -68,41 +67,41 @@ def test_init_asserts_value_argument():
 
 
 def test_with_setting_attrs_defined_as_argument(DummyValidator):
-    class S(Settings):
-        @setting(type_hint=int, doc="V arg docs", validators=(DummyValidator(),))
-        def V(self):
+    class TestSettings(Settings):
+        @setting(type_hint=int, doc="MICE arg docs", validators=(DummyValidator(),))
+        def MICE_COUNT(self):
             return 10
 
-    assert S.V.__doc__ == "V arg docs"
-    assert S.V.type_hint == int
-    assert len(S.V.validators) == 1
-    assert isinstance(S.V.validators[0], DummyValidator)
+    assert TestSettings.MICE_COUNT.__doc__ == "MICE arg docs"
+    assert TestSettings.MICE_COUNT.type_hint == int
+    assert len(TestSettings.MICE_COUNT.validators) == 1
+    assert isinstance(TestSettings.MICE_COUNT.validators[0], DummyValidator)
 
 
 def test_property_setting_using_other_settings():
-    class S(Settings):
-        A: int = 10
-        B: str = 'hello world'
+    class TestSettings(Settings):
+        MICE_COUNT: int = 10
+        MICE_NAME: str = 'alex'
 
         @setting
-        def AB(self) -> str:
-            return f'{self.A} {self.B}'
+        def MICE(self) -> str:
+            return f'{self.MICE_COUNT} {self.MICE_NAME}'
 
-    s = S()
-    assert s.is_valid()
-    assert s.AB == '10 hello world'
+    test_settings = TestSettings()
+    assert test_settings.is_valid()
+    assert test_settings.MICE == '10 alex'
 
 
 def test_property_setting_cannot_be_set():
-    class S(Settings):
+    class TestSettings(Settings):
         @setting
-        def V(self):
+        def MICE_READONLY(self):
             return 10
 
     with pytest.raises(
         AttributeError, match="Can't set attribute: property setting cannot be set"
     ):
-        S().V = 10
+        TestSettings().MICE_READONLY = 10
 
 
 def test_property_setting_is_validated():
@@ -112,10 +111,10 @@ def test_property_setting_is_validated():
         nonlocal validate_called
         validate_called = True
 
-    class S(Settings):
+    class TestSettings(Settings):
         @setting(validators=(validator,))
         def DEBUG(self):
             return True
 
-    assert S().is_valid()
+    assert TestSettings().is_valid()
     assert validate_called
