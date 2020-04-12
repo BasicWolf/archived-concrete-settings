@@ -14,9 +14,9 @@ Welcome to Concrete Settings
 ============================
 
 **Concrete Settings** is a Python library which facilitates
-configuration management in big and small programs.
+configuration management in big and small projects.
 
-The project was born out of necessity to manage a huge
+The library was born out of necessity to manage a huge
 decade-old Django-based SaaS solution with more than two hundred
 different application settings scattered around ``settings.py``.
 *What does this setting do?*

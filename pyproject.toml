@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "concrete-settings"
 version = "0.0.0"
-description = "TODO"
+description = "Concrete Settings facilitates configuration management in big and small projects."
 
 license = "MIT"
 
