@@ -37,7 +37,7 @@ Settings
    :type override: bool
 
    The corresponding implicit definition of a setting in Settings class is written as following:
-
+ 
    .. code-block::
 
       class MySettings(Settings):
@@ -48,6 +48,10 @@ Settings
           #: in Sphinx-style comments above
           #: the setting definition
           SETTING_NAME: type_hint = value @behavior1 @behavior2 @...
+
+   .. attribute:: name
+
+      Setting attribute name (read-only).
 
 .. autoclass:: concrete_settings.Settings
 
@@ -437,7 +441,58 @@ Sources
 
 .. module:: concrete_settings.sources
 
-.. autoclass:: concrete_settings.sources.Source
+.. data:: AnySource = Union[Dict[str, Any], str, 'Source', Path]
+
+   Valid settings sources types union.
+   A valid source is either a ``dict``, an instance of
+   :class:`Source <concrete_settings.sources.Source>` or
+   a path (str or :class:`Path <pathlib.Path>`)
+
+.. autoclass:: Source
+
+   The base class of all Concrete Settings sources.
+
+   .. automethod:: get_source
+
+      A **static** method which returns a ``Source`` instance
+      or ``None`` if ``src`` is not suitable.
+      For example, :class:`DictSource <concrete_settings.sources.DictSource>`
+      implements it as follows:
+
+   .. code-block::
+
+     @staticmethod
+     def get_source(src: AnySource) -> Optional['DictSource']:
+         if isinstance(src, dict):
+             return DictSource(src)
+         elif isinstance(src, DictSource):
+             return src
+         else:
+             return None
+
+   .. automethod:: read
+
+      Called for each setting from settings beign read. A source should
+      return the corresponding value.
+
+      :param setting: Setting attribute instance being processed.
+                      Usually :data:`setting.name <concrete_settings.Setting.name>` is of interest.
+      :param parents: A chain of parent Settings classes names (i.e. in case of nested
+                      settings). This is used to map *source* setting keys like
+                      ``DB_HOST_PORT`` to ``AppSettings.DB.HOST.PORT``.
+                      In this case ``parents=('DB', 'HOST')``.
+      :type setting: :class:`Setting <concrete_settings.Setting>`
+      :type parents: tuple[str]
+
+      ``read()`` should return :class:`NotFound` if setting value was not provided by the source.
+
+.. autoclass:: NotFound
+
+   Returned by :meth:`Source.read <Source.read>` when setting value is not provided by the source.
+
+.. autoclass:: DictSource
+
+   Python :class:`dict` -parsing source.
 
 
 Update strategies
@@ -449,7 +504,7 @@ Update strategies
 
    A strategy decides how a setting value will be :meth:`updated <concrete_settings.Settings.update>`.
 
-   :method: __call__(current_value, new_value)
+   .. automethod:: __call__(current_value, new_value)
 
       The signature of Strategy callables
 

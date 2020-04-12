@@ -1,8 +1,13 @@
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Type, Optional, Union
+from typing import TYPE_CHECKING
 
 from ..exceptions import ConcreteSettingsError
 from . import strategies  # noqa: F401 # imported but unused
+
+if TYPE_CHECKING:
+    from concrete_settings.core import Setting
+
 
 _registered_sources = set()
 
@@ -44,7 +49,9 @@ class Source:
     def get_source(src: AnySource) -> Optional['Source']:
         return None
 
-    def read(self, setting, parents: Tuple[str, ...] = ()) -> Union[Type[NotFound], Any]:
+    def read(
+        self, setting: 'Setting', parents: Tuple[str, ...] = ()
+    ) -> Union[Type[NotFound], Any]:
         pass
 
 
@@ -80,7 +87,9 @@ class DictSource(Source):
         else:
             return None
 
-    def read(self, setting, parents: Tuple[str, ...] = ()) -> Union[Type[NotFound], Any]:
+    def read(
+        self, setting: 'Setting', parents: Tuple[str, ...] = ()
+    ) -> Union[Type[NotFound], Any]:
         d = self.data
         for key in parents:
             d = d[key]
