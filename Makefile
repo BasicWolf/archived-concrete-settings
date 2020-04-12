@@ -37,7 +37,7 @@ test-deploy: build
 	poetry run twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
 deploy: build
-	poetry run twine upload
+	poetry run twine upload dist/*
 
 build:
 	poetry build
