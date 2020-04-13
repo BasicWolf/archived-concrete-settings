@@ -103,5 +103,7 @@ configuration in Python projects.
 
 * `everett <https://everett.readthedocs.io/en/latest/>`_ - is a Python configuration library with the following goals: flexible configuration from multiple configured environments; easy testing with configuration and easy documentation of configuration for users.
 
+* `python-decouple <https://github.com/henriquebastos/python-decouple>`_ - strict separation of settings from code. Decouple helps you to organize your settings so that you can change parameters without having to redeploy your app.
+
 Why should you trust Concrete Settings instead of picking some other library?
 Concrete Settings tries to make configuration definition, processing and maintenance smooth and transparent for developers. Its implicit definition syntax eliminates extra code and allows you to focus on  what is important.
