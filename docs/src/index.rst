@@ -14,7 +14,7 @@ different application settings scattered around ``settings.py``.
 Sometimes developers spent *hours* seeking answers to these
 questions.
 
-**Concrete Settigns** tackles these problems altogether.
+Concrete Settigns tackles these problems altogether.
 It was designed to be developer and end-user friendly.
 The settings are defined via normal Python code with few
 tricks which significantly improve readability
@@ -94,7 +94,7 @@ above its definition.
 An instance of ``Settings`` can be updated i.e. read from any kind of source:
 YAML, JSON or Python files, environmental variables, Python dicts, and you can add more!
 
-Finally, **Concrete Settings** comes with batteries like Django 3.0 support out of the box.
+Finally, Concrete Settings comes with batteries like Django 3.0 support out of the box.
 
 In a nutshell:
 

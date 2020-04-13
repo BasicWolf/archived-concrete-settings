@@ -26,7 +26,7 @@ different application settings scattered around ``settings.py``.
 Sometimes developers spent *hours* seeking answers to these
 questions.
 
-**Concrete Settigns** tackles these problems altogether.
+Concrete Settigns tackles these problems altogether.
 It was designed to be developer and end-user friendly.
 The settings are defined via normal Python code with few
 tricks which significantly improve readability
@@ -80,7 +80,7 @@ above its definition.
 An instance of ``Settings`` can be updated i.e. read from any kind of source:
 YAML, JSON or Python files, environmental variables, Python dicts, and you can add more!
 
-Finally, **Concrete Settings** comes with batteries like Django 3.0 support out of the box.
+Finally, Concrete Settings comes with batteries like Django 3.0 support out of the box.
 
 Concrete Settings are here to improve configuration handling
 whether you are starting from scratch, or dealing with an
@@ -90,20 +90,32 @@ Are you ready to try it out?
 ``pip install concrete-settings`` and welcome to the `documentation <https://basicwolf.github.io/concrete-settings>`_!
 
 
-
 Awesome configuration projects
 ==============================
 
-**Concrete Settings** is not the first and surely is not the last library to handle
+Concrete Settings is not the first and surely is not the last library to handle
 configuration in Python projects.
 
-* `goodconf <https://github.com/lincolnloop/goodconf/>`_ - Define configuration variables and load them from environment or JSON/YAML file. Also generates initial configuration files and documentation for your defined configuration.
+* `goodconf <https://github.com/lincolnloop/goodconf/>`_
+  - Define configuration variables and load them from environment or
+  JSON/YAML file. Also generates initial configuration files and
+  documentation for your defined configuration.
 
-* `profig <https://profig.readthedocs.io>`_ - is a straightforward configuration library for Python. Its objective is to make the most common tasks of configuration handling as simple as possible.
+* `profig <https://profig.readthedocs.io>`_
+  - is a straightforward configuration library for Python.
+  Its objective is to make the most common tasks of configuration
+  handling as simple as possible.
 
-* `everett <https://everett.readthedocs.io/en/latest/>`_ - is a Python configuration library with the following goals: flexible configuration from multiple configured environments; easy testing with configuration and easy documentation of configuration for users.
+* `everett <https://everett.readthedocs.io/en/latest/>`_
+  - is a Python configuration library with the following goals:
+  flexible configuration from multiple configured environments;
+  easy testing with configuration and easy documentation of configuration
+  for users.
 
-* `python-decouple <https://github.com/henriquebastos/python-decouple>`_ - strict separation of settings from code. Decouple helps you to organize your settings so that you can change parameters without having to redeploy your app.
+* `python-decouple <https://github.com/henriquebastos/python-decouple>`_
+  - strict separation of settings from code. Decouple helps you to organize
+  your settings so that you can change parameters without having to redeploy
+  your app.
 
 Why should you trust Concrete Settings instead of picking some other library?
 Concrete Settings tries to make configuration definition, processing and maintenance smooth and transparent for developers. Its implicit definition syntax eliminates extra code and allows you to focus on  what is important.
