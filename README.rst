@@ -88,3 +88,20 @@ old legacy Cthulhu.
 Are you ready to try it out?
 
 ``pip install concrete-settings`` and welcome to the `documentation <https://basicwolf.github.io/concrete-settings>`_!
+
+
+
+Awesome configuration projects
+==============================
+
+**Concrete Settings** is not the first and surely is not the last library to handle
+configuration in Python projects.
+
+* `goodconf <https://github.com/lincolnloop/goodconf/>`_ - Define configuration variables and load them from environment or JSON/YAML file. Also generates initial configuration files and documentation for your defined configuration.
+
+* `profig <https://profig.readthedocs.io>`_ - is a straightforward configuration library for Python. Its objective is to make the most common tasks of configuration handling as simple as possible.
+
+* `everett <https://everett.readthedocs.io/en/latest/>`_ - is a Python configuration library with the following goals: flexible configuration from multiple configured environments; easy testing with configuration and easy documentation of configuration for users.
+
+Why should you trust Concrete Settings instead of picking some other library?
+Concrete Settings tries to make configuration definition, processing and maintenance smooth and transparent for developers. Its implicit definition syntax eliminates extra code and allows you to focus on  what is important.
