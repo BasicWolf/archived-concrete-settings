@@ -89,11 +89,107 @@ Are you ready to try it out?
 
 ``pip install concrete-settings`` and welcome to the `documentation <https://basicwolf.github.io/concrete-settings>`_!
 
+Show me more
+============
+
+So, you are a kind of a developer who expects more show cases in a ``README``?
+Let's see!
+
+Never miss an invalid value via validators
+------------------------------------------
+
+For example, the default *type validator* works like this:
+
+.. code-block:: python
+
+   from concrete_settings import Settings
+
+   class AppSettings(Settings):
+       SPEED: int = 'abc'
+
+   app_settings = AppSettings()
+   print(app_settings.is_valid(raise_exception=False))
+   print(app_settings.errors)
+
+Output:
+
+.. code-block::
+
+   False
+   {'SPEED': ["Expected value of type `<class 'int'>` got value of type `<class 'str'>`"]}
+
+
+Easily warn about deprecation via behavior
+------------------------------------------
+
+Use **behaviors** to control settings during their *initialization*, *validation*,
+*reading* and *writing* operations:
+
+.. code-block:: python
+
+   from concrete_settings import Settings, Setting
+   from concrete_settings.contrib.behaviors import deprecated
+
+   class AppSettings(Settings):
+       MAX_SPEED: int = 30 @deprecated
+
+   app_settings = AppSettings()
+   app_settings.is_valid()
+
+Running this code with ``python -Wdefault`` yields:
+
+.. code-block::
+
+   DeprecationWarning: Setting `MAX_SPEED` in class `<class '__main__.AppSettings'>` is deprecated.
+
+
+Group settings and nest them
+----------------------------
+
+Different settings in a huge setting file?
+Why have those stupid ``GROUP_PREFIXES_...``?
+Instead group and nest settings:
+
+.. code-block:: python
+
+   from concrete_settings import Settings
+
+   class DBSettings(Settings):
+       USER = 'alex'
+       PASSWORD  = 'secret'
+       SERVER = 'localhost@5432'
+
+   class CacheSettings(Settings):
+       ENGINE = 'DatabaseCache'
+       TIMEOUT = 300
+
+   class LoggingSettings(Settings):
+       LEVEL = 'INFO'
+       FORMAT = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
+
+
+   class AppSettings(Settings):
+       DB = DBSettings()
+       CACHE = CacheSettings()
+       LOG = LoggingSettings()
+
+   app_settings = AppSettings()
+   app_settings.validate()  # also calls DB.validate(), CACHE.validate() LOG.validate()
+   print(app_settings.LOG.LEVEL)
+
+There is more
+-------------
+
+There is even more for you to discover in
+`documentation <https://basicwolf.github.io/concrete-settings>`_,
+and there is more to come. **Your** contribution, be it
+a *bug report*, *pull request*, *suggested feature*,
+*comments* and *criticism* are very welcome!
 
 Awesome configuration projects
 ==============================
 
-Concrete Settings is not the first and surely is not the last library to handle
+Concrete Settings is not the first and surely not the last library to handle
 configuration in Python projects.
 
 * `goodconf <https://github.com/lincolnloop/goodconf/>`_
