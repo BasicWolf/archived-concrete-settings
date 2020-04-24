@@ -174,7 +174,7 @@ Instead group and nest settings:
        LOG = LoggingSettings()
 
    app_settings = AppSettings()
-   app_settings.validate()  # also calls DB.validate(), CACHE.validate() LOG.validate()
+   app_settings.is_valid()  # also invokes DB, CACHE and LOG validation
    print(app_settings.LOG.LEVEL)
 
 There is more
