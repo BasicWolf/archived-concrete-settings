@@ -36,6 +36,11 @@ The settings are defined via normal Python code with few
 tricks which significantly improve readability
 and maintainability.
 
+.. contents:: :depth: 2
+
+A small example
+---------------
+
 Take a look at a small example of Settings class with one
 boolean setting ``DEBUG``. A developer defines the
 settings in application code, while an end-user
