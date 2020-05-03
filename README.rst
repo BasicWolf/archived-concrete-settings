@@ -71,8 +71,8 @@ Accessing settings:
    Turns debug mode on/off
 
 
-As you can see, settings are **defined in classes**. Python mechanism
-of inheritance and nesting apply here, so settings can be **mixed** (multiple inheritance)
+Settings are **defined in classes**. Python mechanism
+of inheritance and composition apply here, so settings can be **mixed** (multiple inheritance)
 and be **nested** (settings as class fields).
 Settings are **type-annotated** and are **validated**.
 Documentation matters! Each settings can be documented in Sphinx-style comments ``#:`` written
