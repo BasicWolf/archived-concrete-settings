@@ -102,22 +102,24 @@ class PropertySetting(Setting):
         if decorating_without_arguments:
             self._init_decorator_without_arguments(args[0])
         else:
-            self._init_decorator_with_arguments(*args, **kwargs)
+            if args != ():
+                raise TypeError(
+                    'No positional arguments should be passed to '
+                    f'{self.__class__.__name__}.__init__()'
+                )
+            if 'value' in kwargs:
+                raise TypeError(
+                    '"value" keyword argument should not be passed to '
+                    f'{self.__class__.__name__}.__init__()'
+                )
+
+            self._init_decorator_with_arguments(**kwargs)
 
     def _init_decorator_without_arguments(self, fget: Callable):
         super().__init__()
         self.__call__(fget)
 
-    def _init_decorator_with_arguments(self, *args, **kwargs):
-        assert len(args) == 0, (
-            'No positional arguments should be passed to '
-            f'{self.__class__.__name__}.__init__()'
-        )
-        assert 'value' not in kwargs, (
-            '"value" argument should not be passed to '
-            f'{self.__class__.__name__}.__init__()'
-        )
-
+    def _init_decorator_with_arguments(self, **kwargs):
         super().__init__(value=Undefined, **kwargs)
         self.fget = None
 

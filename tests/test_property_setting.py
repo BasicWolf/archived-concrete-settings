@@ -42,9 +42,9 @@ def test_no_return_type_hint_set_as_any():
     assert TestSettings.ANY_MICE.type_hint is typing.Any
 
 
-def test_init_asserts_first_argument():
+def test_init_checks_positional_arguments_are_empty():
     with pytest.raises(
-        AssertionError,
+        TypeError,
         match='No positional arguments should be passed to PropertySetting.__init__()',
     ):
 
@@ -54,10 +54,13 @@ def test_init_asserts_first_argument():
                 ...
 
 
-def test_init_asserts_value_argument():
+def test_init_checks_value_argument_absence():
     with pytest.raises(
-        AssertionError,
-        match='"value" argument should not be passed to PropertySetting.__init__()',
+        TypeError,
+        match=(
+            '"value" keyword argument should not be passed to '
+            'PropertySetting.__init__()'
+        ),
     ):
 
         class TestSettings(Settings):
