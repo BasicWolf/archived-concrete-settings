@@ -11,7 +11,7 @@ Concrete Settings
    :target: https://github.com/python/mypy
 
 .. image:: https://basicwolf.github.io/concrete-settings/_static/img/pyup_scanned.svg
-   :target:: https://pyup.io
+   :target: https://pyup.io
 
 
 Welcome to Concrete Settings
