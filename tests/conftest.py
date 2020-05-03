@@ -1,3 +1,4 @@
+import os
 import random
 import tempfile
 
@@ -42,10 +43,11 @@ def build_module_mock(mocker):
             module.__file__ = path
         else:
             tmp_file = tempfile.NamedTemporaryFile(
-                mode='w+', prefix=f'tmp_{name}', suffix='.py'
+                mode='w+', prefix=f'tmp_{name}', suffix='.py', delete=False
             )
             tmp_file.write(code)
             tmp_file.flush()
+            tmp_file.close()
             module.__file__ = tmp_file.name
             tmp_files.append(tmp_file)
         sys.modules[name] = module
@@ -55,7 +57,7 @@ def build_module_mock(mocker):
     yield _make_module
 
     for f in tmp_files:
-        f.close()
+        os.remove(f.name)
 
 
 @pytest.fixture
