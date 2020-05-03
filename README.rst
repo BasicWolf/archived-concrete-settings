@@ -79,6 +79,8 @@ Accessing settings:
    >>> print(AppSettings.DEBUG.__doc__)
    Turns debug mode on/off
 
+Concrete concepts
+-----------------
 
 Settings are **defined in classes**. Python mechanism
 of inheritance and composition apply here, so settings can be **mixed** (multiple inheritance)
@@ -98,14 +100,14 @@ Are you ready to try it out?
 
 ``pip install concrete-settings`` and welcome to the `documentation <https://basicwolf.github.io/concrete-settings>`_!
 
-Show me more
-============
+What's inside?
+==============
 
 So, you are a kind of a developer who expects more show cases in a ``README``?
 Let's see!
 
-Never miss an invalid value via validators
-------------------------------------------
+Catch an invalid value early
+----------------------------
 
 For example, the default *type validator* works like this:
 
@@ -128,8 +130,8 @@ Output:
    {'SPEED': ["Expected value of type `<class 'int'>` got value of type `<class 'str'>`"]}
 
 
-Easily warn about deprecation via behavior
-------------------------------------------
+Easily warn about deprecation
+-----------------------------
 
 Use **behaviors** to control settings during their *initialization*, *validation*,
 *reading* and *writing* operations:
@@ -186,8 +188,8 @@ Instead group and nest settings:
    app_settings.is_valid()  # also invokes DB, CACHE and LOG validation
    print(app_settings.LOG.LEVEL)
 
-There is more
--------------
+There is even more
+------------------
 
 There is even more for you to discover in
 `documentation <https://basicwolf.github.io/concrete-settings>`_,
