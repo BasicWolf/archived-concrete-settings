@@ -12,6 +12,7 @@ from typing import (
     Iterator,
     List,
     Mapping,
+    Optional,
     Tuple,
     Type,
     Union,
@@ -60,7 +61,9 @@ class Setting:
     def __set_name__(self, _, name):
         self.name = name
 
-    def __get__(self, owner: 'Settings', owner_type=None):
+    def __get__(
+        self, owner: Optional['Settings'], owner_type=None
+    ) -> Union[Any, 'Setting']:
         assert isinstance(
             owner, (type(None), Settings)
         ), "owner should be None or an instance of Settings"
@@ -140,7 +143,9 @@ class PropertySetting(Setting):
         self.fget = fget
         return self
 
-    def __get__(self, owner: 'Settings', owner_type=None):
+    def __get__(
+        self, owner: Optional['Settings'], owner_type=None
+    ) -> Union[Any, 'Setting']:
         assert isinstance(
             owner, (type(None), Settings)
         ), "owner should be None or an instance of Settings"
