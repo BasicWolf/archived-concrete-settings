@@ -1,4 +1,3 @@
-import abc
 from typing import TYPE_CHECKING
 
 from typing_extensions import Protocol
@@ -14,7 +13,6 @@ class Validator(Protocol):
     A validator accepts a value as a mandatory argument, and keyword-only arguments
     referring to settings, setting and setting's name."""
 
-    @abc.abstractmethod
     def __call__(
         self,
         value,
