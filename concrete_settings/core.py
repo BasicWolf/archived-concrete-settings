@@ -180,7 +180,7 @@ class SettingsMeta(type):
                 and mcs._is_setting_name(name)
                 and mcs._can_be_converted_to_setting_automatically(attr)
             ):
-                new_attr = mcs._make_setting_from_attribute(name, attr, annotations,)
+                new_attr = mcs._make_setting_from_attribute(name, attr, annotations)
 
             # Should we try to guess a type_hint for a Setting?
             if isinstance(new_attr, Setting) and new_attr.type_hint is GuessSettingType:
