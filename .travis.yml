@@ -22,7 +22,7 @@ install: poetry install
 script:
   - make lint
   - make test
-  - make docstest
+  - make doctest
 
 
 jobs:
