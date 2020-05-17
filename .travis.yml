@@ -22,7 +22,7 @@ install: poetry install
 script:
   - make lint
   - make test
-  - make docs
+  - make docstest
 
 
 jobs:
@@ -32,15 +32,6 @@ jobs:
 
 
 deploy:
-  - provider: pages
-    on:
-      branch: master
-      python: '3.8'
-    skip_cleanup: true
-    keep-history: true
-    local_dir: docs/_build/html/
-    github_token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
-
   - provider: script
     on:
       tags: true
