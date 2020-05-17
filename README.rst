@@ -8,13 +8,13 @@ Concrete Settings
    :target: https://concrete-settings.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://basicwolf.github.io/concrete-settings/_static/img/codestyle_black.svg
+.. image:: https://raw.githubusercontent.com/BasicWolf/concrete-settings/master/docs/src/_static/img/codestyle_black.svg
     :target: https://github.com/ambv/black
 
-.. image:: https://basicwolf.github.io/concrete-settings/_static/img/mypy_checked.svg
+.. image:: https://raw.githubusercontent.com/BasicWolf/concrete-settings/master/docs/src/_static/img/mypy_checked.svg
    :target: https://github.com/python/mypy
 
-.. image:: https://basicwolf.github.io/concrete-settings/_static/img/pyup_scanned.svg
+.. image:: https://raw.githubusercontent.com/BasicWolf/concrete-settings/master/docs/src/_static/img/pyup_scanned.svg
    :target: https://pyup.io
 
 
