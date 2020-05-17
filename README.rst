@@ -98,7 +98,7 @@ whether you are starting from scratch, or dealing with an
 old legacy Cthulhu.
 Are you ready to try it out?
 
-``pip install concrete-settings`` and welcome to the `documentation <https://basicwolf.github.io/concrete-settings>`_!
+``pip install concrete-settings`` and welcome to the `documentation <https://concrete-settings.readthedocs.io/>`_!
 
 What's inside?
 ==============
