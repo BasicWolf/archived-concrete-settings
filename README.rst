@@ -4,6 +4,10 @@ Concrete Settings
 .. image:: https://travis-ci.org/BasicWolf/concrete-settings.svg?branch=master
     :target: https://travis-ci.org/BasicWolf/concrete-settings
 
+.. image:: https://readthedocs.org/projects/concrete-settings/badge/?version=latest
+   :target: https://concrete-settings.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 .. image:: https://basicwolf.github.io/concrete-settings/_static/img/codestyle_black.svg
     :target: https://github.com/ambv/black
 
