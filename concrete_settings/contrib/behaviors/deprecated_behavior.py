@@ -32,18 +32,16 @@ class deprecated(Behavior):
 
         super().attach_to(setting)
 
-    def get_setting_value(self, setting: 'Setting', owner: 'Settings', get_value):
+    def get_value(self, setting: 'Setting', owner: 'Settings'):
         if self.warn_on_get:
             if owner and not owner.is_being_validated:
                 msg = self.deprecation_message.format(owner=owner, name=setting.name)
                 warnings.warn(msg, DeprecationWarning)
-        return get_value()
+        return super().get_value(setting, owner)
 
-    def set_setting_value(
-        self, setting: 'Setting', owner: 'Settings', value, set_value
-    ):
+    def set_value(self, setting: 'Setting', owner: 'Settings', value):
         if self.warn_on_set:
             if not owner.is_being_validated:
                 msg = self.deprecation_message.format(owner=owner, name=setting.name)
                 warnings.warn(msg, DeprecationWarning)
-        set_value(value)
+        super().set_value(setting, owner, value)

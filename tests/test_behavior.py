@@ -4,7 +4,6 @@ from concrete_settings import (
     Settings,
     Setting,
     setting as property_setting,
-    Behaviors,
     Behavior,
     override,
 )
@@ -17,8 +16,8 @@ def div():
         def __init__(self, divisor=2):
             self.divisor = divisor
 
-        def get_setting_value(self, setting, owner, get_value):
-            return get_value() / self.divisor
+        def get_value(self, setting, owner):
+            return super().get_value(setting, owner) / self.divisor
 
     return Div
 
@@ -29,8 +28,8 @@ def plus():
         def __init__(self, addend):
             self.addend = addend
 
-        def get_setting_value(self, setting, owner, get_value):
-            return get_value() + self.addend
+        def get_value(self, setting, owner):
+            return super().get_value(setting, owner) + self.addend
 
     return Plus
 
@@ -38,16 +37,16 @@ def plus():
 @pytest.fixture
 def setting_behavior_mock():
     class BehaviorMock(Behavior):
-        get_setting_value_was_called = False
-        set_setting_value_was_called = False
+        get_value_was_called = False
+        set_value_was_called = False
 
-        def get_setting_value(self, setting, owner, get_value):
-            self.get_setting_value_was_called = True
-            return get_value()
+        def get_value(self, setting, owner):
+            self.get_value_was_called = True
+            return super().get_value(setting, owner)
 
-        def set_setting_value(self, setting, owner, value, set_value):
-            self.set_setting_value_was_called = True
-            set_value(value)
+        def set_value(self, setting, owner, value):
+            self.set_value_was_called = True
+            super().set_value(setting, owner, value)
 
     return BehaviorMock
 
@@ -62,7 +61,7 @@ def test_setting_behavior_get(setting_behavior_mock):
         MAX_SPEED = Setting(10) @ bhv_mock
 
     assert TestSettings().MAX_SPEED == 10
-    assert bhv_mock.get_setting_value_was_called
+    assert bhv_mock.get_value_was_called
 
 
 def test_setting_behavior_set(setting_behavior_mock):
@@ -74,7 +73,7 @@ def test_setting_behavior_set(setting_behavior_mock):
     test_settings = TestSettings()
     test_settings.MAX_SPEED = 20
     assert test_settings.MAX_SPEED == 20
-    assert bhv_mock.set_setting_value_was_called
+    assert bhv_mock.set_value_was_called
 
 
 def test_universal_constructor_matmul_on_right_side(div):
@@ -146,72 +145,6 @@ def test_setting_behavior_with_property_setting_order(div, plus):
             return 18
 
     assert HamsterSettings().HAMSTER_COUNT == 4
-
-
-# Behaviors
-
-
-def test_behaviors_prepending_behavior_increases_length(setting_behavior_mock):
-    bhv_mock = setting_behavior_mock()
-    behaviors = Behaviors()
-    behaviors.append(bhv_mock)
-
-    assert len(behaviors) == 1
-
-
-def test_behaviors_prepended_behavior_can_be_get_by_index(setting_behavior_mock):
-    bhv_mock = setting_behavior_mock()
-    behaviors = Behaviors()
-    behaviors.append(bhv_mock)
-
-    assert behaviors[0] == bhv_mock
-
-
-def test_behavior_get_setting_value_call_chain(setting_behavior_mock):
-    class MySettings(Settings):
-        SOME_SETTING = 10
-
-    settings = MySettings()
-
-    get_value_called = False
-
-    def get_value():
-        nonlocal get_value_called
-        get_value_called = True
-        return settings.SOME_SETTING
-
-    bhv_mock = setting_behavior_mock()
-    behaviors = Behaviors()
-    behaviors.append(bhv_mock)
-
-    assert 10 == behaviors.get_setting_value(
-        MySettings.SOME_SETTING, settings, get_value
-    )
-
-    assert get_value_called
-    assert bhv_mock.get_setting_value_was_called
-
-
-def test_behavior_set_setting_value_call_chain(setting_behavior_mock):
-    class MySettings(Settings):
-        SOME_SETTING = 10
-
-    settings = MySettings()
-
-    set_value_called_with_val = None
-
-    def set_value(val):
-        nonlocal set_value_called_with_val
-        set_value_called_with_val = val
-
-    bhv_mock = setting_behavior_mock()
-    behaviors = Behaviors()
-    behaviors.append(bhv_mock)
-
-    behaviors.set_setting_value(MySettings.SOME_SETTING, settings, 20, set_value)
-
-    assert set_value_called_with_val == 20
-    assert bhv_mock.set_setting_value_was_called
 
 
 # == override == #

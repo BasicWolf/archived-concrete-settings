@@ -7,7 +7,6 @@ from .core import (  # noqa: F401 # imported but unused
     Setting,
     PropertySetting,
     INVALID_SETTINGS,
-    Behaviors,
     Behavior,
     override,
 )

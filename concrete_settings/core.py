@@ -1,4 +1,3 @@
-import collections
 import functools
 import logging
 import re
@@ -8,7 +7,6 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Iterable,
     Iterator,
     List,
     Mapping,
@@ -36,7 +34,6 @@ class Setting:
     value: Any
     type_hint: Any
     validators: Tuple[Validator, ...]
-    behaviors: 'Behaviors'
     name: str
     override: bool
 
@@ -47,13 +44,11 @@ class Setting:
         doc: str = '',
         validators: Tuple[Validator, ...] = (),
         type_hint: Any = GuessSettingType,
-        behaviors: Union[Iterable, 'Behaviors'] = (),
         override: bool = False,
     ):
         self.value = value
         self.type_hint = type_hint
         self.validators = tuple(validators)
-        self.behaviors = Behaviors(behaviors or ())
         self.__doc__ = doc
         self.name = ""
         self.override = override
@@ -73,28 +68,17 @@ class Setting:
             return self
 
         # == object-level access ==
-        if not self.behaviors:
-            return getattr(owner, f"__setting_{self.name}_value", self.value)
-        else:
+        return self.get_value(owner)
 
-            def get_value():
-                return getattr(owner, f"__setting_{self.name}_value", self.value)
-
-            return self.behaviors.get_setting_value(self, owner, get_value)
+    def get_value(self, owner):
+        return getattr(owner, f"__setting_{self.name}_value", self.value)
 
     def __set__(self, owner: 'Settings', val):
         assert isinstance(owner, Settings), "owner should be an instance of Settings"
+        self.set_value(owner, val)
 
-        if not self.behaviors:
-            setattr(owner, f"__setting_{self.name}_value", val)
-        else:
-            set_value = functools.partial(
-                setattr, owner, f"__setting_{self.name}_value"
-            )
-            self.behaviors.set_setting_value(self, owner, val, set_value)
-
-    def attach_behavior(self, behavior: 'Behavior'):
-        self.behaviors.append(behavior)
+    def set_value(self, owner: 'Settings', val):
+        setattr(owner, f"__setting_{self.name}_value", val)
 
 
 class PropertySetting(Setting):
@@ -157,9 +141,10 @@ class PropertySetting(Setting):
         if self.fget is None:
             raise AttributeError("Unreadable attribute")
 
-        return self.behaviors.get_setting_value(
-            self, owner, functools.partial(self.fget, owner)
-        )
+        return self.get_value(owner)
+
+    def get_value(self, owner: 'Settings'):
+        return self.fget(owner)
 
     def __set__(self, owner: 'Settings', val):
         raise AttributeError("Can't set attribute: property setting cannot be set")
@@ -531,61 +516,18 @@ class Behavior(metaclass=BehaviorMeta):
         return setting
 
     def attach_to(self, setting: Setting):
-        setting.attach_behavior(self)
+        # replace setting.get_value and .set_value by
+        # corresponding behavior methods
+        self._setting_get_value = setting.get_value
+        self._setting_set_value = setting.set_value
+        setting.get_value = types.MethodType(self.get_value, setting)  # type: ignore
+        setting.set_value = types.MethodType(self.set_value, setting)  # type: ignore
 
-    def get_setting_value(self, setting: Setting, owner: Settings, get_value: Callable):
-        return get_value()
+    def get_value(self, setting: Setting, owner: Settings):
+        return self._setting_get_value(owner)
 
-    def set_setting_value(
-        self, setting: Setting, owner: Settings, value, set_value: Callable
-    ):
-        set_value(value)
-
-
-class Behaviors(collections.abc.Container):
-    def __init__(self, iterable=()):
-        self._container = list(iterable)
-
-    def __bool__(self):
-        return bool(self._container)
-
-    def __len__(self):
-        return len(self._container)
-
-    def __getitem__(self, index):
-        return self._container[index]
-
-    def __contains__(self, item):
-        return item in self._container
-
-    def append(self, behavior):
-        self._container.append(behavior)
-
-    def get_setting_value(self, setting, owner, get_value):
-        """Chain and invoke get_setting_value() of each behavior."""
-
-        def _get_value(i):
-            if i == 0:
-                return get_value()
-            else:
-                return self[i - 1].get_setting_value(
-                    setting, owner, functools.partial(_get_value, i - 1)
-                )
-
-        return _get_value(len(self))
-
-    def set_setting_value(self, setting, owner, value, set_value):
-        """Chain and invoke set_setting_value() of each behavior."""
-
-        def _set_value(v, i):
-            if i == 0:
-                set_value(v)
-            else:
-                self[i - 1].set_setting_value(
-                    setting, owner, v, functools.partial(_set_value, i=i - 1)
-                )
-
-        return _set_value(value, len(self))
+    def set_value(self, setting: Setting, owner: Settings, value):
+        self._setting_set_value(owner, value)
 
 
 class override(Behavior):

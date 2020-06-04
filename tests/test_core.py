@@ -29,15 +29,12 @@ def test_import_in_unsupported_python_fails(mocker):
 
 def test_setting_ctor(v_int):
     validators = (lambda x: x,)
-    s = Setting(
-        v_int, type_hint=int, validators=validators, doc="docstring", behaviors=()
-    )
+    s = Setting(v_int, type_hint=int, validators=validators, doc="docstring")
 
     assert s.value == v_int
     assert s.__doc__ == "docstring"
     assert s.validators is validators
     assert s.type_hint is int
-    assert len(s.behaviors) == 0
 
 
 def test_settings_converted_from_attributes(v_int):
@@ -355,6 +352,7 @@ def test_settings_errors_readonly():
 
 def test_prefix_empty_field_not_allowed():
     with pytest.raises(ValueError, match='prefix cannot be empty'):
+
         @prefix('')
         class MySettings(Settings):
             ...
@@ -363,6 +361,7 @@ def test_prefix_empty_field_not_allowed():
 @pytest.mark.parametrize('invalid_prefix', ['1', '.', '-'])
 def test_prefix_bad_identifier_not_allowed(invalid_prefix):
     with pytest.raises(ValueError, match='prefix should be a valid Python identifier'):
+
         @prefix(invalid_prefix)
         class MySettings(Settings):
             ...
@@ -398,6 +397,7 @@ def test_prefix_cannot_decorate_not_settings_class():
     with pytest.raises(
         AssertionError, match='Intended to decorate Settings sub-classes only'
     ):
+
         @prefix('MY')
         class NotSettings:
             ...
@@ -408,6 +408,7 @@ def test_prefix_cannot_decorate_settings_with_existing_matching_field():
         ValueError,
         match='''MySettings'> class already has setting attribute named "GEAR"''',
     ):
+
         @prefix('MY')
         class MySettings(Settings):
             GEAR = 10
