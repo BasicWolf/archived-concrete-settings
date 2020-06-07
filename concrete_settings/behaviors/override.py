@@ -7,5 +7,5 @@ if TYPE_CHECKING:
 
 
 class override(Behavior):
-    def attach_to(self, setting: Setting):
+    def attach_to(self, setting: 'Setting'):
         setting.override = True
