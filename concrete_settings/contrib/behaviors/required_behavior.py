@@ -8,4 +8,3 @@ class required(Behavior):
 
     def attach_to(self, setting):
         setting.validators = (RequiredValidator(self.message),) + setting.validators
-        super().attach_to(setting)

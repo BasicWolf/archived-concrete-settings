@@ -30,8 +30,6 @@ class deprecated(Behavior):
                 DeprecatedValidator(self.deprecation_message, self.error_on_validation),
             ) + setting.validators
 
-        super().attach_to(setting)
-
     def get_value(self, setting: 'Setting', owner: 'Settings'):
         if self.warn_on_get:
             if owner and not owner.is_being_validated:
