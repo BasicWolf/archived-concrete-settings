@@ -1,7 +1,7 @@
 import warnings
 from typing import TYPE_CHECKING
 
-from concrete_settings import Behavior
+from concrete_settings.behaviors import Behavior
 from concrete_settings.contrib.validators import DeprecatedValidator
 
 if TYPE_CHECKING:
