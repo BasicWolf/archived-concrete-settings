@@ -325,9 +325,9 @@ Behaviors
 
       .. code-block::
 
-         def attach_to(self, setting: 'Setting'):
+         def attach_to(self, setting):
             setting.validators = (
-                   MyValidator()
+                MyValidator()
             ) + setting.validators
 
             super().attach_to(setting)
@@ -335,38 +335,28 @@ Behaviors
       :param setting: Setting to which the behavior is attached.
       :return: Passed setting object.
 
-   .. automethod:: get_setting_value
+   .. automethod:: get_value
 
-      A chained callback invoked when Setting is being read.
+      Invoked when the decorated Setting is being read.
 
       :param Setting setting: Setting to which behavior is attached.
       :param Settings owner: Settings object - setting attribute's owner.
-      :param get_value(): a chained behavior's ``get_setting_value()``
-                        or the base setting value getter if the current
-                        behavior is the first one attached to the setting.
 
-      When overriding this method remember to call ``get_value()``.
-      This would invoke the chained behaviors down to the setting's
-      original value getter.
+      When overriding this method remember to call the base class method
+      ``super().get_value(setting, owner)`` to invoke the chained behaviors down
+      to the setting's original value getter.
 
-   .. automethod:: set_setting_value
+   .. automethod:: set_value
 
-      А chained callback invoked when Setting is being written.
+      Invoked when the decorated Setting is being written.
 
       :param Setting setting: Setting to which behavior is attached.
       :param Settings owner: Settings object - setting attribute's owner.
       :param value: Value being written to the setting.
-      :param set_value(value): a chained behavior's ``set_setting_value()``
-                               or the base setting value setter if the current
-                               behavior is the first one attached to the setting.
 
-      When overriding this method, remember to call ``set_value(value)``.
-      This would invoke the chained behaviors down to the setting's
-      original value setter.
-
-.. autoclass:: concrete_settings.Behaviors
-
-   An internal class - a container for Setting behaviors.
+      When overriding this method, remember to call the base class method
+      ``super().set_value(setting, owner, value)`` to invoke the chained
+      behaviors down to the setting's original value setter.
 
 override
 ........

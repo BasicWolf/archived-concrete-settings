@@ -298,9 +298,7 @@ A straightforward way to do this is by sublassing the
 :class:`Setting <concrete_settings.Setting>` class and overriding
 ``Setting.__get__()``.
 
-Another way would be using the supplied Settings Behavior mechanism.
-Behaviors can be passed to a Setting explicitly.
-But the preferred way is to use the syntactic sugar - by "decorating" settings.
+Another way would be using the supplied Settings Behavior mechanism by "decorating" settings.
 For example, let's take a look at the built-in :class:`deprecated <concrete_settings.contrib.behaviors.deprecated>`
 behavior. It simply adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`
 to the setting. The rationale of using the behavior instead of a validator is improved readability.
@@ -317,14 +315,11 @@ Just have a look:
    app_settings = AppSettings()
    app_settings.is_valid()
 
-The explicit equivalent definition is:
 
-.. testcode:: quickstart-behavior
+**There is no other way to pass behaviors to a setting**, since a behaviors acts as a decorator
+and a Setting has no idea whether it has been decorated or not.
 
-   class AppSettings(Settings):
-       MAX_SPEED: int = Setting(30, behaviors=(deprecated, ))
-
-If Python warnings are enabled (e.g. ``python -Wdefault``), you would
+Back to the example, if Python warnings are enabled (e.g. ``python -Wdefault``), you would
 get a warning in stderr:
 
 

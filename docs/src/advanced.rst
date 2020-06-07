@@ -332,10 +332,11 @@ Behaviors
 :class:`Setting Behaviors <concrete_settings.Behavior>`
 allow executing some logic on different stages of a Setting lifecycle.
 
-In addition to defining behaviors in a Setting
-:class:`constructor <concrete_settings.Setting>`,
 Concrete Settings utilizes matrix multiplication
 ``@`` (:meth:`object.__rmatmul__`) operator to add a behavior to a Setting.
+**There is no other way to pass behaviors to a setting**, since a behaviors acts as a decorator
+and a Setting has no idea whether it has been decorated or not.
+
 Let's define the ``ADMIN_NAME`` setting from the
 example above as :class:`required <concrete_settings.contrib.behaviors.required>`:
 
@@ -346,16 +347,6 @@ example above as :class:`required <concrete_settings.contrib.behaviors.required>
 
    class AppSettings(Settings):
        ADMIN_NAME: str = Undefined @required
-
-The equivalent explicit form is:
-
-.. testcode::
-
-   from concrete_settings import Setting, Settings, Undefined
-   from concrete_settings.contrib.behaviors import required
-
-   class AppSettings(Settings):
-       ADMIN_NAME: str = Setting(Undefined, behaviors=(required, ))
 
 Multiple behaviors can be chained via ``@`` operator:
 
@@ -442,7 +433,7 @@ constructor:
 
 .. testcode::
 
-   from concrete_settings import Settings
+   from concrete_settings import Setting, Settings
 
    class AppSettings(Settings):
 
