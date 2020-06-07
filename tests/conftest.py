@@ -7,12 +7,12 @@ import pytest
 from factory import fuzzy
 from pyfakefs.fake_filesystem_unittest import Patcher
 
-from concrete_settings.exceptions import ValidationError
 from concrete_settings import Validator
+from concrete_settings.exceptions import ValidationError
 
 seed = random.randint(1, 1e9)
 print(f"Running tests with seed: {seed:0>10}")
-factory.fuzzy.reseed_random(seed)
+factory.random.reseed_random(seed)
 
 # Do not allow fakefs patcher to scan Django
 # fixes ImproperlyConfigured situations
