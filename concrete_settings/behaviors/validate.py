@@ -11,5 +11,6 @@ class validate(Behavior):
     def __init__(self, *validators: Validator):
         self._validators: Tuple[Validator, ...] = validators
 
-    def attach_to(self, setting: Setting):
+    def decorate(self, setting: Setting):
         setting.validators += self._validators
+        super().decorate(setting)
