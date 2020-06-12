@@ -37,7 +37,7 @@ Settings
    :type override: bool
 
    The corresponding implicit definition of a setting in Settings class is written as following:
- 
+
    .. code-block::
 
       class MySettings(Settings):
@@ -316,16 +316,16 @@ Behaviors
 
    Base class for Setting attributes behaviors.
 
-   .. automethod:: attach_to
+   .. automethod:: decorate
 
-      Attach self into Setting attribute behaviors.
+      Decorate setting attribute.
 
-      If your custom behavior adds a decorator to the Setting,
+      If your custom behavior adds a validator to the Setting,
       override this method as follows:
 
       .. code-block::
 
-         def attach_to(self, setting):
+         def decorate(self, setting):
             setting.validators = (
                 MyValidator()
             ) + setting.validators
@@ -334,6 +334,13 @@ Behaviors
 
       :param setting: Setting to which the behavior is attached.
       :return: Passed setting object.
+
+
+.. autoclass:: concrete_settings.GetterSetterBehavior
+
+   A base class for behaviors which provide custom get / set behavior.
+   The super class methods have to be invoked to invoke behaviors get / set
+   chain down to the decorated original setting.
 
    .. automethod:: get_value
 
@@ -344,7 +351,15 @@ Behaviors
 
       When overriding this method remember to call the base class method
       ``super().get_value(setting, owner)`` to invoke the chained behaviors down
-      to the setting's original value getter.
+      to the setting's original value getter. For example:
+
+      .. code-block::
+
+         def get_value(self, setting: 'Setting', owner: 'Settings') -> Any:
+             val =  super().get_value(setting, owner)
+             print(f"Setting {setting.name} has been accessed, its value was {val}")
+             return val
+
 
    .. automethod:: set_value
 

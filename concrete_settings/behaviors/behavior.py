@@ -43,25 +43,31 @@ class Behavior(metaclass=BehaviorMeta):
         else:
             setting = setting_or_method
         # Act as a decorator
-        self.attach_to(setting)
+        self.decorate(setting)
         return setting
 
     def __rmatmul__(self, setting: Any):
         if not isinstance(setting, Setting):
             setting = Setting(setting)
 
-        self.attach_to(setting)
+        self.decorate(setting)
         return setting
 
-    def attach_to(self, setting: Setting):
+    def decorate(self, setting: Setting):
+        pass
+
+
+class GetterSetterBehavior(Behavior):
+    def decorate(self, setting: Setting):
         # replace setting.get_value and .set_value by
         # corresponding behavior methods
         self._setting_get_value = setting.get_value
         self._setting_set_value = setting.set_value
         setting.get_value = types.MethodType(self.get_value, setting)  # type: ignore
         setting.set_value = types.MethodType(self.set_value, setting)  # type: ignore
+        super().decorate(setting)
 
-    def get_value(self, setting: Setting, owner: Settings):
+    def get_value(self, setting: Setting, owner: Settings) -> Any:
         return self._setting_get_value(owner)
 
     def set_value(self, setting: Setting, owner: Settings, value):

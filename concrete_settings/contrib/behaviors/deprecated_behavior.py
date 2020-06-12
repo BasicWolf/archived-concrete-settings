@@ -1,14 +1,14 @@
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from concrete_settings.behaviors import Behavior
+from concrete_settings.behaviors.behavior import GetterSetterBehavior
 from concrete_settings.contrib.validators import DeprecatedValidator
 
 if TYPE_CHECKING:
     from concrete_settings import Setting, Settings
 
 
-class deprecated(Behavior):
+class deprecated(GetterSetterBehavior):
     def __init__(
         self,
         deprecation_message: str = 'Setting `{name}` in class `{owner}` is deprecated.',
@@ -24,13 +24,14 @@ class deprecated(Behavior):
         self.warn_on_get = warn_on_get
         self.warn_on_set = warn_on_set
 
-    def attach_to(self, setting: 'Setting'):
+    def decorate(self, setting: 'Setting'):
         if self.warn_on_validation or self.error_on_validation:
             setting.validators = (
                 DeprecatedValidator(self.deprecation_message, self.error_on_validation),
             ) + setting.validators
+        super().decorate(setting)
 
-    def get_value(self, setting: 'Setting', owner: 'Settings'):
+    def get_value(self, setting: 'Setting', owner: 'Settings') -> Any:
         if self.warn_on_get:
             if owner and not owner.is_being_validated:
                 msg = self.deprecation_message.format(owner=owner, name=setting.name)
