@@ -35,7 +35,6 @@ a setting field's :ref:`name <setting_definition_name>`,
 :ref:`initial value <setting_definition_initial_value>`
 and :ref:`type hint <setting_definition_type_hint>`,
 its :ref:`validators <setting_definition_validators>`,
-:ref:`behaviors <setting_definition_behaviors>`
 and :ref:`documentation <setting_definition_documentation>`.
 
 .. uml::
@@ -45,7 +44,6 @@ and :ref:`documentation <setting_definition_documentation>`.
    (Initial value) --> (Setting)
    (Type hint) --> (Setting)
    (Validators) --> (Setting)
-   (Behaviors) --> (Setting)
    (Documentation) --> (Setting)
 
    note left of (Setting) : NAME
@@ -103,7 +101,7 @@ For example, to set validators:
 .. testcode:: setting-definition-name-property-setting-decorator
 
    from concrete_settings import Settings, setting
-   from concrete_settings.exceptions import ValidationError
+   from concrete_settings import ValidationError
 
    # a validator
    def not_too_fast(speed):
@@ -254,7 +252,8 @@ If validation fails, a validator raises
 :class:`ValidationError <concrete_settings.exceptions.ValidationError>`
 with failure details.
 Individual Setting validators are supplied in ``validators`` argument of an explicit Setting definition.
-Also some :ref:`behaviors <setting_definition_behaviors>` add certain validators to a setting.
+Also :ref:`behaviors <setting_definition_behaviors>` like :class:`validate <concrete_settings.validate>`
+and others can be used to add validators to a setting.
 
 The *mandatory validators* are applied to every Setting in Settings class.
 They are defined
@@ -324,68 +323,24 @@ Output:
    False
    {'ADMIN_NAME': ["Expected value of type `<class 'str'>` got value of type `<class 'int'>`"]}
 
-.. _setting_definition_behaviors:
 
-Behaviors
-.........
+Finally Concrete Settings supplies a handy :class:`validate <concrete_settings.validate>` behavior
+to add validators to setting in "decorator" manner:
 
-:class:`Setting Behaviors <concrete_settings.Behavior>`
-allow executing some logic on different stages of a Setting lifecycle.
+.. testsetup:: advanced-validators-behavior-validate
 
-Concrete Settings utilizes matrix multiplication
-``@`` (:meth:`object.__rmatmul__`) operator to add a behavior to a Setting.
-**There is no other way to pass behaviors to a setting**, since a behaviors acts as a decorator
-and a Setting has no idea whether it has been decorated or not.
+   from concrete_settings import Settings
 
-Let's define the ``ADMIN_NAME`` setting from the
-example above as :class:`required <concrete_settings.contrib.behaviors.required>`:
+.. testcode:: advanced-validators-behavior-validate
 
-.. testcode::
+   from concrete_settings import validate, ValidationError
 
-   from concrete_settings import Settings, Undefined
-   from concrete_settings.contrib.behaviors import required
+   def is_positive(value, **kwargs):
+       if value <= 0:
+           raise ValidationError("must be positive integer")
 
    class AppSettings(Settings):
-       ADMIN_NAME: str = Undefined @required
-
-Multiple behaviors can be chained via ``@`` operator:
-
-.. testcode::
-
-   from concrete_settings import Settings, Undefined
-   from concrete_settings.contrib.behaviors import required, deprecated
-
-   class AppSettings(Settings):
-       ADMIN_NAME: str = Undefined @required @deprecated
-
-
-Behaviors can also decorate property-settings:
-
-.. testcode::
-
-   from concrete_settings import Settings, Undefined, setting
-   from concrete_settings.contrib.behaviors import required
-
-   class AppSettings(Settings):
-       @required
-       @setting
-       def ADMIN_NAME(self) -> str:
-           return Undefined
-
-Validating the example above
-
-.. testcode::
-
-   app_settings = AppSettings()
-   print(app_settings.is_valid())
-   print(app_settings.errors)
-
-yields the following output:
-
-.. testoutput::
-
-   False
-   {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value. Current value is `Undefined`']}
+       SPEED: int = 50 @validate(is_positive)
 
 
 .. _setting_definition_documentation:
@@ -466,6 +421,70 @@ Output:
 .. testoutput:: advanced-documentation-property-setting
 
    This documents ADMIN_NAME.
+
+
+.. _setting_definition_behaviors:
+
+Behaviors
+---------
+
+:class:`Setting Behaviors <concrete_settings.Behavior>`
+allow executing some logic on different stages of a Setting life cycle.
+
+Concrete Settings utilizes matrix multiplication
+``@`` (:meth:`object.__rmatmul__`) operator to add a behavior to a Setting.
+Note, that **a Setting has no idea whether it has been decorated or not**.
+
+Let's define the ``ADMIN_NAME`` setting from the
+example above as :class:`required <concrete_settings.contrib.behaviors.required>`:
+
+.. testcode::
+
+   from concrete_settings import Settings, Undefined
+   from concrete_settings.contrib.behaviors import required
+
+   class AppSettings(Settings):
+       ADMIN_NAME: str = Undefined @required
+
+Multiple behaviors can be chained via ``@`` operator:
+
+.. testcode::
+
+   from concrete_settings import Settings, Undefined
+   from concrete_settings.contrib.behaviors import required, deprecated
+
+   class AppSettings(Settings):
+       ADMIN_NAME: str = Undefined @required @deprecated
+
+
+Behaviors can also decorate property-settings:
+
+.. testcode::
+
+   from concrete_settings import Settings, Undefined, setting
+   from concrete_settings.contrib.behaviors import required
+
+   class AppSettings(Settings):
+       @required
+       @setting
+       def ADMIN_NAME(self) -> str:
+           return Undefined
+
+Validating the example above
+
+.. testcode::
+
+   app_settings = AppSettings()
+   print(app_settings.is_valid())
+   print(app_settings.errors)
+
+yields the following output:
+
+.. testoutput::
+
+   False
+   {'ADMIN_NAME': ['Setting `ADMIN_NAME` is required to have a value. Current value is `Undefined`']}
+
 
 
 Inheritance and overriding settings

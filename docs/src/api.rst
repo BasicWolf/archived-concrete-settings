@@ -3,12 +3,6 @@
 API
 ===
 
-**======== IN PROGRESS ========**
-
-API documentation is not complete yet.
-
-**======== IN PROGRESS ========**
-
 This part of the documentation briefly covers the interfaces of Concrete Settings.
 
 Settings
@@ -137,7 +131,7 @@ Settings
 
 .. class:: concrete_settings.setting
 
-.. class:: concrete_settings.core.PropertySetting
+.. class:: concrete_settings.PropertySetting
 
   ``@setting`` (an alias to ``PropertySetting`` decorator-class) is used to mark
   class methods as settings. The property-settings are read-only and used to
@@ -398,7 +392,7 @@ validate
 
 .. autoclass:: concrete_settings.validate
 
-Provides behavior-style way of attaching validators to the setting.
+Provides behavior-style way of attaching validators to a setting.
 
 .. testcode:: api_validate_behavior
 

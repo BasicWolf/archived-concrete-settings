@@ -110,8 +110,7 @@ Output:
 Before going further, let's take a look at the contents of a Setting object.
 Each implicitly or explicitly defined setting consists of a
 **name**, **initial value**, a **type hint**,
-**validators**, **behaviors**
-and **documentation**.
+**validators**, and **documentation**.
 
 .. uml::
    :align: center
@@ -120,7 +119,6 @@ and **documentation**.
    (Initial value) --> (Setting)
    (Type hint) --> (Setting)
    (Validators) --> (Setting)
-   (Behaviors) --> (Setting)
    (Documentation) --> (Setting)
    note left of (Setting) : NAME
    @enduml
@@ -132,8 +130,6 @@ and **documentation**.
   can use the type hint to check whether the setting value corresponds
   to the required type.
 * **Validators** is a collection of callables which validate the value of the setting.
-* **Behaviors** is a collection of :class:`Behavior <concrete_settings.Behavior>`
-  objects which modify a setting behavior during different stages of its life cycle.
 * **Documentation** is a multi-line doc string intended for the end user.
 
 Reading settings
@@ -298,10 +294,10 @@ A straightforward way to do this is by sublassing the
 :class:`Setting <concrete_settings.Setting>` class and overriding
 ``Setting.__get__()``.
 
-Another way would be using the supplied Settings Behavior mechanism by "decorating" settings.
+Another way would be using the supplied Settings Behavior mechanism - by "decorating" settings.
 For example, let's take a look at the built-in :class:`deprecated <concrete_settings.contrib.behaviors.deprecated>`
-behavior. It simply adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`
-to the setting. The rationale of using the behavior instead of a validator is improved readability.
+behavior. It conveniently adds :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`
+to the setting validators. The rationale of using the behavior instead of a validator is improved readability.
 Just have a look:
 
 .. testcode:: quickstart-behavior
@@ -315,11 +311,7 @@ Just have a look:
    app_settings = AppSettings()
    app_settings.is_valid()
 
-
-**There is no other way to pass behaviors to a setting**, since a behaviors acts as a decorator
-and a Setting has no idea whether it has been decorated or not.
-
-Back to the example, if Python warnings are enabled (e.g. ``python -Wdefault``), you would
+If Python warnings are enabled (e.g. ``python -Wdefault``), you would
 get a warning in stderr:
 
 
@@ -327,20 +319,32 @@ get a warning in stderr:
 
    DeprecationWarning: Setting `MAX_SPEED` in class `<class '__main__.AppSettings'>` is deprecated.
 
-In a nutshell, a *behavior* is a way to change how a setting field behaves
+In a nutshell, a *behavior* is a way to change how a setting behaves
 during its initialization, validation, reading and writing operations.
-A behavior can be passed to :class:`Setting.__init__() <concrete_settings.Setting>`,
-by using ``@`` operator: ``value @behavior0 @behavior1 @...`` and by decorating
-property-settings:
+A behavior is attached to a setting via ``@`` operator:
+``value @behavior0 @behavior1 @...`` and by decorating property-settings:
 
 .. testcode:: quickstart-behavior
 
+   from concrete_settings import Settings, Setting, required
+   from concrete_settings.contrib.behaviors import deprecated
+
    class AppSettings(Settings):
-       MIN_SPEED: int = 30
+       MIN_SPEED: int = 30 @deprecated @required
 
        @deprecated
        def MAX_SPEED() -> int:
            return 100
+
+A very handy :class:`validate <concrete_settings.validate>` behavior
+can be used to rewrite the example with validators as follows:
+
+.. testcode:: quickstart-validation
+
+   from concrete_settings import validate
+
+   class AppSettings(Settings):
+       SPEED: int = 50 @validate(not_too_fast, not_too_slow)
 
 
 
