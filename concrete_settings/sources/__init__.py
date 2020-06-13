@@ -6,7 +6,7 @@ from ..exceptions import ConcreteSettingsError
 from . import strategies  # noqa: F401 # imported but unused
 
 if TYPE_CHECKING:
-    from concrete_settings.core import Setting
+    from concrete_settings.settings import Setting
 
 
 _registered_sources = set()

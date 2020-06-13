@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .behavior import Behavior
 
 if TYPE_CHECKING:
-    from ..core import Setting
+    from ..settings import Setting
 
 
 class override(Behavior):
