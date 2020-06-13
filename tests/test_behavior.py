@@ -4,15 +4,14 @@ from concrete_settings import (
     Settings,
     Setting,
     setting as property_setting,
-    Behavior,
-    override,
+    override, GetterSetterBehavior,
 )
 from concrete_settings.exceptions import StructureError
 
 
 @pytest.fixture
 def div():
-    class Div(Behavior):
+    class Div(GetterSetterBehavior):
         def __init__(self, divisor=2):
             self.divisor = divisor
 
@@ -24,7 +23,7 @@ def div():
 
 @pytest.fixture
 def plus():
-    class Plus(Behavior):
+    class Plus(GetterSetterBehavior):
         def __init__(self, addend):
             self.addend = addend
 
@@ -35,8 +34,8 @@ def plus():
 
 
 @pytest.fixture
-def setting_behavior_mock():
-    class BehaviorMock(Behavior):
+def getter_setter_behavior_mock():
+    class BehaviorMock(GetterSetterBehavior):
         get_value_was_called = False
         set_value_was_called = False
 
@@ -54,8 +53,8 @@ def setting_behavior_mock():
 # == SettingsBehavior == #
 
 
-def test_setting_behavior_get(setting_behavior_mock):
-    bhv_mock = setting_behavior_mock()
+def test_setting_behavior_get(getter_setter_behavior_mock):
+    bhv_mock = getter_setter_behavior_mock()
 
     class TestSettings(Settings):
         MAX_SPEED = Setting(10) @ bhv_mock
@@ -64,8 +63,8 @@ def test_setting_behavior_get(setting_behavior_mock):
     assert bhv_mock.get_value_was_called
 
 
-def test_setting_behavior_set(setting_behavior_mock):
-    bhv_mock = setting_behavior_mock()
+def test_setting_behavior_set(getter_setter_behavior_mock):
+    bhv_mock = getter_setter_behavior_mock()
 
     class TestSettings(Settings):
         MAX_SPEED = Setting(10) @ bhv_mock

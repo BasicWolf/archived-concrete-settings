@@ -393,6 +393,34 @@ Usage:
    class DevSettings(BaseSettings):
        SECRET: str = 'abcdef12345' @override
 
+validate
+........
+
+.. autoclass:: concrete_settings.validate
+
+Provides behavior-style way of attaching validators to the setting.
+
+.. testcode:: api_validate_behavior
+
+   from concrete_settings import Settings, validate, ValidationError
+
+   def is_positive(value, **kwargs):
+       if value <= 0:
+           raise ValidationError(f'must be a positive integer')
+
+   class AppSettings(Settings):
+       SPEED: int = 20 @ validate(is_positive)
+
+   app_settings = AppSettings()
+   app_settings.SPEED = -10
+
+   print(app_settings.is_valid())
+   print(app_settings.errors)
+
+.. testoutput:: api_validate_behavior
+
+   False
+   {'SPEED': ['must be a positive integer']}
 
 required
 ........

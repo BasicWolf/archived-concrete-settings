@@ -9,6 +9,7 @@ from .core import (  # noqa: F401 # imported but unused
     INVALID_SETTINGS,
 )
 
+from .exceptions import ValidationError  # noqa: F401 # imported but unused
 from .validators import Validator  # noqa: F401 # imported but unused
 from .types import Undefined  # noqa: F401 # imported but unused
 from .sources import register_source  # noqa: F401 # imported but unused
@@ -17,6 +18,7 @@ from .behaviors import (  # noqa: F401 # imported but unused
     Behavior,
     GetterSetterBehavior,
     override,
+    validate,
 )
 
 setting = PropertySetting

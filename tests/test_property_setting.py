@@ -69,16 +69,16 @@ def test_init_checks_value_argument_absence():
                 return 'Alex'
 
 
-def test_with_setting_attrs_defined_as_argument(DummyValidator):
+def test_with_setting_attrs_defined_as_argument(ValidatorMock):
     class TestSettings(Settings):
-        @setting(type_hint=int, doc="MICE arg docs", validators=(DummyValidator(),))
+        @setting(type_hint=int, doc="MICE arg docs", validators=(ValidatorMock(),))
         def MICE_COUNT(self):
             return 10
 
     assert TestSettings.MICE_COUNT.__doc__ == "MICE arg docs"
     assert TestSettings.MICE_COUNT.type_hint == int
     assert len(TestSettings.MICE_COUNT.validators) == 1
-    assert isinstance(TestSettings.MICE_COUNT.validators[0], DummyValidator)
+    assert isinstance(TestSettings.MICE_COUNT.validators[0], ValidatorMock)
 
 
 def test_property_setting_using_other_settings():

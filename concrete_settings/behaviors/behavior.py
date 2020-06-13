@@ -4,8 +4,16 @@ from typing import Any, Union
 from ..core import Setting, PropertySetting, Settings
 
 
-class BehaviorMeta(type):
-    def __call__(cls, *args, **kwargs):
+class GenericBehaviorMeta(type):
+    def __call__(cls, *args, init_with_arguments=False, **kwargs):
+        # Explicitly tell the metaclass that
+        # Behavior.__init__(arg1, arg2, ...)
+        # is expected
+        # Case: @validate(validator1, ...)
+
+        if init_with_arguments:
+            return super().__call__(*args, **kwargs)
+
         # Act as a decorator
         _decorating_setting_or_method = (
             len(args) == 1
@@ -14,7 +22,6 @@ class BehaviorMeta(type):
         )
 
         if _decorating_setting_or_method:
-            bhv = super().__call__()
             if isinstance(args[0], types.FunctionType):
                 setting = PropertySetting(args[0])
             else:
@@ -34,7 +41,12 @@ class BehaviorMeta(type):
         return bhv(setting)
 
 
-class Behavior(metaclass=BehaviorMeta):
+class BehaviorWithArgumentsMeta(GenericBehaviorMeta):
+    def __call__(cls, *args, **kwargs):
+        return super().__call__(*args, **kwargs, init_with_arguments=True)
+
+
+class Behavior(metaclass=GenericBehaviorMeta):
     def __call__(self, setting_or_method: Union[Setting, types.FunctionType]):
         setting: Setting
 

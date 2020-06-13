@@ -79,9 +79,11 @@ def is_less_that_10():
 
 
 @pytest.fixture
-def DummyValidator():
-    class DummyValidator(Validator):
-        def __call__(self, value, **kwargs):
-            pass
+def ValidatorMock():
+    class ValidatorMock(Validator):
+        called_with_value = None
 
-    return DummyValidator
+        def __call__(self, value, **kwargs):
+            self.called_with_value = value
+
+    return ValidatorMock
