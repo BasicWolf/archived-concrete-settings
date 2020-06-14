@@ -102,7 +102,7 @@ whether you are starting from scratch, or dealing with an
 old legacy Cthulhu.
 Are you ready to try it out?
 
-``pip install concrete-settings`` and welcome to the `documentation <https://concrete-settings.readthedocs.io/>`_!
+``pip install concrete-settings`` and welcome to the `documentation <https://concrete-settings.readthedocs.io/>`__!
 
 What's inside?
 ==============
@@ -196,7 +196,7 @@ There is even more
 ------------------
 
 There is even more for you to discover in
-`documentation <https://basicwolf.github.io/concrete-settings>`_,
+`documentation <https://basicwolf.github.io/concrete-settings>`__,
 and there is more to come. **Your** contribution, be it
 a *bug report*, *pull request*, *suggested feature*,
 *comments* and *criticism* are very welcome!
@@ -239,9 +239,9 @@ It is hard to imagine a software project without the infrastructure that support
 Concrete Settings exists as an open source library only thanks to the services and the tools
 that are used to host, build and maintain it.
 
-My warmest words of gratitude go to `Github https://github.com`_, for hosting the project source,
-`Read the Docs <https://readthedocs.org>`_ for hosting the documentation and `Travis CI <https://travis-ci.org`_
-for continuous integration process, `pyupio https://pyup.io`_ for keeping dependencies
+My warmest words of gratitude go to `Github <https://github.com>`_, for hosting the project source,
+`Read the Docs <https://readthedocs.org>`_ for hosting the documentation and `Travis CI <https://travis-ci.org>`_
+for continuous integration process, `pyupio <https://pyup.io>`_ for keeping dependencies
 up-to-date!
 
 Many thanks for the authors and contributors of the libraries used to build the project.
