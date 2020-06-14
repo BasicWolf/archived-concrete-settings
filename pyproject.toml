@@ -45,7 +45,7 @@ sphinxcontrib-plantuml = "*"
 safety = "*"
 mypy = "^0.761"
 twine = "^3.1.1"
-poetry-dynamic-versioning = "^0.5.0"
+poetry-dynamic-versioning = "*"
 
 [tool.poetry.extras]
 pyyaml = ["pyyaml"]
