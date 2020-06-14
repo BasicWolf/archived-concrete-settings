@@ -18,8 +18,8 @@ SettingName = str
 #:
 ValidationErrorDetails = Union[                   # type: ignore
     str,
-    List['ValidationErrorDetail'],               # type: ignore
-    Dict[SettingName, 'ValidationErrorDetail'],  # type: ignore
+    List['ValidationErrorDetails'],               # type: ignore
+    Dict[SettingName, 'ValidationErrorDetails'],  # type: ignore
 ]
 # fmt: on
 
