@@ -57,14 +57,14 @@ Settings
       Validators applied to each Setting that have no defined validators.
 
       :type: tuple[Validator]
-      :value: :class:`(ValueTypeValidator(), ) <concrete_settings.validators.ValueTypeValidator>`
+      :value: ()
 
    .. attribute:: mandatory_validators
 
       Validators applied to every Setting in the class.
 
       :type: tuple[Validator]
-      :value: ()
+      :value: :class:`(ValueTypeValidator(), ) <concrete_settings.validators.ValueTypeValidator>`
 
    .. method:: is_valid(raise_exception=False) -> bool
 
@@ -256,7 +256,7 @@ ValueTypeValidator
    valid for any type hint.
 
    ``ValueTypeValidator`` is the default validator in
-   :data:`Settings.default_validators <concrete_settings.Settings.default_validators>`.
+   :data:`Settings.mandatory_validators <concrete_settings.Settings.mandatory_validators>`.
 
    :param type_hint: If ``setting.type_hint`` is ``None``, then
                      type match is performed against the given

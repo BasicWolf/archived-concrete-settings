@@ -259,18 +259,19 @@ and others can be used to add validators to a setting.
 The *mandatory validators* are applied to every Setting in Settings class.
 They are defined
 in :attr:`Settings.mandatory_validators <concrete_settings.Settings.mandatory_validators>` tuple.
-The *default validators* are applied to a Setting that has no validators of its own.
-They are defined in
-:attr:`Settings.default_validators <concrete_settings.Settings.default_validators>`.
 :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>` is
-the only validator in the base ``Settings.default_validators``.
+the only validator in the base ``Settings.mandatory_validators``.
 
 .. testsetup::
 
    from concrete_settings.validators import ValueTypeValidator
 
-   assert len(Settings.default_validators) == 1, 'Default validators is expected to have a single validator'
-   assert isinstance(Settings.default_validators[0], ValueTypeValidator)
+   assert len(Settings.mandatory_validators) == 1, 'Mandatory validators are expected to have a single validator'
+   assert isinstance(Settings.mandatory_validators[0], ValueTypeValidator)
+
+The *default validators* are applied to a Setting that has no validators of its own.
+They are defined in
+:attr:`Settings.default_validators <concrete_settings.Settings.default_validators>`.
 
 Note that both lists are inherited by standard Python class inheritance rules.
 For example, to extend ``default_validators`` in a derived class, use

@@ -263,8 +263,8 @@ class SettingsMeta(type):
 
 
 class Settings(Setting, metaclass=SettingsMeta):
-    default_validators: Tuple[Validator, ...] = (ValueTypeValidator(),)
-    mandatory_validators: Tuple[Validator, ...] = ()
+    default_validators: Tuple[Validator, ...] = ()
+    mandatory_validators: Tuple[Validator, ...] = (ValueTypeValidator(),)
 
     _is_being_validated: bool
 
