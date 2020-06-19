@@ -153,6 +153,34 @@ def test_setting_is_validated():
     assert validate_called
 
 
+def test_non_validation_error_is_added_to_errors():
+    def validator_with_exception(value, **_):
+        raise Exception('Invalid value')
+
+    class TestSettings(Settings):
+        MAX_SPEED = Setting(10, validators=(validator_with_exception,))
+
+    test_settings = TestSettings()
+    assert not test_settings.is_valid()
+    assert test_settings.errors == {'MAX_SPEED': ['Invalid value']}
+
+
+def test_validation_error_caused_by_exception():
+    class NoPasaranError(Exception):
+        ...
+
+    def validator_with_exception(value, **_):
+        raise NoPasaranError()
+
+    class TestSettings(Settings):
+        MAX_SPEED = Setting(10, validators=(validator_with_exception,))
+
+    with pytest.raises(ValidationError) as e:
+        TestSettings().is_valid(raise_exception=True)
+
+    assert isinstance(e.value.__cause__, NoPasaranError)
+
+
 #
 # ValueTypeValidator
 #

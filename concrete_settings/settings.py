@@ -379,6 +379,11 @@ class Settings(Setting, metaclass=SettingsMeta):
                 if raise_exception:
                     raise ValidationError({name: e.details}) from e
                 errors.append(str(e))
+            except Exception as e:
+                if raise_exception:
+                    raise ValidationError({name: str(e)}) from e
+                else:
+                    errors.append(str(e))
 
         # nested Settings
         if isinstance(value, Settings):

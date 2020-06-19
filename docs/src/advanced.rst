@@ -250,7 +250,8 @@ Validators is a collection of callables which validate the value of the setting.
 The interface of the callable is defined in the :meth:`Validator protocol <concrete_settings.validators.Validator.__call__>`.
 If validation fails, a validator raises
 :class:`ValidationError <concrete_settings.exceptions.ValidationError>`
-with failure details.
+with failure details. Other exception raised by validators are also wrapped (via ``raise from``) into
+:class:`ValidationError <concrete_settings.exceptions.ValidationError>`.
 Individual Setting validators are supplied in ``validators`` argument of an explicit Setting definition.
 Also :ref:`behaviors <setting_definition_behaviors>` like :class:`validate <concrete_settings.validate>`
 and others can be used to add validators to a setting.
