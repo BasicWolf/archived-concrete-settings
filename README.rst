@@ -239,10 +239,11 @@ It is hard to imagine a software project without the infrastructure that support
 Concrete Settings exists as an open source library only thanks to the services and the tools
 that are used to host, build and maintain it.
 
-My warmest words of gratitude go to `Github <https://github.com>`_, for hosting the project source,
-`Read the Docs <https://readthedocs.org>`_ for hosting the documentation and `Travis CI <https://travis-ci.org>`_
-for continuous integration process, `pyupio <https://pyup.io>`_ for keeping dependencies
-up-to-date!
+My warmest words of gratitude go to
+`Github <https://github.com>`_ for hosting the project source,
+`Read the Docs <https://readthedocs.org>`_ for hosting the documentation,
+`Travis CI <https://travis-ci.org>`_ for continuous integration process
+and`pyupio <https://pyup.io>`_ for keeping dependencies up-to-date!
 
 Many thanks for the authors and contributors of the libraries used to build the project.
 
