@@ -1,2 +1,3 @@
 mkdocs-nature
 sphinxcontrib-plantuml
+sphinx-autodoc-typehints
