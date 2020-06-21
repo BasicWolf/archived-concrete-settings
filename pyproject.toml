@@ -39,6 +39,7 @@ mkdocs-nature = '*'
 pytest-cov = "*"
 setuptools = "^41.0"
 sphinx = "*"
+sphinx-autodoc-typehints = "*"
 pyfakefs = "*"
 pyyaml = "*"
 sphinxcontrib-plantuml = "*"
