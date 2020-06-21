@@ -27,7 +27,7 @@ Concrete Settings' loves reader-friendly implicit settings definitions such as:
        DEBUG: bool = True
 
 In this section we discuss how such an implicit definition
-is parsed and processed into :class:`Setting <concrete_settings.Setting>`
+is parsed and processed into :class:`Setting <concrete_settings.settings.Setting>`
 descriptor instances.
 
 In a nutshell Concrete Settings has to get
@@ -94,7 +94,7 @@ in upper case.
 
 
 A method can be decorated by
-:class:`@setting <concrete_settings.setting>`
+:class:`@setting <concrete_settings.settings.setting>`
 in order to control Setting initialization.
 For example, to set validators:
 
@@ -258,7 +258,7 @@ and others can be used to add validators to a setting.
 
 The *mandatory validators* are applied to every Setting in Settings class.
 They are defined
-in :attr:`Settings.mandatory_validators <concrete_settings.Settings.mandatory_validators>` tuple.
+in :attr:`Settings.mandatory_validators <concrete_settings.settings.Settings.mandatory_validators>` tuple.
 :class:`ValueTypeValidator <concrete_settings.validators.ValueTypeValidator>` is
 the only validator in the base ``Settings.mandatory_validators``.
 
@@ -271,7 +271,7 @@ the only validator in the base ``Settings.mandatory_validators``.
 
 The *default validators* are applied to a Setting that has no validators of its own.
 They are defined in
-:attr:`Settings.default_validators <concrete_settings.Settings.default_validators>`.
+:attr:`Settings.default_validators <concrete_settings.settings.Settings.default_validators>`.
 
 Note that both lists are inherited by standard Python class inheritance rules.
 For example, to extend ``default_validators`` in a derived class, use
@@ -385,7 +385,7 @@ Output:
    ADMIN_NAME is and how to use it.
 
 Note that extracting a docstring **works only if the settings are located in a readable file with source code!**
-Otherwise documentation has to be specified as an argument in :class:`Setting <concrete_settings.Setting>`
+Otherwise documentation has to be specified as an argument in :class:`Setting <concrete_settings.settings.Setting>`
 constructor:
 
 .. testcode::
@@ -430,7 +430,7 @@ Output:
 Behaviors
 ---------
 
-:class:`Setting Behaviors <concrete_settings.Behavior>`
+:class:`Setting Behaviors <concrete_settings.behaviors.Behavior>`
 allow executing some logic on different stages of a Setting life cycle.
 
 Concrete Settings utilizes matrix multiplication
@@ -534,7 +534,7 @@ Concrete Settings detects this difference and raises an exception during early s
    in classes <class 'BaseSettings'> and <class 'DevSettings'> setting MAX_CONNECTIONS has the following difference(s): types differ: <class 'int'> != <class 'str'>
 
 To tell Concrete Settings that the re-defition is valid, a Setting has to be overriden,
-either explicitly by passing ``override=True`` or by using :class:`@override <concrete_settings.override>` behavior:
+either explicitly by passing ``override=True`` or by using :class:`@override <concrete_settings.behaviors.override>` behavior:
 
 
 .. testcode:: advanced_inheritance_override_works

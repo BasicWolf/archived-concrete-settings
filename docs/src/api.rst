@@ -8,7 +8,9 @@ This part of the documentation briefly covers the interfaces of Concrete Setting
 Settings
 --------
 
-.. autoclass:: concrete_settings.Setting([value, *, doc, validators, type_hint, behaviors])
+.. module:: concrete_settings.settings
+
+.. autoclass:: Setting
 
    A setting is a **named** object for storing, documenting and validating
    a certain value.
@@ -22,7 +24,6 @@ Settings
                      The default value
                      (:class:`GuessSettingType <concrete_settings.types.GuessSettingType>`)
                      would invoke type guessing mechanism.
-   :param behaviors: setting behaviors, a container of :class:`Behavior` objects.
    :param override: a indicates that settings definiton is explicitly overriden.
    :type value: :data:`Any <typing.Any>`
    :type doc: str
@@ -47,7 +48,8 @@ Settings
 
       Setting attribute name (read-only).
 
-.. autoclass:: concrete_settings.Settings
+
+.. autoclass:: Settings
 
    Settings is a container for one or more :class:`Setting` objects.
    Settings classes can be mixed and nested.
@@ -72,7 +74,7 @@ Settings
 
       If ``raise_exception`` is False, validation errors are stored
       in :meth:`self.errors <Settings.errors>`.
-      Otherwise a :class:`ValidationError <exceptions.ValidationError>`
+      Otherwise a :class:`ValidationError <concrete_settings.exceptions.ValidationError>`
       is raised when the first invalid setting is encountered.
 
    .. method:: validate
@@ -83,7 +85,7 @@ Settings
       It is called after individual settings have been validated
       without any errors.
 
-      Raise :class:`ValidationError <exceptions.ValidationError>`
+      Raise :class:`ValidationError <concrete_settings.exceptions.ValidationError>`
       to indicate errors.
 
    .. method:: errors
@@ -95,7 +97,8 @@ Settings
       :class:`ValidationErrorDetail <concrete_settings.exceptions.ValidationErrorDetails>`
       structure.
 
-   .. autoproperty:: is_being_validated
+   .. method:: is_being_validated
+      :property:
 
       Indicates that settings are being validated.
 
@@ -129,9 +132,9 @@ Settings
 
 
 
-.. class:: concrete_settings.setting
+.. class:: setting
 
-.. class:: concrete_settings.PropertySetting
+.. class:: PropertySetting
 
   ``@setting`` (an alias to ``PropertySetting`` decorator-class) is used to mark
   class methods as settings. The property-settings are read-only and used to
@@ -156,7 +159,7 @@ Settings
   ``PropertySetting`` automatically and do not require
   decoration by ``@setting``.
 
-.. class:: concrete_settings.prefix
+.. class:: prefix
 
    A decorator for Settings classes which appends
    the defined prefix to each Setting attribute.
@@ -225,9 +228,13 @@ Validators
 .. autoclass:: Validator(Protocol)
    :members: __call__
 
-.. autoclass:: concrete_settings.exceptions.ValidationError
+.. module:: concrete_settings.exceptions
 
-.. autodata:: concrete_settings.exceptions.ValidationErrorDetails
+.. autoclass:: ValidationError(details: :data:`ValidationErrorDetails`)
+
+   Raised by a setting validator when a setting value is invalid.
+
+.. autodata:: ValidationErrorDetails
 
    A recursive union type which describes validation errors.
 
@@ -244,6 +251,7 @@ Validators
       ]
 
 
+
 ValueTypeValidator
 ..................
 
@@ -256,7 +264,7 @@ ValueTypeValidator
    valid for any type hint.
 
    ``ValueTypeValidator`` is the default validator in
-   :data:`Settings.mandatory_validators <concrete_settings.Settings.mandatory_validators>`.
+   :data:`Settings.mandatory_validators <concrete_settings.settings.Settings.mandatory_validators>`.
 
    :param type_hint: If ``setting.type_hint`` is ``None``, then
                      type match is performed against the given
@@ -306,11 +314,13 @@ DeprecatedValidator
 Behaviors
 ---------
 
-.. autoclass:: concrete_settings.Behavior
+.. module:: concrete_settings.behaviors
+
+.. autoclass:: Behavior
 
    Base class for Setting attributes behaviors.
 
-   .. automethod:: decorate
+   .. method:: decorate(setting: concrete_settings.settings.Setting)
 
       Decorate setting attribute.
 
@@ -330,7 +340,7 @@ Behaviors
       :return: Passed setting object.
 
 
-.. autoclass:: concrete_settings.GetterSetterBehavior
+.. autoclass:: GetterSetterBehavior
 
    A base class for behaviors which provide custom get / set behavior.
    The super class methods have to be invoked to invoke behaviors get / set
@@ -338,10 +348,11 @@ Behaviors
 
    .. automethod:: get_value
 
-      Invoked when the decorated Setting is being read.
-
       :param Setting setting: Setting to which behavior is attached.
       :param Settings owner: Settings object - setting attribute's owner.
+
+      Invoked when the decorated Setting is being read.
+
 
       When overriding this method remember to call the base class method
       ``super().get_value(setting, owner)`` to invoke the chained behaviors down
@@ -357,11 +368,11 @@ Behaviors
 
    .. automethod:: set_value
 
-      Invoked when the decorated Setting is being written.
-
       :param Setting setting: Setting to which behavior is attached.
       :param Settings owner: Settings object - setting attribute's owner.
       :param value: Value being written to the setting.
+
+      Invoked when the decorated Setting is being written.
 
       When overriding this method, remember to call the base class method
       ``super().set_value(setting, owner, value)`` to invoke the chained
@@ -370,7 +381,7 @@ Behaviors
 override
 ........
 
-.. autoclass:: concrete_settings.override
+.. autoclass:: override
 
 Sets ``Setting.override = True``.
 
@@ -447,7 +458,7 @@ deprecated
    :param deprecation_message: Warning message template. Placeholders:
 
                                * ``{name}`` - setting name.
-                               * ``{owner}`` - owner :class:`Settings <concrete_settings.Settings>` object.
+                               * ``{owner}`` - owner :class:`Settings <concrete_settings.settings.Settings>` object.
 
    :param bool warn_on_validation: Add warning-raising
                                    :class:`DeprecatedValidator <concrete_settings.contrib.validators.DeprecatedValidator>`
@@ -468,7 +479,9 @@ Sources
 
 .. module:: concrete_settings.sources
 
-.. data:: AnySource = Union[Dict[str, Any], str, 'Source', Path]
+.. data:: AnySource
+
+   ``AnySource = Union[Dict[str, Any], str, 'Source', Path]``
 
    Valid settings sources types union.
    A valid source is either a ``dict``, an instance of
@@ -480,6 +493,9 @@ Sources
    The base class of all Concrete Settings sources.
 
    .. automethod:: get_source
+
+      :param src: some source representation
+      :type src: :data:`AnySource`
 
       A **static** method which returns a ``Source`` instance
       or ``None`` if ``src`` is not suitable.
@@ -499,17 +515,17 @@ Sources
 
    .. automethod:: read
 
-      Called for each setting from settings beign read. A source should
-      return the corresponding value.
-
       :param setting: Setting attribute instance being processed.
-                      Usually :data:`setting.name <concrete_settings.Setting.name>` is of interest.
+                      Usually :data:`setting.name <concrete_settings.settings.Setting.name>` is of interest.
       :param parents: A chain of parent Settings classes names (i.e. in case of nested
                       settings). This is used to map *source* setting keys like
                       ``DB_HOST_PORT`` to ``AppSettings.DB.HOST.PORT``.
                       In this case ``parents=('DB', 'HOST')``.
-      :type setting: :class:`Setting <concrete_settings.Setting>`
+      :type setting: :class:`Setting <concrete_settings.settings.Setting>`
       :type parents: tuple[str]
+
+      Called for each setting from settings beign read. A source should
+      return the corresponding value.
 
       ``read()`` should return :class:`NotFound` if setting value was not provided by the source.
 
@@ -529,7 +545,7 @@ Update strategies
 
 .. autoclass:: Strategy(Protocol)
 
-   A strategy decides how a setting value will be :meth:`updated <concrete_settings.Settings.update>`.
+   A strategy decides how a setting value will be :meth:`updated <concrete_settings.settings.Settings.update>`.
 
    .. automethod:: __call__(current_value, new_value)
 

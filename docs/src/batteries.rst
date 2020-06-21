@@ -11,7 +11,7 @@ Sources
 
 The built-in sources are automatically registered when ``concrete_settings``
 is imported. This means that calling for example
-:meth:`setting.update('/path/to/settings.yaml') <concrete_settings.Settings.update>`
+:meth:`setting.update('/path/to/settings.yaml') <concrete_settings.settings.Settings.update>`
 would automatically invoke :class:`YamlSource <concrete_settings.contrib.sources.YamlSource>`.
 
 Most of the provided sources read the files into memory and store them

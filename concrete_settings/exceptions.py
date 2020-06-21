@@ -25,8 +25,6 @@ ValidationErrorDetails = Union[                   # type: ignore
 
 
 class ValidationError(ConcreteSettingsError):
-    """Raised by a setting validator when a setting value is invalid"""
-
     sources: List[str]
 
     def __init__(self, details: ValidationErrorDetails = ''):

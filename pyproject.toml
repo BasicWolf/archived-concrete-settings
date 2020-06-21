@@ -18,7 +18,7 @@ keywords = ['settings', 'configuration']
 
 [tool.poetry.dependencies]
 python = "^3.6"
-sphinx = "^2.3"
+sphinx = "^3.0"
 typeguard = "^2.7"
 pyyaml = { version = "^5.3", optional = true }
 typing_extensions = "^3.7.4"

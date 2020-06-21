@@ -12,10 +12,10 @@ Defining settings
 -----------------
 
 Defining settings starts
-by subclassing the :class:`Settings <concrete_settings.Settings>`
+by subclassing the :class:`Settings <concrete_settings.settings.Settings>`
 class.
 Each setting is defined by
-:class:`Setting <concrete_settings.Setting>` descriptor.
+:class:`Setting <concrete_settings.settings.Setting>` descriptor.
 The catch is that one does not have
 to declare each setting explicitly.
 
@@ -59,7 +59,7 @@ and a corresponding ``Setting`` attribute is created.
 
 The magic behind the scenes is happening in the metaclass ``SettingsMeta``.
 In a nutshell, if a field looks like a setting, but is not explicitly
-defined as an instance of class :class:`Setting <concrete_settings.Setting>`,
+defined as an instance of class :class:`Setting <concrete_settings.settings.Setting>`,
 a corresponding object is created instead.
 
 :ref:`Later in the documentation <setting_definition>` the setting creation
@@ -147,7 +147,7 @@ If none of the above fits your needs, check out
 :mod:`sources API <concrete_settings.sources>` for creating
 a required settings source.
 
-Updating is done by calling :meth:`Settings.update(source) <concrete_settings.Settings.update>`.
+Updating is done by calling :meth:`Settings.update(source) <concrete_settings.settings.Settings.update>`.
 For example, to update the settings from a JSON file:
 
 
@@ -207,17 +207,17 @@ When Settings values have been finaly loaded, it is time
 to validate each and all settings' values altogether.
 
 A Settings object validates its setting-fields and itself when
-:meth:`Settings.is_valid() <concrete_settings.Settings.is_valid()>`
+:meth:`Settings.is_valid() <concrete_settings.settings.Settings.is_valid()>`
 is called for the first time.
 Validation consists of two stages:
 
 1. For each setting, call every :class:`validator <concrete_settings.validators.Validator>`
    of ``setting.validators`` collection. This validates a setting value as standalone.
 
-2. :meth:`Settings.validate() <concrete_settings.Settings.validate>` is called.
+2. :meth:`Settings.validate() <concrete_settings.settings.Settings.validate>` is called.
    It is indtended to validate the Settings object as a whole.
 
-All validation errors are collected and stored in :meth:`Settings.errors <concrete_settings.Settings.errors>`
+All validation errors are collected and stored in :meth:`Settings.errors <concrete_settings.settings.Settings.errors>`
 
 .. testcode:: quickstart-validation
 
@@ -291,7 +291,7 @@ has been deprecated.
 Raising a warning when settings are initialized and
 every time the setting is being read - sounds like a plan.
 A straightforward way to do this is by sublassing the
-:class:`Setting <concrete_settings.Setting>` class and overriding
+:class:`Setting <concrete_settings.settings.Setting>` class and overriding
 ``Setting.__get__()``.
 
 Another way would be using the supplied Settings Behavior mechanism - by "decorating" settings.
@@ -389,8 +389,8 @@ Output:
 
 At first glance, there is nothing special about this code.
 What makes it special and somewhat confusing is
-that class :class:`Settings <concrete_settings.Settings>` is a
-subclass of class :class:`Setting <concrete_settings.Setting>`!
+that class :class:`Settings <concrete_settings.settings.Settings>` is a
+subclass of class :class:`Setting <concrete_settings.settings.Setting>`!
 Hence, nested Settings behave and can be treated
 as Setting descriptors - e.g. have validators, documentation
 or bound behavior.
@@ -488,11 +488,11 @@ For example, let's combine Database and Log settings:
    INFO
    alex
 
-The :class:`prefix <concrete_settings.prefix>` decorator is used to add
+The :class:`prefix <concrete_settings.settings.prefix>` decorator is used to add
 a common prefix to all setting-fields of the decorated Settings class.
 
 Note that Python rules of multiple inheritance are applied.
-For example :meth:`validate() <concrete_settings.Settings.validate>`
+For example :meth:`validate() <concrete_settings.settings.Settings.validate>`
 must be explicitly called for each of the base classes:
 
 .. testcode:: quickstart-combined
