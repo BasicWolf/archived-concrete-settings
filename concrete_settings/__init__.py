@@ -2,7 +2,6 @@ import sys
 
 from . import settings  # noqa: F401 # imported but unused
 from .settings import (  # noqa: F401 # imported but unused
-    prefix,
     Settings,
     Setting,
     PropertySetting,

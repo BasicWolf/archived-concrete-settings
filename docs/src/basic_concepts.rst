@@ -454,23 +454,22 @@ Output:
    django.core.mail.backends.smtp.EmailBackend
 
 Another use case is extracting settings to own classes
-and combining them to mimic legacy settings module interface.
+and combining them to mimic flat legacy settings module
+interfaces.
 For example, let's combine Database and Log settings:
 
 .. testcode:: quickstart-combined
 
-   from concrete_settings import Settings, prefix
+   from concrete_settings import Settings
 
-   @prefix('DB')
    class DBSettings(Settings):
-       USER = 'alex'
-       PASSWORD  = 'secret'
-       SERVER = 'localhost@5432'
+       DB_USER = 'alex'
+       DB_PASSWORD  = 'secret'
+       DB_SERVER = 'localhost@5432'
 
-   @prefix('LOG')
    class LoggingSettings(Settings):
-       LEVEL = 'INFO'
-       FORMAT = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
+       LOG_LEVEL = 'INFO'
+       LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
 
    class AppSettings(
        DBSettings,
@@ -487,9 +486,6 @@ For example, let's combine Database and Log settings:
 
    INFO
    alex
-
-The :class:`prefix <concrete_settings.settings.prefix>` decorator is used to add
-a common prefix to all setting-fields of the decorated Settings class.
 
 Note that Python rules of multiple inheritance are applied.
 For example :meth:`validate() <concrete_settings.settings.Settings.validate>`

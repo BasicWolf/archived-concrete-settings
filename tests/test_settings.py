@@ -6,7 +6,7 @@ from collections import namedtuple
 import pytest
 
 import concrete_settings
-from concrete_settings import INVALID_SETTINGS, Settings, Setting, Undefined, prefix
+from concrete_settings import INVALID_SETTINGS, Settings, Setting, Undefined
 from concrete_settings.exceptions import ValidationError
 
 
@@ -373,74 +373,6 @@ def test_settings_errors_readonly():
 
     with pytest.raises(AttributeError):
         TestSettings().errors = {}
-
-
-# prefix
-
-
-def test_prefix_empty_field_not_allowed():
-    with pytest.raises(ValueError, match='prefix cannot be empty'):
-
-        @prefix('')
-        class MySettings(Settings):
-            ...
-
-
-@pytest.mark.parametrize('invalid_prefix', ['1', '.', '-'])
-def test_prefix_bad_identifier_not_allowed(invalid_prefix):
-    with pytest.raises(ValueError, match='prefix should be a valid Python identifier'):
-
-        @prefix(invalid_prefix)
-        class MySettings(Settings):
-            ...
-
-
-def test_prefix_adds_underscore_suffix():
-    @prefix('MY')
-    class MySettings(Settings):
-        SPEED = 10
-        NAME = 'alex'
-
-    assert hasattr(MySettings, 'MY_SPEED')
-    assert hasattr(MySettings, 'MY_NAME')
-
-
-def test_prefix_removes_prefixed_attribute_name():
-    @prefix('MY')
-    class MySettings(Settings):
-        SPEED = 10
-
-    assert not hasattr(MySettings, 'SPEED')
-
-
-def test_prefix_sets_setting_name():
-    @prefix('MY')
-    class MySettings(Settings):
-        SPEED = 10
-
-    assert MySettings.MY_SPEED.name == 'MY_SPEED'
-
-
-def test_prefix_cannot_decorate_not_settings_class():
-    with pytest.raises(
-        AssertionError, match='Intended to decorate Settings sub-classes only'
-    ):
-
-        @prefix('MY')
-        class NotSettings:
-            ...
-
-
-def test_prefix_cannot_decorate_settings_with_existing_matching_field():
-    with pytest.raises(
-        ValueError,
-        match='''MySettings'> class already has setting attribute named "GEAR"''',
-    ):
-
-        @prefix('MY')
-        class MySettings(Settings):
-            GEAR = 10
-            MY_GEAR = 1
 
 
 def test_settings_extract_to_module(build_module_mock):

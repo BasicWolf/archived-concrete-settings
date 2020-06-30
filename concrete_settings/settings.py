@@ -1,6 +1,5 @@
 import functools
 import logging
-import re
 import types
 from collections import defaultdict
 from typing import (
@@ -465,34 +464,3 @@ class Settings(Setting, metaclass=SettingsMeta):
     @property
     def is_being_validated(self) -> bool:
         return self._is_being_validated
-
-
-identifier_re = re.compile(r"^[^\d\W]\w*\Z", re.UNICODE)
-
-
-class prefix:
-    def __init__(self, prefix: str):
-        if not prefix:
-            raise ValueError('prefix cannot be empty')
-
-        if not identifier_re.match(prefix):
-            raise ValueError('prefix should be a valid Python identifier')
-
-        self.prefix = f'{prefix}_'
-
-    def __call__(self, settings_cls: Type[Settings]) -> Type[Settings]:
-        assert issubclass(
-            settings_cls, Settings
-        ), 'Intended to decorate Settings sub-classes only'
-
-        for name, attr in settings_cls.settings_attributes():
-            new_name = f'{self.prefix}{name}'
-            if hasattr(settings_cls, new_name):
-                raise ValueError(
-                    f'{settings_cls} class already has setting attribute named "{name}"'
-                )
-
-            delattr(settings_cls, name)
-            setattr(settings_cls, new_name, attr)
-            attr.name = new_name
-        return settings_cls

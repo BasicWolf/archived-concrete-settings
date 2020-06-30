@@ -159,31 +159,6 @@ Settings
   ``PropertySetting`` automatically and do not require
   decoration by ``@setting``.
 
-.. class:: prefix
-
-   A decorator for Settings classes which appends
-   the defined prefix to each Setting attribute.
-   For example:
-
-  .. testsetup:: api_prefix
-
-     from concrete_settings import Settings, prefix
-
-  .. testcode:: api_prefix
-
-     @prefix('MY')
-     class AppSettings(Settings):
-        SPEED = 10
-        NAME = 'alex'
-
-     print(AppSettings().MY_NAME)
-
-  Output:
-
-  .. testoutput:: api_prefix
-
-     alex
-
 Types
 -----
 
