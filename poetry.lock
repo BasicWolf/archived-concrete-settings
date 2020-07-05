@@ -211,9 +211,6 @@ packaging = "*"
 pyyaml = "*"
 toml = "*"
 
-[package.extras]
-pipenv = ["pipenv"]
-
 [[package]]
 category = "dev"
 description = "Dynamic version generation"
