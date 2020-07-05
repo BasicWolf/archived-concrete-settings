@@ -392,7 +392,7 @@ What makes it special and somewhat confusing is
 that class :class:`Settings <concrete_settings.settings.Settings>` is a
 subclass of class :class:`Setting <concrete_settings.settings.Setting>`!
 Hence, nested Settings behave and can be treated
-as Setting descriptors - e.g. have validators, documentation
+as Setting descriptors - have validators, documentation
 or bound behavior.
 
 Additionally, validating top-level settings
