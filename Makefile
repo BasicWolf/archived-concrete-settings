@@ -45,6 +45,6 @@ build:
 
 
 clean:
-	rm -r concrete_settings.egg-info pip-wheel-metadata .pytest_cache
+	rm -rf concrete_settings.egg-info pip-wheel-metadata .pytest_cache
 
 .PHONY: docs
