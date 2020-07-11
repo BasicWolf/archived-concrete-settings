@@ -248,3 +248,9 @@ and `pyupio <https://pyup.io>`_ for keeping dependencies up-to-date!
 Many thanks for the authors and contributors of the libraries used to build the project.
 
 All these wonderful services and tools have been provided *pro bono*.
+
+
+RELEASE NOTES
+=============
+
+**v0.1** [2020.07.11] - first public release.
