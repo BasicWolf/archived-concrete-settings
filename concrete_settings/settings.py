@@ -303,7 +303,7 @@ class Settings(Setting, metaclass=SettingsMeta):
         # settings reading and validation routines.
         # 1. Iterate through __mro__ classes in reverse order - so that
         #    iteration happens from the most-base class to the current one.
-        # 2. Store found settigns as {name: [cls, ...]} to settings_classes
+        # 2. Store found settings as {name: [cls, ...]} to settings_classes
         settings_classes: Dict[str, List[Type['Settings']]] = defaultdict(list)
 
         assert self.__class__.__mro__[-3] is Settings
