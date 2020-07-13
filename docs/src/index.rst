@@ -14,7 +14,7 @@ different application settings scattered around ``settings.py``.
 Sometimes developers spent *hours* seeking answers to these
 questions.
 
-Concrete Settigns tackles these problems altogether.
+Concrete Settings tackles these problems altogether.
 It was designed to be developer and end-user friendly.
 The settings are defined via normal Python code with few
 tricks which significantly improve readability
