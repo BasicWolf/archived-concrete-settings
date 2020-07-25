@@ -37,10 +37,6 @@ class Setting:
     def __get__(
         self, owner: Optional['Settings'], owner_type=None
     ) -> Union[Any, 'Setting']:
-        assert isinstance(
-            owner, (type(None), __import__('concrete_settings.settings').Settings)
-        ), "owner should be None or an instance of Settings"
-
         # == class-level access ==
         if not owner:
             return self
@@ -52,9 +48,6 @@ class Setting:
         return getattr(owner, f"__setting_{self.name}_value", self.value)
 
     def __set__(self, owner: 'Settings', val):
-        assert isinstance(
-            owner, __import__('concrete_settings.settings').Settings
-        ), "owner should be an instance of Settings"
         self.set_value(owner, val)
 
     def set_value(self, owner: 'Settings', val):
@@ -110,10 +103,6 @@ class PropertySetting(Setting):
     def __get__(
         self, owner: Optional['Settings'], owner_type=None
     ) -> Union[Any, 'Setting']:
-        assert isinstance(
-            owner, (type(None), __import__('concrete_settings.settings').Settings)
-        ), "owner should be None or an instance of Settings"
-
         # == class-level access ==
         if not owner:
             return self
