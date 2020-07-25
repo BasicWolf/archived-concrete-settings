@@ -13,6 +13,7 @@ from typing import (
 )
 
 from .setting import Setting, PropertySetting
+from .setting_registry import registry
 from .docreader import extract_doc_comments_from_class_or_module
 from .exceptions import StructureError, ValidationError, ValidationErrorDetails
 from .sources import get_source, AnySource, Source, NotFound
@@ -66,7 +67,10 @@ class SettingsMeta(type):
             return PropertySetting(attr)
 
         type_hint = annotations.get(name, GuessSettingType)
-        return Setting(attr, doc="", type_hint=type_hint)
+
+        setting_class_from_registry = registry.get_setting_class_for_type(type_hint)
+
+        return setting_class_from_registry(attr, doc="", type_hint=type_hint)
 
     @classmethod
     def _guess_type_hint(mcs, name, setting: Setting, annotations, bases: List[type]):
@@ -285,8 +289,8 @@ class Settings(Setting, metaclass=SettingsMeta):
         source_obj = get_source(source)
         self._update(self, source_obj, parents=(), strategies=strategies)
 
+    @staticmethod
     def _update(
-        self,
         settings: 'Settings',
         source: Source,
         parents: Tuple[str, ...] = (),

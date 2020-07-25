@@ -1,6 +1,5 @@
 import sys
 
-from . import settings  # noqa: F401 # imported but unused
 from .setting import Setting, PropertySetting  # noqa: F401 # imported but unused
 from .settings import (  # noqa: F401 # imported but unused
     Settings,
@@ -19,6 +18,10 @@ from .behaviors import (  # noqa: F401 # imported but unused
     validate,
 )
 
+# GLOBALS
+from .setting_registry import registry  # noqa: F401 # imported but unused
+
+# ALIASES
 setting = PropertySetting
 
 name = "concrete_settings"
