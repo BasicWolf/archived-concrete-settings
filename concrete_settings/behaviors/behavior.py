@@ -1,7 +1,8 @@
 import types
 from typing import Any, Union
 
-from ..settings import Setting, PropertySetting, Settings
+from ..settings import Settings
+from .. import Setting, PropertySetting
 
 
 class GenericBehaviorMeta(type):

@@ -4,7 +4,8 @@ from typing_extensions import Protocol
 
 
 if TYPE_CHECKING:
-    from ..settings import Setting, Settings
+    from ..settings import Settings
+    from .. import Setting
 
 
 class Validator(Protocol):

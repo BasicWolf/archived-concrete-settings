@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Tuple
 from .behavior import Behavior, BehaviorWithArgumentsMeta
 
 if TYPE_CHECKING:
-    from ..settings import Setting
+    from .. import Setting
     from ..validators import Validator
 
 
