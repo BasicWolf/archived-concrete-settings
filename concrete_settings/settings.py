@@ -29,7 +29,7 @@ INVALID_SETTINGS = '__invalid__settings__'
 class SettingsMeta(type):
     def __new__(mcs, name, bases, class_dict):
         new_dict = mcs.class_dict_to_settings(class_dict, bases)
-        mcs._add_settings_help(name, new_dict)
+        mcs.add_settings_help(name, new_dict)
         return super().__new__(mcs, name, bases, new_dict)
 
     @classmethod
@@ -38,21 +38,41 @@ class SettingsMeta(type):
         annotations = class_dict.get("__annotations__", {})
 
         for name, attr in class_dict.items():
+            attr_is_setting = isinstance(attr, Setting)
             new_attr = attr
 
-            # Make a Setting out of ALL_UPPERCASE_ATTRIBUTE
+            # Make a Setting out of each UPPERCASE_ATTRIBUTE
             if (
-                not isinstance(attr, Setting)
+                not attr_is_setting
                 and mcs._is_setting_name(name)
                 and mcs._can_be_converted_to_setting_automatically(attr)
             ):
                 new_attr = mcs._make_setting_from_attribute(name, attr, annotations)
 
-            # Should we try to guess a type_hint for a Setting?
-            if isinstance(new_attr, Setting) and new_attr.type_hint is GuessSettingType:
+            new_attr_is_setting = isinstance(new_attr, Setting)
+
+            # Should we guess a type_hint for the Setting?
+            if new_attr_is_setting and new_attr.type_hint is GuessSettingType:
                 new_attr.type_hint = mcs._guess_type_hint(
                     name, new_attr, annotations, bases
                 )
+
+            # If the Setting was created from an implicit definition (without behaviors!)
+            # should we then try substituting the setting type with a one
+            # from the registry?
+            if not attr_is_setting and new_attr_is_setting:
+                setting_class_from_registry = registry.get_setting_class_for_type(
+                    new_attr.type_hint
+                )
+                if setting_class_from_registry is not Setting:
+                    new_attr = mcs._substitute_by_setting_class_from_registry(
+                        new_attr,
+                        setting_class_from_registry
+                    )
+
+            # Final touch: apply behaviors
+            if new_attr_is_setting:
+                mcs._apply_behaviors(new_attr)
 
             new_dict[name] = new_attr
 
@@ -104,7 +124,7 @@ class SettingsMeta(type):
         return not isinstance(attr, callable_types)
 
     @classmethod
-    def _add_settings_help(mcs, cls_name: str, class_dict: dict):
+    def add_settings_help(mcs, cls_name: str, class_dict: dict):
         if '__module__' not in class_dict:
             # class is not coming from a module
             return
@@ -139,6 +159,28 @@ class SettingsMeta(type):
             except KeyError:
                 # no comment-style documentation exists
                 pass
+
+    @classmethod
+    def _substitute_by_setting_class_from_registry(
+        mcs,
+        setting: Setting,
+        substitue_setting_type: Type[Setting]
+    ):
+        new_setting = substitue_setting_type(
+            setting.value,
+            doc=setting.__doc__,
+            validators=setting.validators,
+            type_hint=setting.type_hint,
+            override=setting.override
+        )
+
+        new_setting.behaviors = setting.behaviors
+        return new_setting
+
+    @classmethod
+    def _apply_behaviors(mcs, setting: Setting):
+        for behavior in setting.behaviors:
+            behavior.decorate(setting)
 
 
 class Settings(Setting, metaclass=SettingsMeta):

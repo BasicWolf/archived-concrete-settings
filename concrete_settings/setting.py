@@ -1,11 +1,12 @@
 import functools
-from typing import Any, Tuple, Optional, Union, Callable, TYPE_CHECKING
+from typing import Any, Tuple, Optional, Union, Callable, TYPE_CHECKING, List
 
 from .types import GuessSettingType, Undefined
 from .validators import Validator
 
 if TYPE_CHECKING:
     from .settings import Settings
+    from .behaviors import Behavior
 
 
 class Setting:
@@ -14,6 +15,7 @@ class Setting:
     validators: Tuple[Validator, ...]
     name: str
     override: bool
+    __doc__: str
 
     def __init__(
         self,
@@ -30,6 +32,8 @@ class Setting:
         self.__doc__ = doc
         self.name = ""
         self.override = override
+
+        self.behaviors: List['Behavior'] = []
 
     def __set_name__(self, _, name):
         self.name = name

@@ -55,8 +55,8 @@ class Behavior(metaclass=GenericBehaviorMeta):
             setting = PropertySetting(setting_or_method)
         else:
             setting = setting_or_method
-        # Act as a decorator
-        self.decorate(setting)
+
+        self.attach(setting)
         return setting
 
     def __rmatmul__(self, setting: Any):
@@ -65,6 +65,9 @@ class Behavior(metaclass=GenericBehaviorMeta):
 
         self.decorate(setting)
         return setting
+
+    def attach(self, setting):
+        setting.behaviors.append(self)
 
     def decorate(self, setting: Setting):
         pass
