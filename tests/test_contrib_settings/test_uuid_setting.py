@@ -26,6 +26,11 @@ def test_uuid_value_not_set_from_invalid_string():
     assert parent.ID == '77e7bb7b-6a44-4069-ba04'
 
 
+def test_uuid_setting_has_uuid_validator():
+    assert len(UUIDSetting().validators) == 1
+    assert isinstance(UUIDSetting().validators[0], UUIDValidator)
+
+
 def test_uuid_validator_raises_validation_error():
     with pytest.raises(ValidationError):
         UUIDValidator()('aaa')
