@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from typing_extensions import Protocol
 
@@ -18,9 +18,9 @@ class Validator(Protocol):
         self,
         value,
         *,
-        name: str = None,
-        owner: 'Settings' = None,
-        setting: 'Setting' = None,
+        name: Optional[str] = None,
+        owner: Optional['Settings'] = None,
+        setting: Optional['Setting'] = None,
     ):
         """Validate a value. Raise `ValidationError` if value is wrong."""
         ...
