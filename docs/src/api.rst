@@ -8,7 +8,7 @@ This part of the documentation briefly covers the interfaces of Concrete Setting
 Settings
 --------
 
-.. module:: concrete_settings.settings
+.. module:: concrete_settings.setting
 
 .. autoclass:: Setting
 
@@ -48,10 +48,15 @@ Settings
 
       Setting attribute name (read-only).
 
+   .. attribute:: _behaviors
+
+      Internal attribute for storing behaviors attached to the setting
+
+.. module:: concrete_settings.settings
 
 .. autoclass:: Settings
 
-   Settings is a container for one or more :class:`Setting` objects.
+   Settings is a container for one or more :class:`Setting <concrete_settings.setting.Setting>` objects.
    Settings classes can be mixed and nested.
 
    .. attribute:: default_validators
@@ -295,7 +300,7 @@ Behaviors
 
    Base class for Setting attributes behaviors.
 
-   .. method:: decorate(setting: concrete_settings.settings.Setting)
+   .. method:: decorate(setting: concrete_settings.setting.Setting)
 
       Decorate setting attribute.
 
@@ -491,12 +496,12 @@ Sources
    .. automethod:: read
 
       :param setting: Setting attribute instance being processed.
-                      Usually :data:`setting.name <concrete_settings.settings.Setting.name>` is of interest.
+                      Usually :data:`setting.name <concrete_settings.setting.Setting.name>` is of interest.
       :param parents: A chain of parent Settings classes names (i.e. in case of nested
                       settings). This is used to map *source* setting keys like
                       ``DB_HOST_PORT`` to ``AppSettings.DB.HOST.PORT``.
                       In this case ``parents=('DB', 'HOST')``.
-      :type setting: :class:`Setting <concrete_settings.settings.Setting>`
+      :type setting: :class:`Setting <concrete_settings.setting.Setting>`
       :type parents: tuple[str]
 
       Called for each setting from settings beign read. A source should

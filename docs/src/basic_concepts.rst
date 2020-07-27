@@ -15,7 +15,7 @@ Defining settings starts
 by subclassing the :class:`Settings <concrete_settings.settings.Settings>`
 class.
 Each setting is defined by
-:class:`Setting <concrete_settings.settings.Setting>` descriptor.
+:class:`Setting <concrete_settings.setting.Setting>` descriptor.
 The catch is that one does not have
 to declare each setting explicitly.
 
@@ -59,7 +59,7 @@ and a corresponding ``Setting`` attribute is created.
 
 The magic behind the scenes is happening in the metaclass ``SettingsMeta``.
 In a nutshell, if a field looks like a setting, but is not explicitly
-defined as an instance of class :class:`Setting <concrete_settings.settings.Setting>`,
+defined as an instance of class :class:`Setting <concrete_settings.setting.Setting>`,
 a corresponding object is created instead.
 
 :ref:`Later in the documentation <setting_definition>` the setting creation
@@ -291,7 +291,7 @@ has been deprecated.
 Raising a warning when settings are initialized and
 every time the setting is being read - sounds like a plan.
 A straightforward way to do this is by sublassing the
-:class:`Setting <concrete_settings.settings.Setting>` class and overriding
+:class:`Setting <concrete_settings.setting.Setting>` class and overriding
 ``Setting.__get__()``.
 
 Another way would be using the supplied Settings Behavior mechanism - by "decorating" settings.
@@ -390,7 +390,7 @@ Output:
 At first glance, there is nothing special about this code.
 What makes it special and somewhat confusing is
 that class :class:`Settings <concrete_settings.settings.Settings>` is a
-subclass of class :class:`Setting <concrete_settings.settings.Setting>`!
+subclass of class :class:`Setting <concrete_settings.setting.Setting>`!
 Hence, nested Settings behave and can be treated
 as Setting descriptors - have validators, documentation
 or bound behavior.

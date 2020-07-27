@@ -66,8 +66,8 @@ class Behavior(metaclass=GenericBehaviorMeta):
         self.decorate(setting)
         return setting
 
-    def attach(self, setting):
-        setting.behaviors.append(self)
+    def attach(self, setting: Setting):
+        setting._behaviors.append(self)
 
     def decorate(self, setting: Setting):
         pass

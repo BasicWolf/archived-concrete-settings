@@ -16,6 +16,7 @@ class Setting:
     name: str
     override: bool
     __doc__: str
+    _behaviors: List['Behavior']
 
     def __init__(
         self,
@@ -33,7 +34,7 @@ class Setting:
         self.name = ""
         self.override = override
 
-        self.behaviors: List['Behavior'] = []
+        self._behaviors: List['Behavior'] = []
 
     def __set_name__(self, _, name):
         self.name = name

@@ -27,7 +27,7 @@ Concrete Settings' loves reader-friendly implicit settings definitions such as:
        DEBUG: bool = True
 
 In this section we discuss how such an implicit definition
-is parsed and processed into :class:`Setting <concrete_settings.settings.Setting>`
+is parsed and processed into :class:`Setting <concrete_settings.setting.Setting>`
 descriptor instances.
 
 In a nutshell Concrete Settings has to get
@@ -385,7 +385,7 @@ Output:
    ADMIN_NAME is and how to use it.
 
 Note that extracting a docstring **works only if the settings are located in a readable file with source code!**
-Otherwise documentation has to be specified as an argument in :class:`Setting <concrete_settings.settings.Setting>`
+Otherwise documentation has to be specified as an argument in :class:`Setting <concrete_settings.setting.Setting>`
 constructor:
 
 .. testcode::
@@ -434,8 +434,10 @@ Behaviors
 allow executing some logic on different stages of a Setting life cycle.
 
 Concrete Settings utilizes matrix multiplication
-``@`` (:meth:`object.__rmatmul__`) operator to add a behavior to a Setting.
-Note, that **a Setting has no idea whether it has been decorated or not**.
+``@`` (:meth:`object.__rmatmul__`) operator to attach a behavior to a Setting.
+The attached behaviors are stored in :attr:`Setting._behaviors <concrete_settings.setting.Setting._behaviors>`.
+When a parent :class:`Settings <concrete_settings.settings.Settings>` class
+is constructed a :meth:`behavior.decorate(setting) <concrete_settings.behaviors.Behavior.decorate>` is called for each attached behavior.
 
 Let's define the ``ADMIN_NAME`` setting from the
 example above as :class:`required <concrete_settings.contrib.behaviors.required>`:

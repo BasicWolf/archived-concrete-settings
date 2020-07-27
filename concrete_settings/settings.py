@@ -174,12 +174,12 @@ class SettingsMeta(type):
             override=setting.override
         )
 
-        new_setting.behaviors = setting.behaviors
+        new_setting._behaviors = setting._behaviors
         return new_setting
 
     @classmethod
     def _apply_behaviors(mcs, setting: Setting):
-        for behavior in setting.behaviors:
+        for behavior in setting._behaviors:
             behavior.decorate(setting)
 
 
