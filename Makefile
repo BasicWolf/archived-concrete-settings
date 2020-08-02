@@ -4,6 +4,7 @@ else
 	PYTEST_ARGS = --cov=concrete_settings
 endif
 
+SAFETY_IGNORE_PIPENV_ID = 38334
 
 all:
 	@echo "Available targets:"
@@ -24,7 +25,7 @@ mypy:
 	poetry run mypy concrete_settings
 
 safety:
-	poetry run safety check
+	poetry run safety check --ignore ${SAFETY_IGNORE_PIPENV_ID}
 
 docs: doctest
 	$(MAKE) html -C docs
