@@ -17,11 +17,11 @@ homepage = "https://github.com/basicwolf/concrete-settings"
 keywords = ['settings', 'configuration']
 
 [tool.poetry.dependencies]
-python = "^3.6"
-sphinx = "^3.0"
-typeguard = "^2.9"
-pyyaml = { version = "^5.3", optional = true }
-typing_extensions = "^3.7.4"
+python = ">=3.6,<4.0"
+sphinx = ">=3.0"
+typeguard = ">=2.9"
+pyyaml = { version = ">=5.3", optional = true }
+typing_extensions = ">=3.7.4"
 
 [tool.poetry.dev-dependencies]
 django = { version = "~3.0", optional = true }
